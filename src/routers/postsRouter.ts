@@ -18,35 +18,36 @@ type blogType = {
 
 export const postsRouter = Router({})
 
-const titleValidation = body('title')
-	.trim()
-	.isLength({ min: 1, max: 30 })
-	.withMessage('title length should be from 1 to 30')
-const shortDescriptionValidation = body('shortDescription')
-	.trim()
-	.isLength({ min: 1, max: 100 })
-	.withMessage('shortDescription length should be from 1 to 100')
-const contentValidation = body('content')
-	.trim()
-	.isLength({ min: 1, max: 1000 })
-	.withMessage('Content length should be from 1 to 1000')
-const blogIdValidation = body('blogId')
-	.isString()
-	.trim()
-	.isLength({ min: 1, max: 100 })
-	.withMessage('blogId length should be from 1 to 100')
+export const postsValidation = {
+	titleValidation: body('title')
+		.trim()
+		.isLength({ min: 1, max: 30 })
+		.withMessage('title length should be from 1 to 30'),
+	shortDescriptionValidation: body('shortDescription')
+		.trim()
+		.isLength({ min: 1, max: 100 })
+		.withMessage('shortDescription length should be from 1 to 100'),
+	contentValidation: body('content')
+		.trim()
+		.isLength({ min: 1, max: 1000 })
+		.withMessage('Content length should be from 1 to 1000'),
+	blogIdValidation: body('blogId')
+		.isString()
+		.trim()
+		.isLength({ min: 1, max: 100 })
+		.withMessage('blogId length should be from 1 to 100'),
 
-const blogIdExistValidation = body('blogId').custom(
-	async (value: string, { req }) => {
-		const id = value
-		const params = { id }
-		const blog: blogType | undefined = await blogsService.findBlog(params)
-		if (!blog) {
-			throw new Error('Blog id does not exist')
+	blogIdExistValidation: body('blogId').custom(
+		async (value: string, { req }) => {
+			const id = value
+			const params = { id }
+			const blog: blogType | undefined = await blogsService.findBlog(params)
+			if (!blog) {
+				throw new Error('Blog id does not exist')
+			}
 		}
-	}
-)
-
+	),
+}
 postsRouter.get('/', async (req: Request, res: Response) => {
 	const allPosts: postType[] = await postsService.returnAllPosts()
 	res.status(200).send(allPosts)
@@ -68,11 +69,11 @@ postsRouter.get(
 postsRouter.post(
 	'/',
 	basicAuthMiddleware,
-	blogIdExistValidation,
-	titleValidation,
-	shortDescriptionValidation,
-	contentValidation,
-	blogIdValidation,
+	postsValidation.blogIdExistValidation,
+	postsValidation.titleValidation,
+	postsValidation.shortDescriptionValidation,
+	postsValidation.contentValidation,
+	postsValidation.blogIdValidation,
 	inputValidationMiddleware,
 	async (
 		req: RequestWithBody<{
@@ -91,11 +92,11 @@ postsRouter.post(
 postsRouter.put(
 	'/:id',
 	basicAuthMiddleware,
-	blogIdExistValidation,
-	titleValidation,
-	shortDescriptionValidation,
-	contentValidation,
-	blogIdValidation,
+	postsValidation.blogIdExistValidation,
+	postsValidation.titleValidation,
+	postsValidation.shortDescriptionValidation,
+	postsValidation.contentValidation,
+	postsValidation.blogIdValidation,
 	inputValidationMiddleware,
 	async (
 		req: RequestWithParamsAndBody<

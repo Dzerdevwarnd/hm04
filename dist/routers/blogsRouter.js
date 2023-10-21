@@ -15,6 +15,8 @@ const express_validator_1 = require("express-validator");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const blogsService_1 = require("../services/blogsService");
+const postsService_1 = require("../services/postsService");
+const postsRouter_1 = require("./postsRouter");
 const nameValidation = (0, express_validator_1.body)('name')
     .trim()
     .isLength({ min: 1, max: 15 })
@@ -59,6 +61,10 @@ exports.blogsRouter.get('/:id/posts', (req, res) => __awaiter(void 0, void 0, vo
 exports.blogsRouter.post('/', authMiddleware_1.basicAuthMiddleware, nameValidation, descriptionValidation, urlValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const newBlog = yield blogsService_1.blogsService.createBlog(req.body);
     res.status(201).send(newBlog);
+}));
+exports.blogsRouter.post('/:id/posts', authMiddleware_1.basicAuthMiddleware, postsRouter_1.postsValidation.blogIdExistValidation, postsRouter_1.postsValidation.titleValidation, postsRouter_1.postsValidation.shortDescriptionValidation, postsRouter_1.postsValidation.contentValidation, postsRouter_1.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const newPost = yield postsService_1.postsService.createPost(req.body);
+    res.status(201).send(newPost);
 }));
 exports.blogsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, nameValidation, descriptionValidation, urlValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const resultOfUpdateBlog = yield blogsService_1.blogsService.updateBlog(req.params.id, req.body);

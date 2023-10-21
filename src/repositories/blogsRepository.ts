@@ -1,5 +1,5 @@
 import { client } from '../db'
-import { postType } from './PostsRepository'
+import { postType, postsByBlogIdPaginationType } from './PostsRepository'
 
 export type blogType = {
 	id: string
@@ -16,14 +16,6 @@ export type blogsPaginationType = {
 	pageSize: number
 	totalCount: number
 	items: blogType[]
-}
-
-export type postsByBlogIdPaginationType = {
-	pageCount: number
-	page: number
-	pageSize: number
-	totalCount: number
-	items: postType[]
 }
 
 export const blogsRepository = {

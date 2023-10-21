@@ -25,11 +25,28 @@ const db_1 = require("../db");
 exports.postsRepository = {
     returnAllPosts() {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield db_1.client
+            const totalCount = yield db_1.client
+                .db('hm03')
+                .collection('posts')
+                .countDocuments();
+            const pageSize = 10;
+            const pageCount = Math.ceil(totalCount / pageSize);
+            const page = 1;
+            const allPosts = yield db_1.client
                 .db('hm03')
                 .collection('posts')
                 .find({}, { projection: { _id: 0 } })
+                .sort({ CreatedAt: 1 })
+                .limit(10)
                 .toArray();
+            const postsPagination = {
+                pageCount: pageCount,
+                page: page,
+                pageSize: pageSize,
+                totalCount: totalCount,
+                items: allPosts,
+            };
+            return postsPagination;
         });
     },
     findPost(params) {

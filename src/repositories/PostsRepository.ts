@@ -10,13 +10,38 @@ export type postType = {
 	createdAt: Date
 }
 
+export type postsByBlogIdPaginationType = {
+	pageCount: number
+	page: number
+	pageSize: number
+	totalCount: number
+	items: postType[]
+}
+
 export const postsRepository = {
-	async returnAllPosts(): Promise<postType[]> {
-		return await client
+	async returnAllPosts(): Promise<postsByBlogIdPaginationType> {
+		const totalCount: number = await client
+			.db('hm03')
+			.collection<postType>('posts')
+			.countDocuments()
+		const pageSize = 10
+		const pageCount = Math.ceil(totalCount / pageSize)
+		const page = 1
+		const allPosts = await client
 			.db('hm03')
 			.collection<postType>('posts')
 			.find({}, { projection: { _id: 0 } })
+			.sort({ CreatedAt: 1 })
+			.limit(10)
 			.toArray()
+		const postsPagination = {
+			pageCount: pageCount,
+			page: page,
+			pageSize: pageSize,
+			totalCount: totalCount,
+			items: allPosts,
+		}
+		return postsPagination
 	},
 	async findPost(params: { id: string }): Promise<postType | undefined> {
 		let post: postType | null = await client

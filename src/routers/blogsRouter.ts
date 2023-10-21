@@ -4,6 +4,8 @@ import { basicAuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { blogsPaginationType } from '../repositories/blogsRepository'
 import { blogsService } from '../services/blogsService'
+import { postsService } from '../services/postsService'
+import { postsValidation } from './postsRouter'
 
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
@@ -77,6 +79,29 @@ blogsRouter.post(
 	) => {
 		const newBlog = await blogsService.createBlog(req.body)
 		res.status(201).send(newBlog)
+	}
+)
+
+blogsRouter.post(
+	'/:id/posts',
+	basicAuthMiddleware,
+	postsValidation.blogIdExistValidation,
+	postsValidation.titleValidation,
+	postsValidation.shortDescriptionValidation,
+	postsValidation.contentValidation,
+	postsValidation.blogIdValidation,
+	inputValidationMiddleware,
+	async (
+		req: RequestWithBody<{
+			title: string
+			shortDescription: string
+			content: string
+			blogId: string
+		}>,
+		res: Response
+	) => {
+		const newPost = await postsService.createPost(req.body)
+		res.status(201).send(newPost)
 	}
 )
 
