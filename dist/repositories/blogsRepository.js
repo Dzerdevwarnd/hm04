@@ -23,21 +23,32 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.blogsRepository = void 0;
 const db_1 = require("../db");
 exports.blogsRepository = {
-    returnAllBlogs() {
+    returnAllBlogs(query) {
         return __awaiter(this, void 0, void 0, function* () {
             const totalCount = yield db_1.client
                 .db('hm03')
                 .collection('blogs')
                 .countDocuments();
-            const pageSize = 10;
+            const pageSize = query.pageSize || 10;
             const pageCount = Math.ceil(totalCount / pageSize);
-            const page = 1;
+            const pageSkip = Math.floor(totalCount / pageSize);
+            const page = query.page || 1;
+            const sortBy = query.sortBy || 'createdAt';
+            const searchNameTerm = query.searchNameTerm;
+            let sortDirection = query.sortDirection || 'desc';
+            if (sortDirection === 'desc') {
+                sortDirection = 1;
+            }
+            else {
+                sortDirection = -1;
+            }
             const allBlogs = yield db_1.client
                 .db('hm03')
                 .collection('blogs')
                 .find({}, { projection: { _id: 0 } })
-                .sort({ CreatedAt: 1 })
-                .limit(10)
+                .skip(pageSkip * pageSize)
+                .sort({ [sortBy]: sortDirection })
+                .limit(pageSize)
                 .toArray();
             const blogsPagination = {
                 pageCount: pageCount,

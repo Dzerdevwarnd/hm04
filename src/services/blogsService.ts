@@ -2,12 +2,13 @@ import {
 	blogType,
 	blogsPaginationType,
 	blogsRepository,
-	postsByBlogIdPaginationType,
 } from '../repositories/blogsRepository'
 
+import { postsByBlogIdPaginationType } from '../repositories/PostsRepository'
+
 export const blogsService = {
-	async returnAllBlogs(): Promise<blogsPaginationType> {
-		return blogsRepository.returnAllBlogs()
+	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
+		return blogsRepository.returnAllBlogs(query)
 	},
 	async findBlog(params: { id: string }): Promise<blogType | undefined> {
 		return blogsRepository.findBlog(params)

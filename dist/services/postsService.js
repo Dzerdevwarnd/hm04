@@ -38,6 +38,22 @@ exports.postsService = {
             return postWithout_id;
         });
     },
+    createPostByBlogId(body, id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const createdDate = new Date();
+            const newPost = {
+                id: String(Date.now()),
+                title: body.title,
+                shortDescription: body.shortDescription,
+                content: body.content,
+                blogId: id,
+                blogName: '',
+                createdAt: createdDate,
+            };
+            const postWithout_id = PostsRepository_1.postsRepository.createPost(newPost);
+            return postWithout_id;
+        });
+    },
     updatePost(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
             const resultBoolean = PostsRepository_1.postsRepository.updatePost(id, body);

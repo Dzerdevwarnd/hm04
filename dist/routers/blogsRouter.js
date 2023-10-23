@@ -33,7 +33,7 @@ const urlValidation = (0, express_validator_1.body)('websiteUrl')
     .withMessage('Invalid URl');
 exports.blogsRouter = (0, express_1.Router)({});
 exports.blogsRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const blogsPagination = yield blogsService_1.blogsService.returnAllBlogs();
+    const blogsPagination = yield blogsService_1.blogsService.returnAllBlogs(req.query);
     res.status(200).send(blogsPagination);
 }));
 exports.blogsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -49,7 +49,7 @@ exports.blogsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, 
 }));
 exports.blogsRouter.get('/:id/posts', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const foundPosts = yield blogsService_1.blogsService.findPostsByBlogId(req.params);
-    if (!foundPosts) {
+    if (!(foundPosts === null || foundPosts === void 0 ? void 0 : foundPosts.items)) {
         res.sendStatus(404);
         return;
     }
@@ -62,8 +62,8 @@ exports.blogsRouter.post('/', authMiddleware_1.basicAuthMiddleware, nameValidati
     const newBlog = yield blogsService_1.blogsService.createBlog(req.body);
     res.status(201).send(newBlog);
 }));
-exports.blogsRouter.post('/:id/posts', authMiddleware_1.basicAuthMiddleware, postsRouter_1.postsValidation.blogIdExistValidation, postsRouter_1.postsValidation.titleValidation, postsRouter_1.postsValidation.shortDescriptionValidation, postsRouter_1.postsValidation.contentValidation, postsRouter_1.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const newPost = yield postsService_1.postsService.createPost(req.body);
+exports.blogsRouter.post('/:id/posts', authMiddleware_1.basicAuthMiddleware, postsRouter_1.postsValidation.blogIdExistValidationFromUrl, postsRouter_1.postsValidation.titleValidation, postsRouter_1.postsValidation.shortDescriptionValidation, postsRouter_1.postsValidation.contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const newPost = yield postsService_1.postsService.createPostByBlogId(req.body, req.params.id);
     res.status(201).send(newPost);
 }));
 exports.blogsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, nameValidation, descriptionValidation, urlValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {

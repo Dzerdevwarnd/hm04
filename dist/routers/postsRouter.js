@@ -35,7 +35,15 @@ exports.postsValidation = {
         .trim()
         .isLength({ min: 1, max: 100 })
         .withMessage('blogId length should be from 1 to 100'),
-    blogIdExistValidation: (0, express_validator_1.body)('blogId').custom((value, { req }) => __awaiter(void 0, void 0, void 0, function* () {
+    blogIdExistValidationFromBody: (0, express_validator_1.body)('blogId').custom((value, { req }) => __awaiter(void 0, void 0, void 0, function* () {
+        const id = value;
+        const params = { id };
+        const blog = yield blogsService_1.blogsService.findBlog(params);
+        if (!blog) {
+            throw new Error('Blog id does not exist');
+        }
+    })),
+    blogIdExistValidationFromUrl: (0, express_validator_1.param)('id').custom((value, { req }) => __awaiter(void 0, void 0, void 0, function* () {
         const id = value;
         const params = { id };
         const blog = yield blogsService_1.blogsService.findBlog(params);
@@ -58,11 +66,11 @@ exports.postsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, 
         res.status(200).send(foundPost);
     }
 }));
-exports.postsRouter.post('/', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidation, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.postsRouter.post('/', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const newPost = yield postsService_1.postsService.createPost(req.body);
     res.status(201).send(newPost);
 }));
-exports.postsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidation, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.postsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const ResultOfUpdatePost = yield postsService_1.postsService.updatePost(req.params.id, req.body);
     if (!ResultOfUpdatePost) {
         res.sendStatus(404);

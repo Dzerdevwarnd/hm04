@@ -1,8 +1,8 @@
 import { Request, Response, Router } from 'express'
-import { body } from 'express-validator'
+import { body, param } from 'express-validator'
 import { basicAuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
-import { postType } from '../repositories/PostsRepository'
+import { postsByBlogIdPaginationType } from '../repositories/PostsRepository'
 import { blogsService } from '../services/blogsService'
 import { postsService } from '../services/postsService'
 type RequestWithParams<P> = Request<P, {}, {}, {}>
@@ -37,7 +37,17 @@ export const postsValidation = {
 		.isLength({ min: 1, max: 100 })
 		.withMessage('blogId length should be from 1 to 100'),
 
-	blogIdExistValidation: body('blogId').custom(
+	blogIdExistValidationFromBody: body('blogId').custom(
+		async (value: string, { req }) => {
+			const id = value
+			const params = { id }
+			const blog: blogType | undefined = await blogsService.findBlog(params)
+			if (!blog) {
+				throw new Error('Blog id does not exist')
+			}
+		}
+	),
+	blogIdExistValidationFromUrl: param('id').custom(
 		async (value: string, { req }) => {
 			const id = value
 			const params = { id }
@@ -49,7 +59,8 @@ export const postsValidation = {
 	),
 }
 postsRouter.get('/', async (req: Request, res: Response) => {
-	const allPosts: postType[] = await postsService.returnAllPosts()
+	const allPosts: postsByBlogIdPaginationType =
+		await postsService.returnAllPosts()
 	res.status(200).send(allPosts)
 })
 
@@ -69,7 +80,7 @@ postsRouter.get(
 postsRouter.post(
 	'/',
 	basicAuthMiddleware,
-	postsValidation.blogIdExistValidation,
+	postsValidation.blogIdExistValidationFromBody,
 	postsValidation.titleValidation,
 	postsValidation.shortDescriptionValidation,
 	postsValidation.contentValidation,
@@ -92,7 +103,7 @@ postsRouter.post(
 postsRouter.put(
 	'/:id',
 	basicAuthMiddleware,
-	postsValidation.blogIdExistValidation,
+	postsValidation.blogIdExistValidationFromBody,
 	postsValidation.titleValidation,
 	postsValidation.shortDescriptionValidation,
 	postsValidation.contentValidation,

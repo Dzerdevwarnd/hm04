@@ -19,20 +19,30 @@ export type blogsPaginationType = {
 }
 
 export const blogsRepository = {
-	async returnAllBlogs(): Promise<blogsPaginationType> {
+	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
 		const totalCount: number = await client
 			.db('hm03')
 			.collection<blogType>('blogs')
 			.countDocuments()
-		const pageSize = 10
+		const pageSize = query.pageSize || 10
 		const pageCount = Math.ceil(totalCount / pageSize)
-		const page = 1
+		const pageSkip = Math.floor(totalCount / pageSize)
+		const page = query.page || 1
+		const sortBy = query.sortBy || 'createdAt'
+		const searchNameTerm = query.searchNameTerm
+		let sortDirection = query.sortDirection || 'desc'
+		if (sortDirection === 'desc') {
+			sortDirection = 1
+		} else {
+			sortDirection = -1
+		}
 		const allBlogs = await client
 			.db('hm03')
 			.collection<blogType>('blogs')
 			.find({}, { projection: { _id: 0 } })
-			.sort({ CreatedAt: 1 })
-			.limit(10)
+			.skip(pageSkip * pageSize)
+			.sort({ [sortBy]: sortDirection })
+			.limit(pageSize)
 			.toArray()
 		const blogsPagination = {
 			pageCount: pageCount,

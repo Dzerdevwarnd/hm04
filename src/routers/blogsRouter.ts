@@ -10,6 +10,8 @@ import { postsValidation } from './postsRouter'
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
 type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
+type RequestParamsQuery<P, Q> = Request<P, {}, {}, Q>
+type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 
 const nameValidation = body('name')
 	.trim()
@@ -28,11 +30,14 @@ const urlValidation = body('websiteUrl')
 
 export const blogsRouter = Router({})
 
-blogsRouter.get('/', async (req: Request, res: Response) => {
-	const blogsPagination: blogsPaginationType =
-		await blogsService.returnAllBlogs()
-	res.status(200).send(blogsPagination)
-})
+blogsRouter.get(
+	'/',
+	async (req: RequestWithQuery<{ query: any }>, res: Response) => {
+		const blogsPagination: blogsPaginationType =
+			await blogsService.returnAllBlogs(req.query)
+		res.status(200).send(blogsPagination)
+	}
+)
 
 blogsRouter.get(
 	'/:id',
@@ -52,7 +57,7 @@ blogsRouter.get(
 	'/:id/posts',
 	async (req: RequestWithParams<{ id: string }>, res: Response) => {
 		const foundPosts = await blogsService.findPostsByBlogId(req.params)
-		if (!foundPosts) {
+		if (!foundPosts?.items) {
 			res.sendStatus(404)
 			return
 		} else {
@@ -85,22 +90,26 @@ blogsRouter.post(
 blogsRouter.post(
 	'/:id/posts',
 	basicAuthMiddleware,
-	postsValidation.blogIdExistValidation,
+	postsValidation.blogIdExistValidationFromUrl,
 	postsValidation.titleValidation,
 	postsValidation.shortDescriptionValidation,
 	postsValidation.contentValidation,
-	postsValidation.blogIdValidation,
 	inputValidationMiddleware,
 	async (
-		req: RequestWithBody<{
-			title: string
-			shortDescription: string
-			content: string
-			blogId: string
-		}>,
+		req: RequestWithParamsAndBody<
+			{ id: string },
+			{
+				title: string
+				shortDescription: string
+				content: string
+			}
+		>,
 		res: Response
 	) => {
-		const newPost = await postsService.createPost(req.body)
+		const newPost = await postsService.createPostByBlogId(
+			req.body,
+			req.params.id
+		)
 		res.status(201).send(newPost)
 	}
 )
