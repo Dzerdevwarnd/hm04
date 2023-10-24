@@ -96,7 +96,7 @@ blogsRouter.post(
 blogsRouter.post(
 	'/:id/posts',
 	basicAuthMiddleware,
-	//	postsValidation.blogIdExistValidationFromUrl,
+	postsValidation.blogIdExistValidationFromUrl,
 	postsValidation.titleValidation,
 	postsValidation.shortDescriptionValidation,
 	postsValidation.contentValidation,
