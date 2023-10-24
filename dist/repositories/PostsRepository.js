@@ -31,10 +31,10 @@ exports.postsRepository = {
             const searchNameTerm = query.searchNameTerm || '';
             let sortDirection = query.sortDirection || 'desc';
             if (sortDirection === 'desc') {
-                sortDirection = 1;
+                sortDirection = -1;
             }
             else {
-                sortDirection = -1;
+                sortDirection = 1;
             }
             const posts = yield db_1.client
                 .db('hm03')

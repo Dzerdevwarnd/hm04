@@ -26,9 +26,9 @@ export const blogsRepository = {
 		const searchNameTerm: string = query.searchNameTerm || ''
 		let sortDirection = query.sortDirection || 'desc'
 		if (sortDirection === 'desc') {
-			sortDirection = 1
-		} else {
 			sortDirection = -1
+		} else {
+			sortDirection = 1
 		}
 		const blogs = await client
 			.db('hm03')
@@ -72,9 +72,9 @@ export const blogsRepository = {
 		const searchNameTerm: string = query.searchNameTerm || ''
 		let sortDirection = query.sortDirection || 'desc'
 		if (sortDirection === 'desc') {
-			sortDirection = 1
-		} else {
 			sortDirection = -1
+		} else {
+			sortDirection = 1
 		}
 		let posts: postType[] | null = await client
 			.db('hm03')
