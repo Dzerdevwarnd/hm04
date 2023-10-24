@@ -8,6 +8,7 @@ import { postsService } from '../services/postsService'
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
 type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
+type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 
 type blogType = {
 	id: string
@@ -58,11 +59,14 @@ export const postsValidation = {
 		}
 	),
 }
-postsRouter.get('/', async (req: Request, res: Response) => {
-	const allPosts: postsByBlogIdPaginationType =
-		await postsService.returnAllPosts()
-	res.status(200).send(allPosts)
-})
+postsRouter.get(
+	'/',
+	async (req: RequestWithQuery<{ query: any }>, res: Response) => {
+		const allPosts: postsByBlogIdPaginationType =
+			await postsService.returnAllPosts(req.query)
+		res.status(200).send(allPosts)
+	}
+)
 
 postsRouter.get(
 	'/:id',

@@ -19,27 +19,33 @@ export type postsByBlogIdPaginationType = {
 }
 
 export const postsRepository = {
-	async returnAllPosts(): Promise<postsByBlogIdPaginationType> {
-		const totalCount: number = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.countDocuments()
-		const pageSize = 10
-		const pageCount = Math.ceil(totalCount / pageSize)
-		const page = 1
-		const allPosts = await client
+	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
+		const pageSize = query.pageSize || 10
+		const page = query.page || 1
+		const sortBy = query.sortBy || 'createdAt'
+		const searchNameTerm: string = query.searchNameTerm || ''
+		let sortDirection = query.sortDirection || 'desc'
+		if (sortDirection === 'desc') {
+			sortDirection = 1
+		} else {
+			sortDirection = -1
+		}
+		const posts = await client
 			.db('hm03')
 			.collection<postType>('posts')
 			.find({}, { projection: { _id: 0 } })
-			.sort({ CreatedAt: 1 })
-			.limit(10)
+			.skip((page - 1) * pageSize)
+			.sort({ [sortBy]: sortDirection })
+			.limit(pageSize)
 			.toArray()
+		const totalCount = posts.length
+		const pageCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
 			pageCount: pageCount,
 			page: page,
 			pageSize: pageSize,
 			totalCount: totalCount,
-			items: allPosts,
+			items: posts,
 		}
 		return postsPagination
 	},

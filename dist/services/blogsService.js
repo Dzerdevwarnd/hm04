@@ -22,9 +22,9 @@ exports.blogsService = {
             return blogsRepository_1.blogsRepository.findBlog(params);
         });
     },
-    findPostsByBlogId(params) {
+    findPostsByBlogId(params, query) {
         return __awaiter(this, void 0, void 0, function* () {
-            return blogsRepository_1.blogsRepository.findPostsByBlogId(params);
+            return blogsRepository_1.blogsRepository.findPostsByBlogId(params, query);
         });
     },
     createBlog(body) {

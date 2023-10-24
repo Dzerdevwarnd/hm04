@@ -53,7 +53,7 @@ exports.postsValidation = {
     })),
 };
 exports.postsRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const allPosts = yield postsService_1.postsService.returnAllPosts();
+    const allPosts = yield postsService_1.postsService.returnAllPosts(req.query);
     res.status(200).send(allPosts);
 }));
 exports.postsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {

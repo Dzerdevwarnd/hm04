@@ -12,9 +12,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.postsService = void 0;
 const PostsRepository_1 = require("../repositories/PostsRepository");
 exports.postsService = {
-    returnAllPosts() {
+    returnAllPosts(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            return PostsRepository_1.postsRepository.returnAllPosts();
+            return PostsRepository_1.postsRepository.returnAllPosts(query);
         });
     },
     findPost(params) {

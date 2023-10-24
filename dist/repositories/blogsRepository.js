@@ -25,16 +25,10 @@ const db_1 = require("../db");
 exports.blogsRepository = {
     returnAllBlogs(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const totalCount = yield db_1.client
-                .db('hm03')
-                .collection('blogs')
-                .countDocuments();
             const pageSize = query.pageSize || 10;
-            const pageCount = Math.ceil(totalCount / pageSize);
-            const pageSkip = Math.floor(totalCount / pageSize);
             const page = query.page || 1;
             const sortBy = query.sortBy || 'createdAt';
-            const searchNameTerm = query.searchNameTerm;
+            const searchNameTerm = query.searchNameTerm || '';
             let sortDirection = query.sortDirection || 'desc';
             if (sortDirection === 'desc') {
                 sortDirection = 1;
@@ -42,20 +36,22 @@ exports.blogsRepository = {
             else {
                 sortDirection = -1;
             }
-            const allBlogs = yield db_1.client
+            const blogs = yield db_1.client
                 .db('hm03')
                 .collection('blogs')
-                .find({}, { projection: { _id: 0 } })
-                .skip(pageSkip * pageSize)
+                .find({ name: { $regex: searchNameTerm } }, { projection: { _id: 0 } })
+                .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
                 .toArray();
+            const totalCount = blogs.length;
+            const pageCount = Math.ceil(totalCount / pageSize);
             const blogsPagination = {
                 pageCount: pageCount,
                 page: page,
                 pageSize: pageSize,
                 totalCount: totalCount,
-                items: allBlogs,
+                items: blogs,
             };
             return blogsPagination;
         });
@@ -74,21 +70,29 @@ exports.blogsRepository = {
             }
         });
     },
-    findPostsByBlogId(params) {
+    findPostsByBlogId(params, query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const totalCount = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .countDocuments({ blogId: params.id });
-            const pageSize = 10;
-            const pageCount = Math.ceil(totalCount / pageSize);
-            const page = 1;
-            const allBlogs = yield db_1.client;
+            const pageSize = query.pageSize || 10;
+            const page = query.page || 1;
+            const sortBy = query.sortBy || 'createdAt';
+            const searchNameTerm = query.searchNameTerm || '';
+            let sortDirection = query.sortDirection || 'desc';
+            if (sortDirection === 'desc') {
+                sortDirection = 1;
+            }
+            else {
+                sortDirection = -1;
+            }
             let posts = yield db_1.client
                 .db('hm03')
                 .collection('posts')
                 .find({ blogId: params.id }, { projection: { _id: 0 } })
+                .skip((page - 1) * pageSize)
+                .sort({ [sortBy]: sortDirection })
+                .limit(pageSize)
                 .toArray();
+            const totalCount = posts.length;
+            const pageCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
                 pageCount: pageCount,
                 page: page,

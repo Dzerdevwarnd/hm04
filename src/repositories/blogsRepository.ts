@@ -20,36 +20,32 @@ export type blogsPaginationType = {
 
 export const blogsRepository = {
 	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
-		const totalCount: number = await client
-			.db('hm03')
-			.collection<blogType>('blogs')
-			.countDocuments()
 		const pageSize = query.pageSize || 10
-		const pageCount = Math.ceil(totalCount / pageSize)
-		const pageSkip = Math.floor(totalCount / pageSize)
 		const page = query.page || 1
 		const sortBy = query.sortBy || 'createdAt'
-		const searchNameTerm = query.searchNameTerm
+		const searchNameTerm: string = query.searchNameTerm || ''
 		let sortDirection = query.sortDirection || 'desc'
 		if (sortDirection === 'desc') {
 			sortDirection = 1
 		} else {
 			sortDirection = -1
 		}
-		const allBlogs = await client
+		const blogs = await client
 			.db('hm03')
 			.collection<blogType>('blogs')
-			.find({}, { projection: { _id: 0 } })
-			.skip(pageSkip * pageSize)
+			.find({ name: { $regex: searchNameTerm } }, { projection: { _id: 0 } })
+			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
 			.toArray()
+		const totalCount = blogs.length
+		const pageCount = Math.ceil(totalCount / pageSize)
 		const blogsPagination = {
 			pageCount: pageCount,
 			page: page,
 			pageSize: pageSize,
 			totalCount: totalCount,
-			items: allBlogs,
+			items: blogs,
 		}
 		return blogsPagination
 	},
@@ -64,22 +60,32 @@ export const blogsRepository = {
 			return
 		}
 	},
-	async findPostsByBlogId(params: {
-		id: string
-	}): Promise<postsByBlogIdPaginationType | undefined> {
-		const totalCount: number = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.countDocuments({ blogId: params.id })
-		const pageSize = 10
-		const pageCount = Math.ceil(totalCount / pageSize)
-		const page = 1
-		const allBlogs = await client
+	async findPostsByBlogId(
+		params: {
+			id: string
+		},
+		query: any
+	): Promise<postsByBlogIdPaginationType | undefined> {
+		const pageSize = query.pageSize || 10
+		const page = query.page || 1
+		const sortBy = query.sortBy || 'createdAt'
+		const searchNameTerm: string = query.searchNameTerm || ''
+		let sortDirection = query.sortDirection || 'desc'
+		if (sortDirection === 'desc') {
+			sortDirection = 1
+		} else {
+			sortDirection = -1
+		}
 		let posts: postType[] | null = await client
 			.db('hm03')
 			.collection<postType>('posts')
 			.find({ blogId: params.id }, { projection: { _id: 0 } })
+			.skip((page - 1) * pageSize)
+			.sort({ [sortBy]: sortDirection })
+			.limit(pageSize)
 			.toArray()
+		const totalCount = posts.length
+		const pageCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
 			pageCount: pageCount,
 			page: page,

@@ -55,8 +55,14 @@ blogsRouter.get(
 
 blogsRouter.get(
 	'/:id/posts',
-	async (req: RequestWithParams<{ id: string }>, res: Response) => {
-		const foundPosts = await blogsService.findPostsByBlogId(req.params)
+	async (
+		req: RequestParamsQuery<{ id: string }, { query: any }>,
+		res: Response
+	) => {
+		const foundPosts = await blogsService.findPostsByBlogId(
+			req.params,
+			req.query
+		)
 		if (!foundPosts?.items) {
 			res.sendStatus(404)
 			return

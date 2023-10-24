@@ -5,8 +5,8 @@ import {
 } from '../repositories/PostsRepository'
 
 export const postsService = {
-	async returnAllPosts(): Promise<postsByBlogIdPaginationType> {
-		return postsRepository.returnAllPosts()
+	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
+		return postsRepository.returnAllPosts(query)
 	},
 
 	async findPost(params: { id: string }): Promise<postType | undefined> {

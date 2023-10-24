@@ -13,10 +13,13 @@ export const blogsService = {
 	async findBlog(params: { id: string }): Promise<blogType | undefined> {
 		return blogsRepository.findBlog(params)
 	},
-	async findPostsByBlogId(params: {
-		id: string
-	}): Promise<postsByBlogIdPaginationType | undefined> {
-		return blogsRepository.findPostsByBlogId(params)
+	async findPostsByBlogId(
+		params: {
+			id: string
+		},
+		query: any
+	): Promise<postsByBlogIdPaginationType | undefined> {
+		return blogsRepository.findPostsByBlogId(params, query)
 	},
 	async createBlog(body: {
 		name: string
