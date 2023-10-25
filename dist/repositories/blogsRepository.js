@@ -50,7 +50,7 @@ exports.blogsRepository = {
                 .countDocuments();
             const pageCount = Math.ceil(totalCount / pageSize);
             const blogsPagination = {
-                pageCount: pageCount,
+                pagesCount: pageCount,
                 page: page,
                 pageSize: pageSize,
                 totalCount: totalCount,
@@ -99,7 +99,7 @@ exports.blogsRepository = {
                 .countDocuments();
             const pageCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
-                pageCount: pageCount,
+                pagesCount: pageCount,
                 page: page,
                 pageSize: pageSize,
                 totalCount: totalCount,

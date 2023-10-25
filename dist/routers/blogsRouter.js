@@ -49,7 +49,7 @@ exports.blogsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, 
 }));
 exports.blogsRouter.get('/:id/posts', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const foundPosts = yield blogsService_1.blogsService.findPostsByBlogId(req.params, req.query);
-    if (!(foundPosts === null || foundPosts === void 0 ? void 0 : foundPosts.items)) {
+    if (!(foundPosts === null || foundPosts === void 0 ? void 0 : foundPosts.items[0])) {
         res.sendStatus(404);
         return;
     }

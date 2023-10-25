@@ -11,7 +11,7 @@ export type postType = {
 }
 
 export type postsByBlogIdPaginationType = {
-	pageCount: number
+	pagesCount: number
 	page: number
 	pageSize: number
 	totalCount: number
@@ -44,7 +44,7 @@ export const postsRepository = {
 			.countDocuments()
 		const pageCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
-			pageCount: pageCount,
+			pagesCount: pageCount,
 			page: page,
 			pageSize: pageSize,
 			totalCount: totalCount,
