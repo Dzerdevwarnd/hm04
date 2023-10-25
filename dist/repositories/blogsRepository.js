@@ -75,10 +75,12 @@ exports.blogsRepository = {
     },
     findPostsByBlogId(params, query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const totalCount = yield db_1.client
+            const allPosts = yield db_1.client
                 .db('hm03')
                 .collection('posts')
-                .countDocuments();
+                .find()
+                .toArray();
+            const totalCount = allPosts.length;
             const pageSize = query.pageSize || 10;
             const page = query.page || 1;
             const sortBy = query.sortBy || 'createdAt';

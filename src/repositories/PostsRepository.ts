@@ -20,7 +20,7 @@ export type postsByBlogIdPaginationType = {
 
 export const postsRepository = {
 	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
-		const pageSize = query.pageSize || 10
+		const pageSize = Number(query.pageSize) || 10
 		const page = query.page || 1
 		const sortBy = query.sortBy || 'createdAt'
 		let sortDirection = query.sortDirection || 'desc'
