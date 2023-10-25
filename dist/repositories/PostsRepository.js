@@ -28,7 +28,6 @@ exports.postsRepository = {
             const pageSize = query.pageSize || 10;
             const page = query.page || 1;
             const sortBy = query.sortBy || 'createdAt';
-            const searchNameTerm = query.searchNameTerm || '';
             let sortDirection = query.sortDirection || 'desc';
             if (sortDirection === 'desc') {
                 sortDirection = -1;

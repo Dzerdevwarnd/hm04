@@ -69,6 +69,10 @@ export const blogsRepository = {
 		},
 		query: any
 	): Promise<postsByBlogIdPaginationType | undefined> {
+		const totalCount = await client
+			.db('hm03')
+			.collection<postType>('posts')
+			.countDocuments()
 		const pageSize = query.pageSize || 10
 		const page = query.page || 1
 		const sortBy = query.sortBy || 'createdAt'
@@ -86,10 +90,6 @@ export const blogsRepository = {
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
 			.toArray()
-		const totalCount = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.countDocuments()
 		const pageCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
 			pagesCount: pageCount,
