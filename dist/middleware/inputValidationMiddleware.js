@@ -13,6 +13,7 @@ const inputValidationMiddleware = (req, res, next) => {
             errorResponse.field = errors[i].path;
             errorsMessages.push(errorResponse);
             if (errorResponse.message === 'Blog URL id does not exist') {
+                //Исключение на случай не находа id блога для создания  поста
                 res.sendStatus(404);
             }
         }
