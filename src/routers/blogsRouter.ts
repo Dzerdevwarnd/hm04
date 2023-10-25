@@ -63,7 +63,7 @@ blogsRouter.get(
 			req.params,
 			req.query
 		)
-		if (!foundPosts?.items[0]) {
+		if (foundPosts?.items.length === 0) {
 			res.sendStatus(404)
 			return
 		} else {
