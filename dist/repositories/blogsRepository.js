@@ -39,7 +39,7 @@ exports.blogsRepository = {
             const blogs = yield db_1.client
                 .db('hm03')
                 .collection('blogs')
-                .find({ name: { $regex: searchNameTerm } }, { projection: { _id: 0 } })
+                .find({ name: { $regex: searchNameTerm, $options: 'i' } }, { projection: { _id: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)

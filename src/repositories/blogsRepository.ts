@@ -33,7 +33,10 @@ export const blogsRepository = {
 		const blogs = await client
 			.db('hm03')
 			.collection<blogType>('blogs')
-			.find({ name: { $regex: searchNameTerm } }, { projection: { _id: 0 } })
+			.find(
+				{ name: { $regex: searchNameTerm, $options: 'i' } },
+				{ projection: { _id: 0 } }
+			)
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
