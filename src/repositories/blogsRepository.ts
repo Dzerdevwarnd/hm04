@@ -20,9 +20,9 @@ export type blogsPaginationType = {
 
 export const blogsRepository = {
 	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
-		const pageSize = query.pageSize || 10
-		const page = query.pageNumber || 1
-		const sortBy = query.sortBy || 'createdAt'
+		const pageSize = Number(query.pageSize) || 10
+		const page = Number(query.pageNumber) || 1
+		const sortBy: string = query.sortBy || 'createdAt'
 		const searchNameTerm: string = query.searchNameTerm || ''
 		let sortDirection = query.sortDirection || 'desc'
 		if (sortDirection === 'desc') {
@@ -45,7 +45,7 @@ export const blogsRepository = {
 		const pagesCount = Math.ceil(totalCount / pageSize)
 		const blogsPagination = {
 			pagesCount: pagesCount,
-			page: page,
+			page: Number(page),
 			pageSize: pageSize,
 			totalCount: totalCount,
 			items: blogs,

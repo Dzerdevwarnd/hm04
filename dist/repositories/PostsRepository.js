@@ -47,9 +47,9 @@ exports.postsRepository = {
                 .db('hm03')
                 .collection('posts')
                 .countDocuments();
-            const pageCount = Math.ceil(totalCount / pageSize);
+            const pagesCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
-                pagesCount: pageCount,
+                pagesCount: pagesCount,
                 page: Number(page),
                 pageSize: pageSize,
                 totalCount: totalCount,
