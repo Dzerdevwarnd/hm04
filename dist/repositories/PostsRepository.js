@@ -50,7 +50,7 @@ exports.postsRepository = {
             const pageCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
                 pagesCount: pageCount,
-                page: page,
+                page: Number(page),
                 pageSize: pageSize,
                 totalCount: totalCount,
                 items: posts,
