@@ -26,7 +26,7 @@ exports.blogsRepository = {
     returnAllBlogs(query) {
         return __awaiter(this, void 0, void 0, function* () {
             const pageSize = query.pageSize || 10;
-            const page = query.page || 1;
+            const page = query.pageNumber || 1;
             const sortBy = query.sortBy || 'createdAt';
             const searchNameTerm = query.searchNameTerm || '';
             let sortDirection = query.sortDirection || 'desc';
@@ -82,7 +82,7 @@ exports.blogsRepository = {
                 .toArray();
             const totalCount = allPosts.length;
             const pageSize = query.pageSize || 10;
-            const page = query.page || 1;
+            const page = query.pageNumber || 1;
             const sortBy = query.sortBy || 'createdAt';
             let sortDirection = query.sortDirection || 'desc';
             if (sortDirection === 'desc') {
