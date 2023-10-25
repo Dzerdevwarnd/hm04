@@ -44,7 +44,10 @@ exports.blogsRepository = {
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
                 .toArray();
-            const totalCount = blogs.length;
+            const totalCount = yield db_1.client
+                .db('hm03')
+                .collection('blogs')
+                .countDocuments();
             const pageCount = Math.ceil(totalCount / pageSize);
             const blogsPagination = {
                 pageCount: pageCount,
@@ -75,7 +78,6 @@ exports.blogsRepository = {
             const pageSize = query.pageSize || 10;
             const page = query.page || 1;
             const sortBy = query.sortBy || 'createdAt';
-            const searchNameTerm = query.searchNameTerm || '';
             let sortDirection = query.sortDirection || 'desc';
             if (sortDirection === 'desc') {
                 sortDirection = -1;
@@ -91,7 +93,10 @@ exports.blogsRepository = {
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
                 .toArray();
-            const totalCount = posts.length;
+            const totalCount = yield db_1.client
+                .db('hm03')
+                .collection('posts')
+                .countDocuments();
             const pageCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
                 pageCount: pageCount,

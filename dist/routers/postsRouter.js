@@ -48,8 +48,7 @@ exports.postsValidation = {
         const params = { id };
         const blog = yield blogsService_1.blogsService.findBlog(params);
         if (!blog) {
-            Response.sendStatus(404);
-            const error = new Error('Blog id does not exist');
+            const error = new Error('Blog URL id does not exist');
             throw error;
         }
     })),

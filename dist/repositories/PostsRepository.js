@@ -44,7 +44,10 @@ exports.postsRepository = {
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
                 .toArray();
-            const totalCount = posts.length;
+            const totalCount = yield db_1.client
+                .db('hm03')
+                .collection('posts')
+                .countDocuments();
             const pageCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
                 pageCount: pageCount,

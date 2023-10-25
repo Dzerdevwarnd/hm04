@@ -38,7 +38,10 @@ export const postsRepository = {
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
 			.toArray()
-		const totalCount = posts.length
+		const totalCount = await client
+			.db('hm03')
+			.collection<postType>('posts')
+			.countDocuments()
 		const pageCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
 			pageCount: pageCount,

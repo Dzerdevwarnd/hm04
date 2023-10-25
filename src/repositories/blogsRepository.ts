@@ -38,7 +38,10 @@ export const blogsRepository = {
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
 			.toArray()
-		const totalCount = blogs.length
+		const totalCount = await client
+			.db('hm03')
+			.collection<blogType>('blogs')
+			.countDocuments()
 		const pageCount = Math.ceil(totalCount / pageSize)
 		const blogsPagination = {
 			pageCount: pageCount,
@@ -69,7 +72,6 @@ export const blogsRepository = {
 		const pageSize = query.pageSize || 10
 		const page = query.page || 1
 		const sortBy = query.sortBy || 'createdAt'
-		const searchNameTerm: string = query.searchNameTerm || ''
 		let sortDirection = query.sortDirection || 'desc'
 		if (sortDirection === 'desc') {
 			sortDirection = -1
@@ -84,7 +86,10 @@ export const blogsRepository = {
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
 			.toArray()
-		const totalCount = posts.length
+		const totalCount = await client
+			.db('hm03')
+			.collection<postType>('posts')
+			.countDocuments()
 		const pageCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
 			pageCount: pageCount,
