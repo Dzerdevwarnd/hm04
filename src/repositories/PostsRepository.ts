@@ -25,9 +25,9 @@ export const postsRepository = {
 		const sortBy = query.sortBy || 'createdAt'
 		let sortDirection = query.sortDirection || 'desc'
 		if (sortDirection === 'desc') {
-			sortDirection = -1
-		} else {
 			sortDirection = 1
+		} else {
+			sortDirection = -1
 		}
 		const posts = await client
 			.db('hm03')
