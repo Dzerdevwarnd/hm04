@@ -41,7 +41,7 @@ export const blogsRepository = {
 		const totalCount = await client
 			.db('hm03')
 			.collection<blogType>('blogs')
-			.countDocuments()
+			.countDocuments({})
 		const pagesCount = Math.ceil(totalCount / pageSize)
 		const blogsPagination = {
 			pagesCount: pagesCount,

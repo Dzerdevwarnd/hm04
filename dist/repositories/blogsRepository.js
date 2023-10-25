@@ -47,7 +47,7 @@ exports.blogsRepository = {
             const totalCount = yield db_1.client
                 .db('hm03')
                 .collection('blogs')
-                .countDocuments();
+                .countDocuments({});
             const pagesCount = Math.ceil(totalCount / pageSize);
             const blogsPagination = {
                 pagesCount: pagesCount,
