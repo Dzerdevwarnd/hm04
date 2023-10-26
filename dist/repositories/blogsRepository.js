@@ -47,7 +47,7 @@ exports.blogsRepository = {
             const totalCount = yield db_1.client
                 .db('hm03')
                 .collection('blogs')
-                .countDocuments({});
+                .countDocuments({ name: { $regex: searchNameTerm, $options: 'i' } });
             const pagesCount = Math.ceil(totalCount / pageSize);
             const blogsPagination = {
                 pagesCount: pagesCount,
@@ -75,12 +75,10 @@ exports.blogsRepository = {
     },
     findPostsByBlogId(params, query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const allPosts = yield db_1.client
+            const totalCount = yield db_1.client
                 .db('hm03')
                 .collection('posts')
-                .find()
-                .toArray();
-            const totalCount = allPosts.length;
+                .countDocuments({ blogId: params.id });
             const pageSize = query.pageSize || 10;
             const page = query.pageNumber || 1;
             const sortBy = query.sortBy || 'createdAt';
