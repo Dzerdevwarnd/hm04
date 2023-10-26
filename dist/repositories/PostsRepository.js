@@ -40,7 +40,7 @@ exports.postsRepository = {
                 .collection('posts')
                 .find({}, { projection: { _id: 0 } })
                 .skip((page - 1) * pageSize)
-                .sort({ [sortBy]: sortDirection })
+                .sort({ [sortBy]: sortDirection, createdAt: 1 })
                 .limit(pageSize)
                 .toArray();
             const totalCount = yield db_1.client
