@@ -43,15 +43,17 @@ exports.postsValidation = {
             throw new Error('Blog id does not exist');
         }
     })),
-    blogIdExistValidationFromUrl: (0, express_validator_1.param)('id').custom((value, { req }) => __awaiter(void 0, void 0, void 0, function* () {
-        const id = value;
-        const params = { id };
-        const blog = yield blogsService_1.blogsService.findBlog(params);
-        if (!blog) {
-            const error = new Error('Blog URL id does not exist');
-            throw error;
+    /*blogIdExistValidationFromUrl: param('id').custom(
+        async (value: string, { req }) => {
+            const id = value
+            const params = { id }
+            const blog: blogType | undefined = await blogsService.findBlog(params)
+            if (!blog) {
+                const error = new Error('Blog URL id does not exist')
+                throw error
+            }
         }
-    })),
+    ),*/
 };
 exports.postsRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const allPosts = yield postsService_1.postsService.returnAllPosts(req.query);

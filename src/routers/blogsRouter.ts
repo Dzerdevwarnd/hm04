@@ -96,7 +96,7 @@ blogsRouter.post(
 blogsRouter.post(
 	'/:id/posts',
 	basicAuthMiddleware,
-	postsValidation.blogIdExistValidationFromUrl,
+	//postsValidation.blogIdExistValidationFromUrl,
 	postsValidation.titleValidation,
 	postsValidation.shortDescriptionValidation,
 	postsValidation.contentValidation,
@@ -112,6 +112,10 @@ blogsRouter.post(
 		>,
 		res: Response
 	) => {
+		if ((await blogsService.findBlog(req.params)) === undefined) {
+			res.sendStatus(404)
+			return
+		}
 		const newPost = await postsService.createPostByBlogId(
 			req.body,
 			req.params.id

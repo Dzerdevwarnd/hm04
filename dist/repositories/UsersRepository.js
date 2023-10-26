@@ -20,91 +20,68 @@ var __rest = (this && this.__rest) || function (s, e) {
     return t;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.postsRepository = void 0;
+exports.usersRepository = void 0;
 const db_1 = require("../db");
-exports.postsRepository = {
-    returnAllPosts(query) {
-        var _a, _b;
+exports.usersRepository = {
+    returnAllUsers(query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const pageSize = Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10;
-            const page = Number(query === null || query === void 0 ? void 0 : query.pageNumber) || 1;
-            const sortBy = (_a = query === null || query === void 0 ? void 0 : query.sortBy) !== null && _a !== void 0 ? _a : 'createdAt';
-            let sortDirection = (_b = query === null || query === void 0 ? void 0 : query.sortDirection) !== null && _b !== void 0 ? _b : 'desc';
+            const pageSize = Number(query.pageSize) || 10;
+            const page = Number(query.pageNumber) || 1;
+            const sortBy = query.sortBy || 'createdAt';
+            const searchLoginTerm = query.searchLoginTerm || '';
+            const searchEmailTerm = query.searchEmailTerm || '';
+            let sortDirection = query.sortDirection || 'desc';
             if (sortDirection === 'desc') {
                 sortDirection = -1;
             }
             else {
                 sortDirection = 1;
             }
-            const posts = yield db_1.client
+            const users = yield db_1.client
                 .db('hm03')
-                .collection('posts')
-                .find({}, { projection: { _id: 0 } })
+                .collection('users')
+                .find({
+                login: { $regex: searchLoginTerm, $options: 'i' },
+                email: { $regex: searchEmailTerm, $options: 'i' },
+            }, { projection: { _id: 0 } })
                 .skip((page - 1) * pageSize)
-                .sort({ [sortBy]: sortDirection, createdAt: sortDirection })
+                .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
                 .toArray();
             const totalCount = yield db_1.client
                 .db('hm03')
-                .collection('posts')
-                .countDocuments();
+                .collection('users')
+                .countDocuments({
+                login: { $regex: searchLoginTerm, $options: 'i' },
+                email: { $regex: searchEmailTerm, $options: 'i' },
+            });
             const pagesCount = Math.ceil(totalCount / pageSize);
-            const postsPagination = {
+            const usersPagination = {
                 pagesCount: pagesCount,
                 page: Number(page),
                 pageSize: pageSize,
                 totalCount: totalCount,
-                items: posts,
+                items: users,
             };
-            return postsPagination;
+            return usersPagination;
         });
     },
-    findPost(params) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let post = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .findOne({ id: params.id }, { projection: { _id: 0 } });
-            if (post) {
-                return post;
-            }
-            else {
-                return;
-            }
-        });
-    },
-    createPost(newPost) {
+    createUser(newUser) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield db_1.client
                 .db('hm03')
-                .collection('posts')
-                .insertOne(newPost);
+                .collection('users')
+                .insertOne(newUser);
             //@ts-ignore
-            const { _id } = newPost, postWithout_Id = __rest(newPost, ["_id"]);
-            return postWithout_Id;
+            const { _id } = newUser, blogWithout_Id = __rest(newUser, ["_id"]);
+            return newUser;
         });
     },
-    updatePost(id, body) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .updateOne({ id: id }, {
-                $set: {
-                    title: body.title,
-                    shortDescription: body.shortDescription,
-                    content: body.content,
-                    blogId: body.blogId,
-                },
-            });
-            return result.matchedCount === 1;
-        });
-    },
-    deletePost(params) {
+    deleteUser(params) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = yield db_1.client
                 .db('hm03')
-                .collection('posts')
+                .collection('users')
                 .deleteOne({ id: params.id });
             return result.deletedCount === 1;
         });

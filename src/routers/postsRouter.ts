@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express'
-import { body, param } from 'express-validator'
+import { body } from 'express-validator'
 import { basicAuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { postsByBlogIdPaginationType } from '../repositories/PostsRepository'
@@ -48,17 +48,17 @@ export const postsValidation = {
 			}
 		}
 	),
-	blogIdExistValidationFromUrl: param('id').custom(
+	/*blogIdExistValidationFromUrl: param('id').custom(
 		async (value: string, { req }) => {
 			const id = value
 			const params = { id }
 			const blog: blogType | undefined = await blogsService.findBlog(params)
 			if (!blog) {
 				const error = new Error('Blog URL id does not exist')
-				throw error
+				throw error 
 			}
 		}
-	),
+	),*/
 }
 postsRouter.get(
 	'/',
