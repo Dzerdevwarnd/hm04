@@ -24,12 +24,12 @@ exports.postsRepository = void 0;
 const db_1 = require("../db");
 exports.postsRepository = {
     returnAllPosts(query) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c;
         return __awaiter(this, void 0, void 0, function* () {
-            const pageSize = (_a = Number(query === null || query === void 0 ? void 0 : query.pageSize)) !== null && _a !== void 0 ? _a : 10;
-            const page = (_b = query === null || query === void 0 ? void 0 : query.pageNumber) !== null && _b !== void 0 ? _b : 1;
-            const sortBy = (_c = query === null || query === void 0 ? void 0 : query.sortBy) !== null && _c !== void 0 ? _c : 'createdAt';
-            let sortDirection = (_d = query === null || query === void 0 ? void 0 : query.sortDirection) !== null && _d !== void 0 ? _d : 'desc';
+            const pageSize = Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10;
+            const page = (_a = query === null || query === void 0 ? void 0 : query.pageNumber) !== null && _a !== void 0 ? _a : 1;
+            const sortBy = (_b = query === null || query === void 0 ? void 0 : query.sortBy) !== null && _b !== void 0 ? _b : 'createdAt';
+            let sortDirection = (_c = query === null || query === void 0 ? void 0 : query.sortDirection) !== null && _c !== void 0 ? _c : 'desc';
             if (sortDirection === 'desc') {
                 sortDirection = -1;
             }
