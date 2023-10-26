@@ -79,8 +79,8 @@ exports.blogsRepository = {
                 .db('hm03')
                 .collection('posts')
                 .countDocuments({ blogId: params.id });
-            const pageSize = query.pageSize || 10;
-            const page = query.pageNumber || 1;
+            const pageSize = Number(query.pageSize) || 10;
+            const page = Number(query.pageNumber) || 1;
             const sortBy = query.sortBy || 'createdAt';
             let sortDirection = query.sortDirection || 'desc';
             if (sortDirection === 'desc') {
