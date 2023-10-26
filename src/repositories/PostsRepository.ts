@@ -20,10 +20,10 @@ export type postsByBlogIdPaginationType = {
 
 export const postsRepository = {
 	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
-		const pageSize = Number(query.pageSize) || 10
-		const page = query.pageNumber || 1
-		const sortBy = query.sortBy || 'createdAt'
-		let sortDirection = query.sortDirection || 'desc'
+		const pageSize = Number(query?.pageSize) ?? 10
+		const page = query?.pageNumber ?? 1
+		const sortBy = query?.sortBy ?? 'createdAt'
+		let sortDirection = query?.sortDirection ?? 'desc'
 		if (sortDirection === 'desc') {
 			sortDirection = -1
 		} else {
@@ -34,7 +34,7 @@ export const postsRepository = {
 			.collection<postType>('posts')
 			.find({}, { projection: { _id: 0 } })
 			.skip((page - 1) * pageSize)
-			.sort({ [sortBy]: sortDirection })
+			.sort({ [sortBy]: sortDirection, createdAt: sortDirection })
 			.limit(pageSize)
 			.toArray()
 		const totalCount = await client

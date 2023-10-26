@@ -24,11 +24,12 @@ exports.postsRepository = void 0;
 const db_1 = require("../db");
 exports.postsRepository = {
     returnAllPosts(query) {
+        var _a, _b, _c, _d;
         return __awaiter(this, void 0, void 0, function* () {
-            const pageSize = Number(query.pageSize) || 10;
-            const page = query.pageNumber || 1;
-            const sortBy = query.sortBy || 'createdAt';
-            let sortDirection = query.sortDirection || 'desc';
+            const pageSize = (_a = Number(query === null || query === void 0 ? void 0 : query.pageSize)) !== null && _a !== void 0 ? _a : 10;
+            const page = (_b = query === null || query === void 0 ? void 0 : query.pageNumber) !== null && _b !== void 0 ? _b : 1;
+            const sortBy = (_c = query === null || query === void 0 ? void 0 : query.sortBy) !== null && _c !== void 0 ? _c : 'createdAt';
+            let sortDirection = (_d = query === null || query === void 0 ? void 0 : query.sortDirection) !== null && _d !== void 0 ? _d : 'desc';
             if (sortDirection === 'desc') {
                 sortDirection = -1;
             }
@@ -40,7 +41,7 @@ exports.postsRepository = {
                 .collection('posts')
                 .find({}, { projection: { _id: 0 } })
                 .skip((page - 1) * pageSize)
-                .sort({ [sortBy]: sortDirection })
+                .sort({ [sortBy]: sortDirection, createdAt: sortDirection })
                 .limit(pageSize)
                 .toArray();
             const totalCount = yield db_1.client
