@@ -1,10 +1,19 @@
 import { client } from '../db'
 
-export type userType = {
+export type userViewType = {
 	id: string
 	login: string
 	email: string
 	createdAt: Date
+}
+
+export type UserDbType = {
+	id: string
+	login: string
+	email: string
+	createdAt: Date
+	passwordSalt: string
+	passwordHash: string
 }
 
 export type usersPaginationType = {
@@ -12,7 +21,7 @@ export type usersPaginationType = {
 	page: number
 	pageSize: number
 	totalCount: number
-	items: userType[]
+	items: userViewType[]
 }
 
 export const usersRepository = {
@@ -30,7 +39,7 @@ export const usersRepository = {
 		}
 		const users = await client
 			.db('hm03')
-			.collection<userType>('users')
+			.collection<UserDbType>('users')
 			.find(
 				{
 					login: { $regex: searchLoginTerm, $options: 'i' },
@@ -44,7 +53,7 @@ export const usersRepository = {
 			.toArray()
 		const totalCount = await client
 			.db('hm03')
-			.collection<userType>('users')
+			.collection<UserDbType>('users')
 			.countDocuments({
 				login: { $regex: searchLoginTerm, $options: 'i' },
 				email: { $regex: searchEmailTerm, $options: 'i' },
@@ -60,20 +69,29 @@ export const usersRepository = {
 		return usersPagination
 	},
 
-	async createUser(newUser: userType): Promise<userType> {
+	async findDBUser(loginOrEmail: string): Promise<UserDbType | undefined> {
+		let user = await client
+			.db('hm03')
+			.collection<UserDbType>('users')
+			.findOne({ $or: [{ email: loginOrEmail }, { login: loginOrEmail }] })
+		//@ts-ignore
+		return user
+	},
+
+	async createUser(newUser: UserDbType): Promise<userViewType> {
 		const result = await client
 			.db('hm03')
-			.collection<userType>('users')
+			.collection<UserDbType>('users')
 			.insertOne(newUser)
 		//@ts-ignore
-		const { _id, ...blogWithout_Id } = newUser
-		return newUser
+		const { _id, passwordHash, passwordSalt, ...userView } = newUser
+		return userView
 	},
 
 	async deleteUser(params: { id: string }): Promise<boolean> {
 		let result = await client
 			.db('hm03')
-			.collection<userType>('users')
+			.collection<UserDbType>('users')
 			.deleteOne({ id: params.id })
 		return result.deletedCount === 1
 	},

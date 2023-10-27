@@ -31,15 +31,15 @@ const emailValidation = (0, express_validator_1.body)('email')
     .withMessage('Invalid email');
 exports.usersRouter = (0, express_1.Router)({});
 exports.usersRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const usersPagination = yield usersService_1.UserService.returnAllUsers(req.query);
+    const usersPagination = yield usersService_1.userService.returnAllUsers(req.query);
     res.status(200).send(usersPagination);
 }));
 exports.usersRouter.post('/', authMiddleware_1.basicAuthMiddleware, loginValidation, passwordValidation, emailValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const newUser = yield usersService_1.UserService.createUser(req.body);
+    const newUser = yield usersService_1.userService.createUser(req.body);
     res.status(201).send(newUser);
 }));
 exports.usersRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const ResultOfDeleteBlog = yield usersService_1.UserService.deleteUser(req.params);
+    const ResultOfDeleteBlog = yield usersService_1.userService.deleteUser(req.params);
     if (!ResultOfDeleteBlog) {
         res.sendStatus(404);
         return;

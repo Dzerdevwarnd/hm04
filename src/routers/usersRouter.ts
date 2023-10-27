@@ -3,7 +3,7 @@ import { body } from 'express-validator'
 import { basicAuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { usersPaginationType } from '../repositories/UsersRepository'
-import { UserService } from '../services/usersService'
+import { userService } from '../services/usersService'
 
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
@@ -32,7 +32,7 @@ usersRouter.get(
 	'/',
 	async (req: RequestWithQuery<{ query: any }>, res: Response) => {
 		const usersPagination: usersPaginationType =
-			await UserService.returnAllUsers(req.query)
+			await userService.returnAllUsers(req.query)
 		res.status(200).send(usersPagination)
 	}
 )
@@ -52,7 +52,7 @@ usersRouter.post(
 		}>,
 		res: Response
 	) => {
-		const newUser = await UserService.createUser(req.body)
+		const newUser = await userService.createUser(req.body)
 		res.status(201).send(newUser)
 	}
 )
@@ -61,7 +61,7 @@ usersRouter.delete(
 	'/:id',
 	basicAuthMiddleware,
 	async (req: RequestWithParams<{ id: string }>, res: Response) => {
-		const ResultOfDeleteBlog = await UserService.deleteUser(req.params)
+		const ResultOfDeleteBlog = await userService.deleteUser(req.params)
 		if (!ResultOfDeleteBlog) {
 			res.sendStatus(404)
 			return

@@ -66,6 +66,16 @@ exports.usersRepository = {
             return usersPagination;
         });
     },
+    findDBUser(loginOrEmail) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield db_1.client
+                .db('hm03')
+                .collection('users')
+                .findOne({ $or: [{ email: loginOrEmail }, { login: loginOrEmail }] });
+            //@ts-ignore
+            return user;
+        });
+    },
     createUser(newUser) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield db_1.client
@@ -73,8 +83,8 @@ exports.usersRepository = {
                 .collection('users')
                 .insertOne(newUser);
             //@ts-ignore
-            const { _id } = newUser, blogWithout_Id = __rest(newUser, ["_id"]);
-            return newUser;
+            const { _id, passwordHash, passwordSalt } = newUser, userView = __rest(newUser, ["_id", "passwordHash", "passwordSalt"]);
+            return userView;
         });
     },
     deleteUser(params) {
