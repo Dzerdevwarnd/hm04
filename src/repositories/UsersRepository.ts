@@ -57,8 +57,10 @@ export const usersRepository = {
 			.db('hm03')
 			.collection<UserDbType>('users')
 			.countDocuments({
-				login: { $regex: searchLoginTerm, $options: 'i' },
-				email: { $regex: searchEmailTerm, $options: 'i' },
+				$or: [
+					{ login: { $regex: searchLoginTerm, $options: 'i' } },
+					{ email: { $regex: searchEmailTerm, $options: 'i' } },
+				],
 			})
 		const pagesCount = Math.ceil(totalCount / pageSize)
 		const usersPagination = {
