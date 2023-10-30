@@ -18,13 +18,17 @@ exports.authRouter = (0, express_1.Router)({});
 const loginOrEmailValidation = (0, express_validator_1.body)('loginOrEmail')
     .trim()
     .isLength({ min: 1, max: 100 })
-    .withMessage('loginOrEmail length should be from 1 to 100');
-exports.authRouter.post('/login', loginOrEmailValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    .withMessage('login or Email length should be from 1 to 100');
+const passwordValidation = (0, express_validator_1.body)('password')
+    .trim()
+    .isLength({ min: 1, max: 20 })
+    .withMessage('Password or Email length should be from 1 to 20');
+exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const checkResult = yield usersService_1.userService.checkCreditionals(req.body.loginOrEmail, req.body.password);
     if (checkResult === false) {
-        res.sendStatus(400);
+        res.sendStatus(401);
     }
     else {
-        res.sendStatus(200);
+        res.sendStatus(204);
     }
 }));

@@ -30,7 +30,7 @@ export const userService = {
 		return userView
 	},
 	async deleteUser(params: { id: string }): Promise<boolean> {
-		let resultBoolean = await userService.deleteUser(params)
+		let resultBoolean = await usersRepository.deleteUser(params)
 		return resultBoolean
 	},
 	async generateHash(password: string, passwordSalt: string) {

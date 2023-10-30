@@ -43,7 +43,7 @@ exports.usersRepository = {
                 .find({
                 login: { $regex: searchLoginTerm, $options: 'i' },
                 email: { $regex: searchEmailTerm, $options: 'i' },
-            }, { projection: { _id: 0 } })
+            }, { projection: { _id: 0, passwordSalt: 0, passxwordHash: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)

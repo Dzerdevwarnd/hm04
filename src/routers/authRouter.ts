@@ -8,11 +8,17 @@ export const authRouter = Router({})
 const loginOrEmailValidation = body('loginOrEmail')
 	.trim()
 	.isLength({ min: 1, max: 100 })
-	.withMessage('loginOrEmail length should be from 1 to 100')
+	.withMessage('login or Email length should be from 1 to 100')
+
+const passwordValidation = body('password')
+	.trim()
+	.isLength({ min: 1, max: 20 })
+	.withMessage('Password or Email length should be from 1 to 20')
 
 authRouter.post(
 	'/login',
 	loginOrEmailValidation,
+	passwordValidation,
 	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
 		const checkResult = await userService.checkCreditionals(
@@ -20,9 +26,9 @@ authRouter.post(
 			req.body.password
 		)
 		if (checkResult === false) {
-			res.sendStatus(400)
+			res.sendStatus(401)
 		} else {
-			res.sendStatus(200)
+			res.sendStatus(204)
 		}
 	}
 )

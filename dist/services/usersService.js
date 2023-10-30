@@ -40,7 +40,7 @@ exports.userService = {
     },
     deleteUser(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let resultBoolean = yield exports.userService.deleteUser(params);
+            let resultBoolean = yield UsersRepository_1.usersRepository.deleteUser(params);
             return resultBoolean;
         });
     },
