@@ -6,14 +6,19 @@ import { blogType } from '../repositories/blogsRepository'
 export const testingRouter = Router({})
 
 testingRouter.delete('/all-data', async (req: Request, res: Response) => {
-	let resultBlogs = await client
+	let resultOfDeleteBlogs = await client
 		.db('hm03')
 		.collection<blogType>('blogs')
 		.deleteMany({})
 
-	let resultPosts = await client
+	let resultOfDeletePosts = await client
 		.db('hm03')
 		.collection<postType>('posts')
+		.deleteMany({})
+
+	let resultOfDeleteUsers = await client
+		.db('hm03')
+		.collection<postType>('users')
 		.deleteMany({})
 
 	res.sendStatus(204)

@@ -14,13 +14,17 @@ const express_1 = require("express");
 const db_1 = require("../db");
 exports.testingRouter = (0, express_1.Router)({});
 exports.testingRouter.delete('/all-data', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let resultBlogs = yield db_1.client
+    let resultOfDeleteBlogs = yield db_1.client
         .db('hm03')
         .collection('blogs')
         .deleteMany({});
-    let resultPosts = yield db_1.client
+    let resultOfDeletePosts = yield db_1.client
         .db('hm03')
         .collection('posts')
+        .deleteMany({});
+    let resultOfDeleteUsers = yield db_1.client
+        .db('hm03')
+        .collection('users')
         .deleteMany({});
     res.sendStatus(204);
     return;
