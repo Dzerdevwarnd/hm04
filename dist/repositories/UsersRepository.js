@@ -41,9 +41,11 @@ exports.usersRepository = {
                 .db('hm03')
                 .collection('users')
                 .find({
-                login: { $regex: searchLoginTerm, $options: 'i' },
-                email: { $regex: searchEmailTerm, $options: 'i' },
-            }, { projection: { _id: 0, passwordSalt: 0, passxwordHash: 0 } })
+                $or: [
+                    { login: { $regex: searchLoginTerm, $options: 'i' } },
+                    { email: { $regex: searchEmailTerm, $options: 'i' } },
+                ],
+            }, { projection: { _id: 0, passwordSalt: 0, passwordHash: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)

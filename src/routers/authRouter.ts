@@ -21,7 +21,7 @@ authRouter.post(
 	passwordValidation,
 	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
-		const checkResult = await userService.checkCreditionals(
+		const checkResult = await userService.checkCredentionals(
 			req.body.loginOrEmail,
 			req.body.password
 		)

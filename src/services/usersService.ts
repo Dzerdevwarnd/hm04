@@ -37,7 +37,7 @@ export const userService = {
 		const hash = await bcrypt.hash(password, passwordSalt)
 		return hash
 	},
-	async checkCreditionals(loginOrEmail: string, password: string) {
+	async checkCredentionals(loginOrEmail: string, password: string) {
 		const user = await usersRepository.findDBUser(loginOrEmail)
 		if (!user) {
 			return false

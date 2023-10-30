@@ -24,7 +24,7 @@ const passwordValidation = (0, express_validator_1.body)('password')
     .isLength({ min: 1, max: 20 })
     .withMessage('Password or Email length should be from 1 to 20');
 exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const checkResult = yield usersService_1.userService.checkCreditionals(req.body.loginOrEmail, req.body.password);
+    const checkResult = yield usersService_1.userService.checkCredentionals(req.body.loginOrEmail, req.body.password);
     if (checkResult === false) {
         res.sendStatus(401);
     }
