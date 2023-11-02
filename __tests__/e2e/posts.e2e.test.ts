@@ -1,23 +1,18 @@
 import request from 'supertest'
-import { app } from '../../src/setting'
+import { app, routersPaths } from '../../src/setting'
 
 describe('/posts', () => {
 	it('should return 200 and array', async () => {
-		await request(app)
-			.get('/posts')
-			.expect(200, [
-				{
-					id: 1,
-					title: 'test title',
-					shortDescription: 'test short description',
-					content: 'test content',
-					blogId: '1',
-					blogName: 'test blog name',
-				},
-			])
+		await request(app).get(routersPaths.posts).expect(200, {
+			pagesCount: 0,
+			page: 1,
+			pageSize: 10,
+			totalCount: 0,
+			items: [],
+		})
 	})
 	it('should return 404', async () => {
-		await request(app).get('/posts/2').expect(404)
+		await request(app).get(routersPaths.posts).expect(404)
 	})
 	it('should return 204', async () => {
 		await request(app)
@@ -26,7 +21,7 @@ describe('/posts', () => {
 				title: 'string',
 				shortDescription: 'string',
 				content: 'string',
-				blogName: 'string',
+				blogId: 'string',
 			})
 			.auth('admin', 'qwerty')
 			.expect(204)

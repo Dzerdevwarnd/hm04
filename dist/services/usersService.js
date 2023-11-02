@@ -50,18 +50,18 @@ exports.userService = {
             return hash;
         });
     },
-    checkCredentionals(loginOrEmail, password) {
+    checkCredentionalsAndReturnUser(loginOrEmail, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield UsersRepository_1.usersRepository.findDBUser(loginOrEmail);
             if (!user) {
-                return false;
+                return user;
             }
             if (user.passwordHash !==
                 (yield this.generateHash(password, user.passwordSalt))) {
-                return false;
+                return user;
             }
             else {
-                return true;
+                return user;
             }
         });
     },

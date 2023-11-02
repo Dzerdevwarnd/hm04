@@ -107,6 +107,7 @@ export const blogsRepository = {
 			return
 		}
 	},
+
 	async createBlog(newBlog: blogType): Promise<blogType> {
 		const result = await client
 			.db('hm03')

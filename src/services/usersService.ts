@@ -37,18 +37,21 @@ export const userService = {
 		const hash = await bcrypt.hash(password, passwordSalt)
 		return hash
 	},
-	async checkCredentionals(loginOrEmail: string, password: string) {
+	async checkCredentionalsAndReturnUser(
+		loginOrEmail: string,
+		password: string
+	): Promise<UserDbType | undefined> {
 		const user = await usersRepository.findDBUser(loginOrEmail)
 		if (!user) {
-			return false
+			return user
 		}
 		if (
 			user.passwordHash !==
 			(await this.generateHash(password, user.passwordSalt))
 		) {
-			return false
+			return user
 		} else {
-			return true
+			return user
 		}
 	},
 }

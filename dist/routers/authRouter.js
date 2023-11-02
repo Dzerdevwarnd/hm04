@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authRouter = void 0;
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
+const jwt_service_1 = require("../application/jwt-service");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const usersService_1 = require("../services/usersService");
 exports.authRouter = (0, express_1.Router)({});
@@ -24,11 +25,12 @@ const passwordValidation = (0, express_validator_1.body)('password')
     .isLength({ min: 1, max: 20 })
     .withMessage('Password or Email length should be from 1 to 20');
 exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const checkResult = yield usersService_1.userService.checkCredentionals(req.body.loginOrEmail, req.body.password);
-    if (checkResult === false) {
+    const user = yield usersService_1.userService.checkCredentionalsAndReturnUser(req.body.loginOrEmail, req.body.password);
+    if (user == undefined) {
         res.sendStatus(401);
     }
     else {
-        res.sendStatus(204);
+        const token = yield jwt_service_1.jwtService.createJWT(user);
+        res.status(201).send(token);
     }
 }));
