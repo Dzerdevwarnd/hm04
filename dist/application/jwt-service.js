@@ -14,7 +14,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.jwtService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const mongodb_1 = require("mongodb");
 const setting_1 = require("../setting");
 exports.jwtService = {
     createJWT(user) {
@@ -29,7 +28,7 @@ exports.jwtService = {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const result = jsonwebtoken_1.default.verify(token, setting_1.settings.JWT_SECRET);
-                return new mongodb_1.ObjectId(result.UserId);
+                return result.userId;
             }
             catch (error) {
                 return null;

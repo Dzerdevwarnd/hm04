@@ -16,6 +16,23 @@ const passwordValidation = body('password')
 	.isLength({ min: 1, max: 20 })
 	.withMessage('Password or Email length should be from 1 to 20')
 
+authRouter.get('/me', async (req: Request, res: Response) => {
+	const token = req.headers.authorization!.split(' ')[1]
+	const userId = await jwtService.getUserIdByToken(token)
+	if (!userId) {
+		res.sendStatus(401)
+		return
+	}
+	const user = await userService.findUser(userId)
+	const userInfo = {
+		id: userId,
+		login: user!.login,
+		email: user!.email,
+	}
+	console.log(userInfo)
+	res.status(200).send(userInfo)
+})
+
 authRouter.post(
 	'/login',
 	loginOrEmailValidation,
@@ -30,7 +47,9 @@ authRouter.post(
 			res.sendStatus(401)
 		} else {
 			const token = await jwtService.createJWT(user)
-			res.status(201).send(token)
+			const accessToken = { accessToken: token }
+			res.status(201).send(accessToken)
 		}
 	}
 )
+////

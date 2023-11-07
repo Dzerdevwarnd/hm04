@@ -23,6 +23,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.usersRepository = void 0;
 const db_1 = require("../db");
 exports.usersRepository = {
+    findUser(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield db_1.client
+                .db('hm03')
+                .collection('users')
+                .findOne({ id: id });
+            return user;
+        });
+    },
     returnAllUsers(query) {
         return __awaiter(this, void 0, void 0, function* () {
             const pageSize = Number(query.pageSize) || 10;

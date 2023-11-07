@@ -25,6 +25,14 @@ export type usersPaginationType = {
 }
 
 export const usersRepository = {
+	async findUser(id: string): Promise<UserDbType | null> {
+		const user = await client
+			.db('hm03')
+			.collection<UserDbType>('users')
+			.findOne({ id: id })
+		return user
+	},
+
 	async returnAllUsers(query: any): Promise<usersPaginationType> {
 		const pageSize = Number(query.pageSize) || 10
 		const page = Number(query.pageNumber) || 1

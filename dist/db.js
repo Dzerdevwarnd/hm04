@@ -35,8 +35,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.runDb = exports.postsCollection = exports.blogsCollection = exports.client = void 0;
 const dotenv = __importStar(require("dotenv"));
 const mongodb_1 = require("mongodb");
+const setting_1 = require("./setting");
 dotenv.config();
-const mongoUri = process.env.MONGO_URL;
+const mongoUri = setting_1.settings.MONGO_URL;
 console.log('url:', mongoUri);
 if (!mongoUri) {
     throw new Error("Url doesn't found");

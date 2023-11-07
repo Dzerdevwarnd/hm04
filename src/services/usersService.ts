@@ -7,6 +7,10 @@ import {
 } from '../repositories/UsersRepository'
 
 export const userService = {
+	async findUser(id: string): Promise<UserDbType | null> {
+		let user = await usersRepository.findUser(id)
+		return user
+	},
 	async returnAllUsers(query: any): Promise<usersPaginationType> {
 		return await usersRepository.returnAllUsers(query)
 	},

@@ -16,6 +16,12 @@ exports.userService = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const UsersRepository_1 = require("../repositories/UsersRepository");
 exports.userService = {
+    findUser(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let user = yield UsersRepository_1.usersRepository.findUser(id);
+            return user;
+        });
+    },
     returnAllUsers(query) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield UsersRepository_1.usersRepository.returnAllUsers(query);

@@ -24,6 +24,22 @@ const passwordValidation = (0, express_validator_1.body)('password')
     .trim()
     .isLength({ min: 1, max: 20 })
     .withMessage('Password or Email length should be from 1 to 20');
+exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const token = req.headers.authorization.split(' ')[1];
+    const userId = yield jwt_service_1.jwtService.getUserIdByToken(token);
+    if (!userId) {
+        res.sendStatus(401);
+        return;
+    }
+    const user = yield usersService_1.userService.findUser(userId);
+    const userInfo = {
+        id: userId,
+        login: user.login,
+        email: user.email,
+    };
+    console.log(userInfo);
+    res.status(200).send(userInfo);
+}));
 exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield usersService_1.userService.checkCredentionalsAndReturnUser(req.body.loginOrEmail, req.body.password);
     if (user == undefined) {
@@ -31,6 +47,8 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
     }
     else {
         const token = yield jwt_service_1.jwtService.createJWT(user);
-        res.status(201).send(token);
+        const accessToken = { accessToken: token };
+        res.status(201).send(accessToken);
     }
 }));
+////
