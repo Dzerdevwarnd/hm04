@@ -61,8 +61,8 @@ usersRouter.delete(
 	'/:id',
 	basicAuthMiddleware,
 	async (req: RequestWithParams<{ id: string }>, res: Response) => {
-		const ResultOfDeleteBlog = await userService.deleteUser(req.params)
-		if (!ResultOfDeleteBlog) {
+		const ResultOfDelete = await userService.deleteUser(req.params)
+		if (!ResultOfDelete) {
 			res.sendStatus(404)
 			return
 		} else {

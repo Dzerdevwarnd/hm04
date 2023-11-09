@@ -39,8 +39,8 @@ exports.usersRouter.post('/', authMiddleware_1.basicAuthMiddleware, loginValidat
     res.status(201).send(newUser);
 }));
 exports.usersRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const ResultOfDeleteBlog = yield usersService_1.userService.deleteUser(req.params);
-    if (!ResultOfDeleteBlog) {
+    const ResultOfDelete = yield usersService_1.userService.deleteUser(req.params);
+    if (!ResultOfDelete) {
         res.sendStatus(404);
         return;
     }
