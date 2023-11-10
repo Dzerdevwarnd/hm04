@@ -14,7 +14,9 @@ const express_1 = require("express");
 const express_validator_1 = require("express-validator");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
+const PostsRepository_1 = require("../repositories/PostsRepository");
 const blogsService_1 = require("../services/blogsService");
+const commentsService_1 = require("../services/commentsService");
 const postsService_1 = require("../services/postsService");
 exports.postsRouter = (0, express_1.Router)({});
 exports.postsValidation = {
@@ -92,4 +94,23 @@ exports.postsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, r
         res.sendStatus(204);
         return;
     }
+}));
+exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const comments = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query);
+    if (!comments) {
+        res.sendStatus(404);
+        return;
+    }
+    else {
+        res.status(200).send(comments);
+    }
+}));
+exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const post = yield PostsRepository_1.postsRepository.findPost(req.params);
+    if (!post) {
+        res.sendStatus(404);
+    }
+    const token = req.headers.authorization[1];
+    const comment = yield commentsService_1.commentService.createCommentsByPostId(req.params.id, req.body, token);
+    res.status(201).send(comment);
 }));

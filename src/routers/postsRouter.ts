@@ -1,14 +1,22 @@
 import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
-import { basicAuthMiddleware } from '../middleware/authMiddleware'
+import {
+	AuthMiddleware,
+	basicAuthMiddleware,
+} from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
-import { postsByBlogIdPaginationType } from '../repositories/PostsRepository'
+import {
+	postsByBlogIdPaginationType,
+	postsRepository,
+} from '../repositories/PostsRepository'
 import { blogsService } from '../services/blogsService'
+import { commentService } from '../services/commentsService'
 import { postsService } from '../services/postsService'
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
 type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
 type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
+type RequestWithParamsAndQuery<P, Q> = Request<P, {}, {}, Q>
 
 type blogType = {
 	id: string
@@ -150,5 +158,47 @@ postsRouter.delete(
 			res.sendStatus(204)
 			return
 		}
+	}
+)
+
+postsRouter.get(
+	'/:id/comments',
+	async (
+		req: RequestWithParamsAndQuery<{ id: string }, { query: any }>,
+		res: Response
+	) => {
+		const comments = await commentService.findCommentsByPostId(
+			req.params.id,
+			req.query
+		)
+		if (!comments) {
+			res.sendStatus(404)
+			return
+		} else {
+			res.status(200).send(comments)
+		}
+	}
+)
+
+postsRouter.post(
+	'/:id/comments',
+	AuthMiddleware,
+	postsValidation.contentValidation,
+	inputValidationMiddleware,
+	async (
+		req: RequestWithParamsAndBody<{ id: string }, { content: string }>,
+		res: Response
+	) => {
+		const post = await postsRepository.findPost(req.params)
+		if (!post) {
+			res.sendStatus(404)
+		}
+		const token = req.headers.authorization![1]
+		const comment = await commentService.createCommentsByPostId(
+			req.params.id,
+			req.body,
+			token
+		)
+		res.status(201).send(comment)
 	}
 )

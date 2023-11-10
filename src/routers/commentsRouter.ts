@@ -64,7 +64,7 @@ commentsRouter.put(
 	'/:id',
 	AuthMiddleware,
 	async (
-		req: RequestWithParamsAndBody<{ id: string }, { context: string }>,
+		req: RequestWithParamsAndBody<{ id: string }, { content: string }>,
 		res: Response
 	) => {
 		const comment = await commentsRepository.findComment(req.params.id)
