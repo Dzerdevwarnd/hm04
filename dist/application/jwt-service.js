@@ -28,6 +28,7 @@ exports.jwtService = {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const result = jsonwebtoken_1.default.verify(token, setting_1.settings.JWT_SECRET);
+                console.log(result.userId);
                 return result.userId;
             }
             catch (error) {

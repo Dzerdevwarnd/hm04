@@ -35,7 +35,8 @@ export const commentService = {
 		body: { content: string },
 		token: string
 	): Promise<commentType | null> {
-		const userId = await jwtService.getUserIdByToken(token)
+		const userId: string = await jwtService.getUserIdByToken(token)
+		console.log(userId)
 		const user = await usersRepository.findUser(userId)
 		if (!user) {
 			return user

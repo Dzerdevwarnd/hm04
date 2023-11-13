@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
 import { AuthMiddleware } from '../middleware/authMiddleware'
+import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { commentsRepository } from '../repositories/commentRepository'
 import { commentService } from '../services/commentsService'
 
@@ -24,6 +25,10 @@ const emailValidation = body('email')
 	.withMessage('URL length should be from 1 to 100')
 	.isEmail()
 	.withMessage('Invalid email')
+const contentValidation = body('content')
+	.trim()
+	.isLength({ min: 1, max: 100 })
+	.withMessage('Content length should be from 1 to 100')
 
 export const commentsRouter = Router({})
 
@@ -63,6 +68,8 @@ commentsRouter.delete(
 commentsRouter.put(
 	'/:id',
 	AuthMiddleware,
+	contentValidation,
+	inputValidationMiddleware,
 	async (
 		req: RequestWithParamsAndBody<{ id: string }, { content: string }>,
 		res: Response

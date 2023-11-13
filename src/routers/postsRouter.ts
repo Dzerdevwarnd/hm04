@@ -199,6 +199,10 @@ postsRouter.post(
 			req.body,
 			token
 		)
-		res.status(201).send(comment)
+		if (!comment) {
+			res.sendStatus(404)
+		} else {
+			res.status(201).send(comment)
+		}
 	}
 )

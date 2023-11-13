@@ -27,7 +27,9 @@ const AuthMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, fun
         req.user = yield usersService_1.userService.findUser(userId);
         next();
     }
-    res.send(401);
+    else {
+        res.send(401);
+    }
 });
 exports.AuthMiddleware = AuthMiddleware;
 const basicAuthMiddleware = (req, res, next) => {

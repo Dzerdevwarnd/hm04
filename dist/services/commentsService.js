@@ -41,6 +41,7 @@ exports.commentService = {
     createCommentsByPostId(id, body, token) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = yield jwt_service_1.jwtService.getUserIdByToken(token);
+            console.log(userId);
             const user = yield UsersRepository_1.usersRepository.findUser(userId);
             if (!user) {
                 return user;

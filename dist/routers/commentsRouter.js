@@ -13,6 +13,7 @@ exports.commentsRouter = void 0;
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
 const authMiddleware_1 = require("../middleware/authMiddleware");
+const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const commentRepository_1 = require("../repositories/commentRepository");
 const commentsService_1 = require("../services/commentsService");
 const loginValidation = (0, express_validator_1.body)('login')
@@ -29,6 +30,10 @@ const emailValidation = (0, express_validator_1.body)('email')
     .withMessage('URL length should be from 1 to 100')
     .isEmail()
     .withMessage('Invalid email');
+const contentValidation = (0, express_validator_1.body)('content')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Content length should be from 1 to 100');
 exports.commentsRouter = (0, express_1.Router)({});
 exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const foundComment = yield commentsService_1.commentService.findComment(req.params.id);
@@ -56,7 +61,7 @@ exports.commentsRouter.delete('/:id', authMiddleware_1.AuthMiddleware, (req, res
         return;
     }
 }));
-exports.commentsRouter.put('/:id', authMiddleware_1.AuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.commentsRouter.put('/:id', authMiddleware_1.AuthMiddleware, contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const comment = yield commentRepository_1.commentsRepository.findComment(req.params.id);
     if ((comment === null || comment === void 0 ? void 0 : comment.id) !== req.user.id) {
         res.sendStatus(403);

@@ -112,5 +112,10 @@ exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, expor
     }
     const token = req.headers.authorization[1];
     const comment = yield commentsService_1.commentService.createCommentsByPostId(req.params.id, req.body, token);
-    res.status(201).send(comment);
+    if (!comment) {
+        res.sendStatus(404);
+    }
+    else {
+        res.status(201).send(comment);
+    }
 }));
