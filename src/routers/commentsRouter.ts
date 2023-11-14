@@ -13,8 +13,8 @@ type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 
 const contentValidation = body('content')
 	.trim()
-	.isLength({ min: 20, max: 100 })
-	.withMessage('Content length should be from 20 to 100')
+	.isLength({ min: 20, max: 300 })
+	.withMessage('Content length should be from 20 to 300')
 
 export const commentsRouter = Router({})
 

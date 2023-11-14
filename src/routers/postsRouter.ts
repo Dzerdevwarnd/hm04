@@ -38,8 +38,8 @@ export const postsValidation = {
 		.withMessage('shortDescription length should be from 1 to 100'),
 	contentValidation: body('content')
 		.trim()
-		.isLength({ min: 20, max: 300 })
-		.withMessage('Content length should be from 20 to 300'),
+		.isLength({ min: 1, max: 1000 })
+		.withMessage('Content length should be from 1 to 1000'),
 	blogIdValidation: body('blogId')
 		.isString()
 		.trim()
@@ -56,6 +56,10 @@ export const postsValidation = {
 			}
 		}
 	),
+	commentsContentValidation: body('content')
+		.trim()
+		.isLength({ min: 20, max: 300 })
+		.withMessage('Content length should be from 20 to 300'),
 	/*blogIdExistValidationFromUrl: param('id').custom(
 		async (value: string, { req }) => {
 			const id = value
@@ -183,7 +187,7 @@ postsRouter.get(
 postsRouter.post(
 	'/:id/comments',
 	AuthMiddleware,
-	postsValidation.contentValidation,
+	postsValidation.commentsContentValidation,
 	inputValidationMiddleware,
 	async (
 		req: RequestWithParamsAndBody<{ id: string }, { content: string }>,

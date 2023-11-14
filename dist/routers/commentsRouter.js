@@ -18,8 +18,8 @@ const commentRepository_1 = require("../repositories/commentRepository");
 const commentsService_1 = require("../services/commentsService");
 const contentValidation = (0, express_validator_1.body)('content')
     .trim()
-    .isLength({ min: 20, max: 100 })
-    .withMessage('Content length should be from 20 to 100');
+    .isLength({ min: 20, max: 300 })
+    .withMessage('Content length should be from 20 to 300');
 exports.commentsRouter = (0, express_1.Router)({});
 exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const foundComment = yield commentsService_1.commentService.findComment(req.params.id);

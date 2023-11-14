@@ -30,8 +30,8 @@ exports.postsValidation = {
         .withMessage('shortDescription length should be from 1 to 100'),
     contentValidation: (0, express_validator_1.body)('content')
         .trim()
-        .isLength({ min: 20, max: 300 })
-        .withMessage('Content length should be from 20 to 300'),
+        .isLength({ min: 1, max: 1000 })
+        .withMessage('Content length should be from 1 to 1000'),
     blogIdValidation: (0, express_validator_1.body)('blogId')
         .isString()
         .trim()
@@ -45,6 +45,10 @@ exports.postsValidation = {
             throw new Error('Blog id does not exist');
         }
     })),
+    commentsContentValidation: (0, express_validator_1.body)('content')
+        .trim()
+        .isLength({ min: 20, max: 300 })
+        .withMessage('Content length should be from 20 to 300'),
     /*blogIdExistValidationFromUrl: param('id').custom(
         async (value: string, { req }) => {
             const id = value
@@ -105,7 +109,7 @@ exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0,
         res.status(200).send(commentsPagination);
     }
 }));
-exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.commentsContentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const post = yield PostsRepository_1.postsRepository.findPost(req.params);
     if (!post) {
         res.sendStatus(404);
