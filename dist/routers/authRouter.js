@@ -48,7 +48,7 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
     else {
         const token = yield jwt_service_1.jwtService.createJWT(user);
         const accessToken = { accessToken: token };
-        res.status(201).send(accessToken);
+        res.status(200).send(accessToken);
     }
 }));
 ////

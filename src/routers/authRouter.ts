@@ -48,7 +48,7 @@ authRouter.post(
 		} else {
 			const token = await jwtService.createJWT(user)
 			const accessToken = { accessToken: token }
-			res.status(201).send(accessToken)
+			res.status(200).send(accessToken)
 		}
 	}
 )

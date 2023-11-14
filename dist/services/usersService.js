@@ -60,11 +60,11 @@ exports.userService = {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield UsersRepository_1.usersRepository.findDBUser(loginOrEmail);
             if (!user) {
-                return user;
+                return undefined;
             }
             if (user.passwordHash !==
                 (yield this.generateHash(password, user.passwordSalt))) {
-                return user;
+                return undefined;
             }
             else {
                 return user;

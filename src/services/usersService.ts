@@ -47,13 +47,13 @@ export const userService = {
 	): Promise<UserDbType | undefined> {
 		const user = await usersRepository.findDBUser(loginOrEmail)
 		if (!user) {
-			return user
+			return undefined
 		}
 		if (
 			user.passwordHash !==
 			(await this.generateHash(password, user.passwordSalt))
 		) {
-			return user
+			return undefined
 		} else {
 			return user
 		}
