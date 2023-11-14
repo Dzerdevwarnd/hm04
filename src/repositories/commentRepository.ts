@@ -34,7 +34,7 @@ export const commentsRepository = {
 		const foundComment = await client
 			.db('hm03')
 			.collection<commentType>('comments')
-			.findOne({ id: id }, { projection: { _id: 0 } })
+			.findOne({ id: id }, { projection: { _id: 0, postId: 0 } })
 		return foundComment
 	},
 
@@ -54,7 +54,7 @@ export const commentsRepository = {
 		const comments = await client
 			.db('hm03')
 			.collection<commentType>('comments')
-			.find({ postId: id }, { projection: { _id: 0 } })
+			.find({ postId: id }, { projection: { _id: 0, postId: 0 } })
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection, createdAt: sortDirection })
 			.limit(pageSize)
@@ -103,7 +103,7 @@ export const commentsRepository = {
 			.collection<commentDBType>('comments')
 			.insertOne(newComment)
 		//@ts-ignore
-		const { _id, ...commentWithout_Id } = newComment
+		const { _id, postId, ...commentWithout_Id } = newComment
 		return commentWithout_Id
 	},
 }

@@ -28,7 +28,7 @@ exports.commentsRepository = {
             const foundComment = yield db_1.client
                 .db('hm03')
                 .collection('comments')
-                .findOne({ id: id }, { projection: { _id: 0 } });
+                .findOne({ id: id }, { projection: { _id: 0, postId: 0 } });
             return foundComment;
         });
     },
@@ -48,7 +48,7 @@ exports.commentsRepository = {
             const comments = yield db_1.client
                 .db('hm03')
                 .collection('comments')
-                .find({ postId: id }, { projection: { _id: 0 } })
+                .find({ postId: id }, { projection: { _id: 0, postId: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection, createdAt: sortDirection })
                 .limit(pageSize)
@@ -97,7 +97,7 @@ exports.commentsRepository = {
                 .collection('comments')
                 .insertOne(newComment);
             //@ts-ignore
-            const { _id } = newComment, commentWithout_Id = __rest(newComment, ["_id"]);
+            const { _id, postId } = newComment, commentWithout_Id = __rest(newComment, ["_id", "postId"]);
             return commentWithout_Id;
         });
     },
