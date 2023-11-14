@@ -1,6 +1,7 @@
 import { jwtService } from '../application/jwt-service'
 import { usersRepository } from '../repositories/UsersRepository'
 import {
+	commentDBType,
 	commentType,
 	commentsPaginationType,
 } from '../repositories/commentRepository'
@@ -35,14 +36,14 @@ export const commentService = {
 		body: { content: string },
 		token: string
 	): Promise<commentType | null> {
-		const userId: string = await jwtService.getUserIdByToken(token)
-		console.log(userId)
-		const user = await usersRepository.findUser(userId)
+		const userId = await jwtService.getUserIdByToken(token)
+		const user = await usersRepository.findUser(userId!)
 		if (!user) {
 			return user
 		}
-		const comment: commentType = {
+		const comment: commentDBType = {
 			id: String(Date.now()),
+			postId: id,
 			content: body.content,
 			commentatorInfo: {
 				userId: user?.id,

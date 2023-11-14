@@ -96,13 +96,13 @@ exports.postsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, r
     }
 }));
 exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comments = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query);
-    if (!comments) {
+    const commentsPagination = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query);
+    if (!commentsPagination) {
         res.sendStatus(404);
         return;
     }
     else {
-        res.status(200).send(comments);
+        res.status(200).send(commentsPagination);
     }
 }));
 exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -110,7 +110,7 @@ exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, expor
     if (!post) {
         res.sendStatus(404);
     }
-    const token = req.headers.authorization[1];
+    const token = req.headers.authorization.split(' ')[1];
     const comment = yield commentsService_1.commentService.createCommentsByPostId(req.params.id, req.body, token);
     if (!comment) {
         res.sendStatus(404);

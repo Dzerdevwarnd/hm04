@@ -41,13 +41,13 @@ exports.commentService = {
     createCommentsByPostId(id, body, token) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = yield jwt_service_1.jwtService.getUserIdByToken(token);
-            console.log(userId);
             const user = yield UsersRepository_1.usersRepository.findUser(userId);
             if (!user) {
                 return user;
             }
             const comment = {
                 id: String(Date.now()),
+                postId: id,
                 content: body.content,
                 commentatorInfo: {
                     userId: user === null || user === void 0 ? void 0 : user.id,

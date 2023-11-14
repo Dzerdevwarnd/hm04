@@ -27,12 +27,11 @@ exports.jwtService = {
     getUserIdByToken(token) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const result = jsonwebtoken_1.default.verify(token, setting_1.settings.JWT_SECRET);
-                console.log(result.userId);
+                const result = yield jsonwebtoken_1.default.verify(token, setting_1.settings.JWT_SECRET);
                 return result.userId;
             }
             catch (error) {
-                return null;
+                return;
             }
         });
     },

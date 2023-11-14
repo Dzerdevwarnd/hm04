@@ -47,33 +47,29 @@ exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 
 }));
 exports.commentsRouter.delete('/:id', authMiddleware_1.AuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const comment = yield commentRepository_1.commentsRepository.findComment(req.params.id);
-    if ((comment === null || comment === void 0 ? void 0 : comment.id) !== req.user.id) {
+    if (!comment) {
+        res.sendStatus(404);
+        return;
+    }
+    if (comment.commentatorInfo.userId !== req.user.id) {
         res.sendStatus(403);
         return;
     }
     const ResultOfDelete = yield commentsService_1.commentService.deleteComment(req.params.id);
-    if (!ResultOfDelete) {
-        res.sendStatus(404);
-        return;
-    }
-    else {
-        res.sendStatus(204);
-        return;
-    }
+    res.sendStatus(204);
+    return;
 }));
 exports.commentsRouter.put('/:id', authMiddleware_1.AuthMiddleware, contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const comment = yield commentRepository_1.commentsRepository.findComment(req.params.id);
-    if ((comment === null || comment === void 0 ? void 0 : comment.id) !== req.user.id) {
+    if (!comment) {
+        res.sendStatus(404);
+        return;
+    }
+    if (comment.commentatorInfo.userId !== req.user.id) {
         res.sendStatus(403);
         return;
     }
     const resultOfUpdate = yield commentsService_1.commentService.updateComment(req.params.id, req.body);
-    if (!resultOfUpdate) {
-        res.sendStatus(404);
-        return;
-    }
-    else {
-        res.sendStatus(204);
-        return;
-    }
+    res.sendStatus(204);
+    return;
 }));

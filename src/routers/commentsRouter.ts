@@ -50,18 +50,17 @@ commentsRouter.delete(
 	AuthMiddleware,
 	async (req: RequestWithParams<{ id: string }>, res: Response) => {
 		const comment = await commentsRepository.findComment(req.params.id)
-		if (comment?.id !== req.user!.id) {
+		if (!comment) {
+			res.sendStatus(404)
+			return
+		}
+		if (comment.commentatorInfo.userId !== req.user!.id) {
 			res.sendStatus(403)
 			return
 		}
 		const ResultOfDelete = await commentService.deleteComment(req.params.id)
-		if (!ResultOfDelete) {
-			res.sendStatus(404)
-			return
-		} else {
-			res.sendStatus(204)
-			return
-		}
+		res.sendStatus(204)
+		return
 	}
 )
 
@@ -75,7 +74,11 @@ commentsRouter.put(
 		res: Response
 	) => {
 		const comment = await commentsRepository.findComment(req.params.id)
-		if (comment?.id !== req.user!.id) {
+		if (!comment) {
+			res.sendStatus(404)
+			return
+		}
+		if (comment.commentatorInfo.userId !== req.user!.id) {
 			res.sendStatus(403)
 			return
 		}
@@ -83,12 +86,7 @@ commentsRouter.put(
 			req.params.id,
 			req.body
 		)
-		if (!resultOfUpdate) {
-			res.sendStatus(404)
-			return
-		} else {
-			res.sendStatus(204)
-			return
-		}
+		res.sendStatus(204)
+		return
 	}
 )

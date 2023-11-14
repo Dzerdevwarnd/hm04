@@ -167,15 +167,15 @@ postsRouter.get(
 		req: RequestWithParamsAndQuery<{ id: string }, { query: any }>,
 		res: Response
 	) => {
-		const comments = await commentService.findCommentsByPostId(
+		const commentsPagination = await commentService.findCommentsByPostId(
 			req.params.id,
 			req.query
 		)
-		if (!comments) {
+		if (!commentsPagination) {
 			res.sendStatus(404)
 			return
 		} else {
-			res.status(200).send(comments)
+			res.status(200).send(commentsPagination)
 		}
 	}
 )
@@ -193,7 +193,8 @@ postsRouter.post(
 		if (!post) {
 			res.sendStatus(404)
 		}
-		const token = req.headers.authorization![1]
+		const token = req.headers.authorization!.split(' ')[1]
+
 		const comment = await commentService.createCommentsByPostId(
 			req.params.id,
 			req.body,

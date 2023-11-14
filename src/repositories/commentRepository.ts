@@ -10,6 +10,17 @@ export type commentType = {
 	createdAt: Date
 }
 
+export type commentDBType = {
+	id: string
+	postId: string
+	content: string
+	commentatorInfo: {
+		userId: string
+		userLogin: string
+	}
+	createdAt: Date
+}
+
 export type commentsPaginationType = {
 	pagesCount: number
 	page: number
@@ -23,7 +34,7 @@ export const commentsRepository = {
 		const foundComment = await client
 			.db('hm03')
 			.collection<commentType>('comments')
-			.findOne({ id: id })
+			.findOne({ id: id }, { projection: { _id: 0 } })
 		return foundComment
 	},
 
@@ -43,7 +54,7 @@ export const commentsRepository = {
 		const comments = await client
 			.db('hm03')
 			.collection<commentType>('comments')
-			.find({ id: id }, { projection: { _id: 0 } })
+			.find({ postId: id }, { projection: { _id: 0 } })
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection, createdAt: sortDirection })
 			.limit(pageSize)
@@ -86,10 +97,10 @@ export const commentsRepository = {
 		return resultOfUpdate.matchedCount === 1
 	},
 
-	async createComment(newComment: commentType): Promise<commentType> {
+	async createComment(newComment: commentDBType): Promise<commentType> {
 		const result = await client
 			.db('hm03')
-			.collection<commentType>('comments')
+			.collection<commentDBType>('comments')
 			.insertOne(newComment)
 		//@ts-ignore
 		const { _id, ...commentWithout_Id } = newComment
