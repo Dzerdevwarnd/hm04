@@ -30,8 +30,8 @@ exports.postsValidation = {
         .withMessage('shortDescription length should be from 1 to 100'),
     contentValidation: (0, express_validator_1.body)('content')
         .trim()
-        .isLength({ min: 1, max: 1000 })
-        .withMessage('Content length should be from 1 to 1000'),
+        .isLength({ min: 20, max: 300 })
+        .withMessage('Content length should be from 20 to 300'),
     blogIdValidation: (0, express_validator_1.body)('blogId')
         .isString()
         .trim()
@@ -97,7 +97,7 @@ exports.postsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, r
 }));
 exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const commentsPagination = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query);
-    if (!commentsPagination) {
+    if (!(commentsPagination === null || commentsPagination === void 0 ? void 0 : commentsPagination.items)) {
         res.sendStatus(404);
         return;
     }

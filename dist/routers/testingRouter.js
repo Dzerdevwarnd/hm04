@@ -26,6 +26,10 @@ exports.testingRouter.delete('/all-data', (req, res) => __awaiter(void 0, void 0
         .db('hm03')
         .collection('users')
         .deleteMany({});
+    let resultOfDeleteComments = yield db_1.client
+        .db('hm03')
+        .collection('comments')
+        .deleteMany({});
     res.sendStatus(204);
     return;
 }));

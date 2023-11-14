@@ -38,8 +38,8 @@ export const postsValidation = {
 		.withMessage('shortDescription length should be from 1 to 100'),
 	contentValidation: body('content')
 		.trim()
-		.isLength({ min: 1, max: 1000 })
-		.withMessage('Content length should be from 1 to 1000'),
+		.isLength({ min: 20, max: 300 })
+		.withMessage('Content length should be from 20 to 300'),
 	blogIdValidation: body('blogId')
 		.isString()
 		.trim()
@@ -171,7 +171,7 @@ postsRouter.get(
 			req.params.id,
 			req.query
 		)
-		if (!commentsPagination) {
+		if (!commentsPagination?.items) {
 			res.sendStatus(404)
 			return
 		} else {
