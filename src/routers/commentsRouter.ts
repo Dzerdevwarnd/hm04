@@ -11,24 +11,10 @@ type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
 type RequestParamsQuery<P, Q> = Request<P, {}, {}, Q>
 type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 
-const loginValidation = body('login')
-	.trim()
-	.isLength({ min: 3, max: 10 })
-	.withMessage('Login length should be from 3 to 10')
-const passwordValidation = body('password')
-	.trim()
-	.isLength({ min: 6, max: 20 })
-	.withMessage('Password length should be from 6 to 20')
-const emailValidation = body('email')
-	.trim()
-	.isLength({ min: 1, max: 100 })
-	.withMessage('URL length should be from 1 to 100')
-	.isEmail()
-	.withMessage('Invalid email')
 const contentValidation = body('content')
 	.trim()
-	.isLength({ min: 1, max: 100 })
-	.withMessage('Content length should be from 1 to 100')
+	.isLength({ min: 20, max: 100 })
+	.withMessage('Content length should be from 20 to 100')
 
 export const commentsRouter = Router({})
 
