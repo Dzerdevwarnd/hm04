@@ -101,7 +101,7 @@ exports.postsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, r
 }));
 exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const commentsPagination = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query);
-    if (!(commentsPagination === null || commentsPagination === void 0 ? void 0 : commentsPagination.items)) {
+    if ((commentsPagination === null || commentsPagination === void 0 ? void 0 : commentsPagination.items.length) === 0) {
         res.sendStatus(404);
         return;
     }

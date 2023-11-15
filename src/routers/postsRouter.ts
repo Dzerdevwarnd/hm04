@@ -175,7 +175,7 @@ postsRouter.get(
 			req.params.id,
 			req.query
 		)
-		if (!commentsPagination?.items) {
+		if (commentsPagination?.items.length === 0) {
 			res.sendStatus(404)
 			return
 		} else {

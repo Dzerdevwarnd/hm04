@@ -62,7 +62,7 @@ export const commentsRepository = {
 		const totalCount = await client
 			.db('hm03')
 			.collection<commentType>('comments')
-			.countDocuments()
+			.countDocuments({ postId: id })
 		const pagesCount = Math.ceil(totalCount / pageSize)
 		const commentsPagination = {
 			pagesCount: pagesCount,

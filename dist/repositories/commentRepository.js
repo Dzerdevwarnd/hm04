@@ -56,7 +56,7 @@ exports.commentsRepository = {
             const totalCount = yield db_1.client
                 .db('hm03')
                 .collection('comments')
-                .countDocuments();
+                .countDocuments({ postId: id });
             const pagesCount = Math.ceil(totalCount / pageSize);
             const commentsPagination = {
                 pagesCount: pagesCount,
