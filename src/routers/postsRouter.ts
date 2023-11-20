@@ -195,7 +195,7 @@ postsRouter.post(
 	) => {
 		const post = await postsRepository.findPost(req.params)
 		if (!post) {
-			res.sendStatus(404)
+			return res.sendStatus(404)
 		}
 		const token = req.headers.authorization!.split(' ')[1]
 
@@ -205,9 +205,9 @@ postsRouter.post(
 			token
 		)
 		if (!comment) {
-			res.sendStatus(404)
+			return res.sendStatus(404)
 		} else {
-			res.status(201).send(comment)
+			return res.status(201).send(comment)
 		}
 	}
 )

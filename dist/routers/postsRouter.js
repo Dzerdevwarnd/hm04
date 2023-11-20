@@ -112,14 +112,14 @@ exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0,
 exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.commentsContentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const post = yield PostsRepository_1.postsRepository.findPost(req.params);
     if (!post) {
-        res.sendStatus(404);
+        return res.sendStatus(404);
     }
     const token = req.headers.authorization.split(' ')[1];
     const comment = yield commentsService_1.commentService.createCommentsByPostId(req.params.id, req.body, token);
     if (!comment) {
-        res.sendStatus(404);
+        return res.sendStatus(404);
     }
     else {
-        res.status(201).send(comment);
+        return res.status(201).send(comment);
     }
 }));
