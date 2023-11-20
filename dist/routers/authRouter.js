@@ -37,8 +37,8 @@ exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, fu
         login: user.login,
         email: user.email,
     };
-    console.log(userInfo);
     res.status(200).send(userInfo);
+    return;
 }));
 exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield usersService_1.userService.checkCredentionalsAndReturnUser(req.body.loginOrEmail, req.body.password);
@@ -49,6 +49,7 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
         const token = yield jwt_service_1.jwtService.createJWT(user);
         const accessToken = { accessToken: token };
         res.status(200).send(accessToken);
+        return;
     }
 }));
 ////

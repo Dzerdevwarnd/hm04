@@ -29,6 +29,7 @@ exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 
     }
     else {
         res.status(200).send(foundComment);
+        return;
     }
 }));
 exports.commentsRouter.delete('/:id', authMiddleware_1.AuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {

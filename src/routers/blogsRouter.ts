@@ -36,6 +36,7 @@ blogsRouter.get(
 		const blogsPagination: blogsPaginationType =
 			await blogsService.returnAllBlogs(req.query)
 		res.status(200).send(blogsPagination)
+		return
 	}
 )
 
@@ -90,6 +91,7 @@ blogsRouter.post(
 	) => {
 		const newBlog = await blogsService.createBlog(req.body)
 		res.status(201).send(newBlog)
+		return
 	}
 )
 
@@ -121,6 +123,7 @@ blogsRouter.post(
 			req.params.id
 		)
 		res.status(201).send(newPost)
+		return
 	}
 )
 
@@ -148,8 +151,10 @@ blogsRouter.put(
 		)
 		if (!resultOfUpdateBlog) {
 			res.sendStatus(404)
+			return
 		} else {
 			res.sendStatus(204)
+			return
 		}
 	}
 )

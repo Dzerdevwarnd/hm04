@@ -1,55 +1,82 @@
 import request from 'supertest'
+import { blogsRepository } from '../../src/repositories/blogsRepository'
+import { blogsService } from '../../src/services/blogsService'
 import { app, routersPaths } from '../../src/setting'
 
 describe('/posts', () => {
-	it('should return 200 and array', async () => {
-		await request(app).get(routersPaths.posts).expect(200, {
-			pagesCount: 0,
-			page: 1,
-			pageSize: 10,
-			totalCount: 0,
-			items: [],
+	let entityId: string
+	let entityCreatedAt: string
+	let blogId = ''
+
+	it('should return 201 and one entity object', async () => {
+		blogsService.createBlog({
+			name: 'Cu11r',
+			description: '1',
+			websiteUrl: 'cucumber.org',
+		})
+		blogId = (await blogsRepository.returnAllBlogs('')).items[0].id
+		console.log(`123321${blogId}`)
+		const res = await request(app)
+			.post(routersPaths.posts)
+			.send({
+				title: '1234123',
+				shortDescription: 'string',
+				content: 'фывыфвыфвыф',
+				blogId: blogId,
+			})
+			.auth('admin', 'qwerty')
+		expect(res.status).toEqual(201)
+		expect(res.body).toEqual({
+			id: expect.any(String),
+			title: '1234123',
+			shortDescription: 'string',
+			content: 'фывыфвыфвыф',
+			blogId: blogId,
+			blogName: '',
+			createdAt: expect.any(String),
+		})
+		entityId = res.body.id
+		entityCreatedAt = res.body.createdAt
+		console.log(`!!!!!!!!!!!!!!!!!!!!!!!!!${res.body.id}`)
+	})
+
+	it('should return 200 and entity pagination', async () => {
+		const res = await request(app).get(`${routersPaths.posts}/${entityId}`)
+		expect(res.status).toEqual(200)
+		expect(res.body).toEqual({
+			id: entityId,
+			title: '1234123',
+			shortDescription: 'string',
+			content: 'фывыфвыфвыф',
+			blogId: blogId,
+			blogName: '',
+			createdAt: entityCreatedAt,
 		})
 	})
-	it('should return 404', async () => {
-		await request(app).get(routersPaths.posts).expect(404)
+
+	it('should return 404, non exist post', async () => {
+		await request(app).get(`${routersPaths.blogs}/2`).expect(404)
 	})
-	it('should return 204', async () => {
+	it('should return 204, update blog', async () => {
 		await request(app)
-			.put('/posts/1')
+			.put(`${routersPaths.posts}/${entityId}`)
 			.send({
-				title: 'string',
-				shortDescription: 'string',
-				content: 'string',
-				blogId: 'string',
+				title: 'updated',
+				shortDescription: 'updated',
+				content: 'updated',
+				blogId: blogId,
 			})
 			.auth('admin', 'qwerty')
 			.expect(204)
 	})
-	it('should return 204', async () => {
-		await request(app).delete('/posts/1').auth('admin', 'qwerty').expect(204)
+	it('should return 204, delete post', async () => {
+		await request(app)
+			.delete(`${routersPaths.posts}/${entityId}`)
+			.auth('admin', 'qwerty')
+			.expect(204)
 	})
 
-	it('should return 404', async () => {
-		await request(app).get('/posts/1').expect(404)
+	it('should return 404, not found deleted blog', async () => {
+		await request(app).get(`${routersPaths.posts}/${entityId}`).expect(404)
 	})
-	/*it('should return 201 and array', async () => {
-		await request(app)
-			.post('/blogs')
-			.send({
-				name: 'Cu11r',
-				description: '1',
-				websiteUrl: 'cucumber.org',
-			})
-			.auth('admin', 'qwerty')
-			.expect(201, [
-				{
-					id: expect.anything(),
-					name: 'Cu11r',
-					description: '1',
-					websiteUrl: 'cucumber.org',
-				},
-			])
-	})
-*/
 })

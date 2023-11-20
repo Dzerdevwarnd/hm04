@@ -2,11 +2,11 @@ import * as dotenv from 'dotenv'
 import { MongoClient } from 'mongodb'
 import { postType } from './repositories/PostsRepository'
 import { blogType } from './repositories/blogsRepository'
-import { settings } from './setting'
 
 dotenv.config()
 
-const mongoUri = settings.MONGO_URL
+const mongoUri =
+	'mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/?retryWrites=true&w=majority'
 console.log('url:', mongoUri)
 if (!mongoUri) {
 	throw new Error("Url doesn't found")

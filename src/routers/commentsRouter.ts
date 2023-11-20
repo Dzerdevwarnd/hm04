@@ -27,6 +27,7 @@ commentsRouter.get(
 			return
 		} else {
 			res.status(200).send(foundComment)
+			return
 		}
 	}
 )

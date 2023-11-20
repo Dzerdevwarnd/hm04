@@ -64,6 +64,7 @@ exports.postsValidation = {
 exports.postsRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const allPosts = yield postsService_1.postsService.returnAllPosts(req.query);
     res.status(200).send(allPosts);
+    return;
 }));
 exports.postsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const foundPost = yield postsService_1.postsService.findPost(req.params);
@@ -73,19 +74,23 @@ exports.postsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, 
     }
     else {
         res.status(200).send(foundPost);
+        return;
     }
 }));
 exports.postsRouter.post('/', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const newPost = yield postsService_1.postsService.createPost(req.body);
     res.status(201).send(newPost);
+    return;
 }));
 exports.postsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const ResultOfUpdatePost = yield postsService_1.postsService.updatePost(req.params.id, req.body);
     if (!ResultOfUpdatePost) {
         res.sendStatus(404);
+        return;
     }
     else {
         res.sendStatus(204);
+        return;
     }
 }));
 exports.postsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -107,19 +112,23 @@ exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0,
     }
     else {
         res.status(200).send(commentsPagination);
+        return;
     }
 }));
 exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.commentsContentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const post = yield PostsRepository_1.postsRepository.findPost(req.params);
     if (!post) {
-        return res.sendStatus(404);
+        res.sendStatus(404);
+        return;
     }
     const token = req.headers.authorization.split(' ')[1];
     const comment = yield commentsService_1.commentService.createCommentsByPostId(req.params.id, req.body, token);
     if (!comment) {
-        return res.sendStatus(404);
+        res.sendStatus(404);
+        return;
     }
     else {
-        return res.status(201).send(comment);
+        res.status(201).send(comment);
+        return;
     }
 }));

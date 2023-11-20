@@ -35,6 +35,7 @@ exports.blogsRouter = (0, express_1.Router)({});
 exports.blogsRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const blogsPagination = yield blogsService_1.blogsService.returnAllBlogs(req.query);
     res.status(200).send(blogsPagination);
+    return;
 }));
 exports.blogsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const foundBlog = yield blogsService_1.blogsService.findBlog(req.params);
@@ -61,6 +62,7 @@ exports.blogsRouter.get('/:id/posts', (req, res) => __awaiter(void 0, void 0, vo
 exports.blogsRouter.post('/', authMiddleware_1.basicAuthMiddleware, nameValidation, descriptionValidation, urlValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const newBlog = yield blogsService_1.blogsService.createBlog(req.body);
     res.status(201).send(newBlog);
+    return;
 }));
 exports.blogsRouter.post('/:id/posts', authMiddleware_1.basicAuthMiddleware, 
 //postsValidation.blogIdExistValidationFromUrl,
@@ -71,14 +73,17 @@ postsRouter_1.postsValidation.titleValidation, postsRouter_1.postsValidation.sho
     }
     const newPost = yield postsService_1.postsService.createPostByBlogId(req.body, req.params.id);
     res.status(201).send(newPost);
+    return;
 }));
 exports.blogsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, nameValidation, descriptionValidation, urlValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const resultOfUpdateBlog = yield blogsService_1.blogsService.updateBlog(req.params.id, req.body);
     if (!resultOfUpdateBlog) {
         res.sendStatus(404);
+        return;
     }
     else {
         res.sendStatus(204);
+        return;
     }
 }));
 exports.blogsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {

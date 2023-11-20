@@ -29,8 +29,8 @@ authRouter.get('/me', async (req: Request, res: Response) => {
 		login: user!.login,
 		email: user!.email,
 	}
-	console.log(userInfo)
 	res.status(200).send(userInfo)
+	return
 })
 
 authRouter.post(
@@ -49,6 +49,7 @@ authRouter.post(
 			const token = await jwtService.createJWT(user)
 			const accessToken = { accessToken: token }
 			res.status(200).send(accessToken)
+			return
 		}
 	}
 )

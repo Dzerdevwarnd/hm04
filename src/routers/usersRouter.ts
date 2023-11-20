@@ -34,6 +34,7 @@ usersRouter.get(
 		const usersPagination: usersPaginationType =
 			await userService.returnAllUsers(req.query)
 		res.status(200).send(usersPagination)
+		return
 	}
 )
 
@@ -54,6 +55,7 @@ usersRouter.post(
 	) => {
 		const newUser = await userService.createUser(req.body)
 		res.status(201).send(newUser)
+		return
 	}
 )
 

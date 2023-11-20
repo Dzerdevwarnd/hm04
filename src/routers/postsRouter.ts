@@ -78,6 +78,7 @@ postsRouter.get(
 		const allPosts: postsByBlogIdPaginationType =
 			await postsService.returnAllPosts(req.query)
 		res.status(200).send(allPosts)
+		return
 	}
 )
 
@@ -90,6 +91,7 @@ postsRouter.get(
 			return
 		} else {
 			res.status(200).send(foundPost)
+			return
 		}
 	}
 )
@@ -114,6 +116,7 @@ postsRouter.post(
 	) => {
 		const newPost = await postsService.createPost(req.body)
 		res.status(201).send(newPost)
+		return
 	}
 )
 
@@ -144,8 +147,10 @@ postsRouter.put(
 		)
 		if (!ResultOfUpdatePost) {
 			res.sendStatus(404)
+			return
 		} else {
 			res.sendStatus(204)
+			return
 		}
 	}
 )
@@ -180,6 +185,7 @@ postsRouter.get(
 			return
 		} else {
 			res.status(200).send(commentsPagination)
+			return
 		}
 	}
 )
@@ -195,7 +201,8 @@ postsRouter.post(
 	) => {
 		const post = await postsRepository.findPost(req.params)
 		if (!post) {
-			return res.sendStatus(404)
+			res.sendStatus(404)
+			return
 		}
 		const token = req.headers.authorization!.split(' ')[1]
 
@@ -205,9 +212,11 @@ postsRouter.post(
 			token
 		)
 		if (!comment) {
-			return res.sendStatus(404)
+			res.sendStatus(404)
+			return
 		} else {
-			return res.status(201).send(comment)
+			res.status(201).send(comment)
+			return
 		}
 	}
 )
