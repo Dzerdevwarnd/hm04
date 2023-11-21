@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
 import { jwtService } from '../application/jwt-service'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
+import { authService } from '../services/authService'
 import { userService } from '../services/usersService'
 
 export const authRouter = Router({})
@@ -39,15 +40,14 @@ authRouter.post(
 	passwordValidation,
 	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
-		const user = await userService.checkCredentionalsAndReturnUser(
+		const accessToken = await authService.loginAndReturnJwtKey(
 			req.body.loginOrEmail,
 			req.body.password
 		)
-		if (user == undefined) {
+		if (!accessToken) {
 			res.sendStatus(401)
+			return
 		} else {
-			const token = await jwtService.createJWT(user)
-			const accessToken = { accessToken: token }
 			res.status(200).send(accessToken)
 			return
 		}

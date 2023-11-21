@@ -15,7 +15,6 @@ describe('/posts', () => {
 			websiteUrl: 'cucumber.org',
 		})
 		blogId = (await blogsRepository.returnAllBlogs('')).items[0].id
-		console.log(`123321${blogId}`)
 		const res = await request(app)
 			.post(routersPaths.posts)
 			.send({
@@ -37,7 +36,6 @@ describe('/posts', () => {
 		})
 		entityId = res.body.id
 		entityCreatedAt = res.body.createdAt
-		console.log(`!!!!!!!!!!!!!!!!!!!!!!!!!${res.body.id}`)
 	})
 
 	it('should return 200 and entity pagination', async () => {
