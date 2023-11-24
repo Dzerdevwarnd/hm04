@@ -12,10 +12,10 @@ export const emailAdapter = {
 			from: 'Warnd<dzerdevwarnd3@gmail.com>',
 			to: email,
 			subject: 'Email confirmation',
-			html: `Thank for your registration
-			To finish registration please follow the link below:
-			 https://vercel.com/dzerdevwarnd/hm04/auth/confirm-email?code=${user?.emailConfirmationData.confirmationCode} complete registration
-			`,
+			html: `<h1>Thank for your registration</h1>
+ <p>To finish registration please follow the link below:
+     <a href='https://somesite.com/confirm-email?code=${user?.emailConfirmationData.confirmationCode}'>complete registration</a>
+ </p>`,
 		})
 		console.log(info)
 		return
