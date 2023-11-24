@@ -27,7 +27,10 @@ exports.emailAdapter = {
                 from: 'Warnd<dzerdevwarnd3@gmail.com>',
                 to: email,
                 subject: 'Email confirmation',
-                html: `https://vercel.com/dzerdevwarnd/hm04/auth/registration-confirmation?code=${user === null || user === void 0 ? void 0 : user.emailConfirmationData.confirmationCode}`,
+                html: `Thank for your registration
+			To finish registration please follow the link below:
+			 https://vercel.com/dzerdevwarnd/hm04/auth/registration-confirmation?code=${user === null || user === void 0 ? void 0 : user.emailConfirmationData.confirmationCode} complete registration
+			`,
             });
             console.log(info);
             return;
