@@ -97,7 +97,7 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
 exports.authRouter.post('/registration', EmailFormValidation, EmailUsageValidation, loginValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const newUser = yield authService_1.authService.createUser(req.body.password, req.body.email, req.body.login);
     if (!newUser) {
-        res.sendStatus(400);
+        res.status(400).send('User create error');
         return;
     }
     yield emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
@@ -107,7 +107,7 @@ exports.authRouter.post('/registration', EmailFormValidation, EmailUsageValidati
 exports.authRouter.post('/registration-confirmation', confirmationCodeIsAlreadyConfirmedValidation, confirmationCodeValidation, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const isConfirmationAccept = yield usersService_1.userService.userEmailConfirmationAccept(req.body.code);
     if (!isConfirmationAccept) {
-        res.sendStatus(400);
+        res.status(400).send('user confirm error');
         return;
     }
     else {

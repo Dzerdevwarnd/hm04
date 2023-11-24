@@ -118,7 +118,7 @@ authRouter.post(
 			req.body.login
 		)
 		if (!newUser) {
-			res.sendStatus(400)
+			res.status(400).send('User create error')
 			return
 		}
 		await emailAdapter.sendConfirmEmail(req.body.email)
@@ -136,7 +136,7 @@ authRouter.post(
 			req.body.code
 		)
 		if (!isConfirmationAccept) {
-			res.sendStatus(400)
+			res.status(400).send('user confirm error')
 			return
 		} else {
 			res.sendStatus(204)
