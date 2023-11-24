@@ -14,7 +14,7 @@ export const emailAdapter = {
 			subject: 'Email confirmation',
 			html: `Thank for your registration
 			To finish registration please follow the link below:
-			 https://vercel.com/dzerdevwarnd/hm04/auth/registration-confirmation?code=${user?.emailConfirmationData.confirmationCode} complete registration
+			 https://vercel.com/dzerdevwarnd/hm04/auth/confirm-email?code=${user?.emailConfirmationData.confirmationCode} complete registration
 			`,
 		})
 		console.log(info)
