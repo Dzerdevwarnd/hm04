@@ -51,7 +51,7 @@ exports.commentService = {
                 content: body.content,
                 commentatorInfo: {
                     userId: user === null || user === void 0 ? void 0 : user.id,
-                    userLogin: user === null || user === void 0 ? void 0 : user.login,
+                    userLogin: user.accountData.login,
                 },
                 createdAt: new Date(),
             };

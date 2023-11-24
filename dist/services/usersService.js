@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userService = void 0;
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const add_1 = __importDefault(require("date-fns/add"));
+const uuid_1 = require("uuid");
 const UsersRepository_1 = require("../repositories/UsersRepository");
 exports.userService = {
     findUser(id) {
@@ -29,16 +31,23 @@ exports.userService = {
     },
     createUser(body) {
         return __awaiter(this, void 0, void 0, function* () {
-            const passwordSalt = yield bcrypt_1.default.genSalt(10);
+            const passwordSalt = yield this.generateSalt();
             const passwordHash = yield this.generateHash(body.password, passwordSalt);
             const createdDate = new Date();
             const newUser = {
                 id: String(Date.now()),
-                login: body.login,
-                email: body.email,
-                createdAt: createdDate,
-                passwordSalt: passwordSalt,
-                passwordHash: passwordHash,
+                accountData: {
+                    login: body.login,
+                    email: body.email,
+                    createdAt: createdDate,
+                    passwordSalt: passwordSalt,
+                    passwordHash: passwordHash,
+                },
+                emailConfirmationData: {
+                    confirmationCode: uuid_1.v4,
+                    expirationDate: (0, add_1.default)(new Date(), { hours: 1, minutes: 3 }),
+                    isConfirmed: true,
+                },
             };
             const userView = yield UsersRepository_1.usersRepository.createUser(newUser);
             return userView;
@@ -56,19 +65,31 @@ exports.userService = {
             return hash;
         });
     },
+    generateSalt() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const salt = yield bcrypt_1.default.genSalt(10);
+            return salt;
+        });
+    },
     checkCredentionalsAndReturnUser(loginOrEmail, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield UsersRepository_1.usersRepository.findDBUser(loginOrEmail);
             if (!user) {
                 return undefined;
             }
-            if (user.passwordHash !==
-                (yield this.generateHash(password, user.passwordSalt))) {
+            if (user.accountData.passwordHash !==
+                (yield this.generateHash(password, user.accountData.passwordSalt))) {
                 return undefined;
             }
             else {
                 return user;
             }
+        });
+    },
+    userEmailConfirmationAccept(confirmationCode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const isConfirmationAccept = yield UsersRepository_1.usersRepository.userEmailConfirmationAccept(confirmationCode);
+            return isConfirmationAccept;
         });
     },
 };

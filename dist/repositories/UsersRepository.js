@@ -8,17 +8,6 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.usersRepository = void 0;
 const db_1 = require("../db");
@@ -51,10 +40,10 @@ exports.usersRepository = {
                 .collection('users')
                 .find({
                 $or: [
-                    { login: { $regex: searchLoginTerm, $options: 'i' } },
-                    { email: { $regex: searchEmailTerm, $options: 'i' } },
+                    { 'accountData.login': { $regex: searchLoginTerm, $options: 'i' } },
+                    { 'accountData.email': { $regex: searchEmailTerm, $options: 'i' } },
                 ],
-            }, { projection: { _id: 0, passwordSalt: 0, passwordHash: 0 } })
+            })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
@@ -64,17 +53,23 @@ exports.usersRepository = {
                 .collection('users')
                 .countDocuments({
                 $or: [
-                    { login: { $regex: searchLoginTerm, $options: 'i' } },
-                    { email: { $regex: searchEmailTerm, $options: 'i' } },
+                    { 'accountData.login': { $regex: searchLoginTerm, $options: 'i' } },
+                    { 'accountData.email': { $regex: searchEmailTerm, $options: 'i' } },
                 ],
             });
             const pagesCount = Math.ceil(totalCount / pageSize);
+            const usersView = users.map(({ id, accountData }) => ({
+                id,
+                login: accountData.login,
+                email: accountData.email,
+                createdAt: accountData.createdAt,
+            }));
             const usersPagination = {
                 pagesCount: pagesCount,
                 page: Number(page),
                 pageSize: pageSize,
                 totalCount: totalCount,
-                items: users,
+                items: usersView,
             };
             return usersPagination;
         });
@@ -84,7 +79,12 @@ exports.usersRepository = {
             let user = yield db_1.client
                 .db('hm03')
                 .collection('users')
-                .findOne({ $or: [{ email: loginOrEmail }, { login: loginOrEmail }] });
+                .findOne({
+                $or: [
+                    { 'accountData.email': loginOrEmail },
+                    { 'accountData.login': loginOrEmail },
+                ],
+            });
             //@ts-ignore
             return user;
         });
@@ -96,17 +96,42 @@ exports.usersRepository = {
                 .collection('users')
                 .insertOne(newUser);
             //@ts-ignore
-            const { _id, passwordHash, passwordSalt } = newUser, userView = __rest(newUser, ["_id", "passwordHash", "passwordSalt"]);
+            const userView = {
+                id: newUser.id,
+                login: newUser.accountData.login,
+                email: newUser.accountData.login,
+                createdAt: newUser.accountData.createdAt,
+            };
             return userView;
         });
     },
     deleteUser(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield db_1.client
+            const result = yield db_1.client
                 .db('hm03')
                 .collection('users')
                 .deleteOne({ id: params.id });
             return result.deletedCount === 1;
         });
     },
+    userEmailConfirmationAccept(confirmationCode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield db_1.client
+                .db('hm03')
+                .collection('users')
+                .findOne({ 'emailConfirmationData.confirmationCode': confirmationCode });
+            if (!user) {
+                return false;
+            }
+            if (new Date() > (user === null || user === void 0 ? void 0 : user.emailConfirmationData.expirationDate)) {
+                return false;
+            }
+            const resultOfUpdate = yield db_1.client
+                .db('hm03')
+                .collection('users')
+                .updateOne({ 'emailConfirmationData.confirmationCode': confirmationCode }, { $set: { 'emailConfirmationData.isConfirmed': true } });
+            return resultOfUpdate.modifiedCount === 1;
+        });
+    },
 };
+//

@@ -19,7 +19,7 @@ describe('/comments', () => {
 	const password = '123321'
 
 	it('should return 201 and one entity object', async () => {
-		blogsService.createBlog({
+		await blogsService.createBlog({
 			//Создание блога и поста для дальнейшей проверки комментариев
 			name: 'Cu11r',
 			description: '1',
@@ -35,7 +35,7 @@ describe('/comments', () => {
 		})
 		postId = (await postsRepository.returnAllPosts('')).items[0].id
 
-		userService.createUser({ email, password, login }) // создание юзера и jwt ключа
+		userService.createUser({ login, password, email }) // создание юзера и jwt ключа
 		const accessToken = await authService.loginAndReturnJwtKey(login, password)
 		jwtToken = accessToken?.accessToken
 

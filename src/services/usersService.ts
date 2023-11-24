@@ -1,4 +1,6 @@
 import bcrypt from 'bcrypt'
+import add from 'date-fns/add'
+import { v4 as uuidv4 } from 'uuid'
 import {
 	UserDbType,
 	userViewType,
@@ -19,16 +21,23 @@ export const userService = {
 		password: string
 		email: string
 	}): Promise<userViewType> {
-		const passwordSalt = await bcrypt.genSalt(10)
+		const passwordSalt = await this.generateSalt()
 		const passwordHash = await this.generateHash(body.password, passwordSalt)
 		const createdDate = new Date()
 		const newUser: UserDbType = {
 			id: String(Date.now()),
-			login: body.login,
-			email: body.email,
-			createdAt: createdDate,
-			passwordSalt: passwordSalt,
-			passwordHash: passwordHash,
+			accountData: {
+				login: body.login,
+				email: body.email,
+				createdAt: createdDate,
+				passwordSalt: passwordSalt,
+				passwordHash: passwordHash,
+			},
+			emailConfirmationData: {
+				confirmationCode: uuidv4,
+				expirationDate: add(new Date(), { hours: 1, minutes: 3 }),
+				isConfirmed: true,
+			},
 		}
 		const userView = await usersRepository.createUser(newUser)
 		return userView
@@ -41,6 +50,10 @@ export const userService = {
 		const hash = await bcrypt.hash(password, passwordSalt)
 		return hash
 	},
+	async generateSalt() {
+		const salt = await bcrypt.genSalt(10)
+		return salt
+	},
 	async checkCredentionalsAndReturnUser(
 		loginOrEmail: string,
 		password: string
@@ -50,12 +63,17 @@ export const userService = {
 			return undefined
 		}
 		if (
-			user.passwordHash !==
-			(await this.generateHash(password, user.passwordSalt))
+			user.accountData.passwordHash !==
+			(await this.generateHash(password, user.accountData.passwordSalt))
 		) {
 			return undefined
 		} else {
 			return user
 		}
+	},
+	async userEmailConfirmationAccept(confirmationCode: any): Promise<Boolean> {
+		const isConfirmationAccept =
+			await usersRepository.userEmailConfirmationAccept(confirmationCode)
+		return isConfirmationAccept
 	},
 }

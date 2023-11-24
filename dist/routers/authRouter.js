@@ -12,11 +12,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authRouter = void 0;
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
+const emailAdapter_1 = require("../adapters/emailAdapter");
 const jwt_service_1 = require("../application/jwt-service");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
+const UsersRepository_1 = require("../repositories/UsersRepository");
 const authService_1 = require("../services/authService");
 const usersService_1 = require("../services/usersService");
 exports.authRouter = (0, express_1.Router)({});
+const loginValidation = (0, express_validator_1.body)('login')
+    .trim()
+    .isLength({ min: 3, max: 10 })
+    .withMessage('login length should be from 3 to 10')
+    .custom((login) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield UsersRepository_1.usersRepository.findDBUser(login);
+    if (user) {
+        throw new Error('User with that login is already exist');
+    }
+}));
+const EmailFormValidation = (0, express_validator_1.body)('email')
+    .trim()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Email length should be from 1 to 100')
+    .isEmail()
+    .withMessage('Incorrect email');
+const EmailUsageValidation = (0, express_validator_1.body)('email').custom((email) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield UsersRepository_1.usersRepository.findDBUser(email);
+    if (user) {
+        throw new Error('User with that email is already exist');
+    }
+}));
 const loginOrEmailValidation = (0, express_validator_1.body)('loginOrEmail')
     .trim()
     .isLength({ min: 1, max: 100 })
@@ -35,8 +59,8 @@ exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, fu
     const user = yield usersService_1.userService.findUser(userId);
     const userInfo = {
         id: userId,
-        login: user.login,
-        email: user.email,
+        login: user.accountData.login,
+        email: user.accountData.email,
     };
     res.status(200).send(userInfo);
     return;
@@ -52,4 +76,39 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
         return;
     }
 }));
-////
+exports.authRouter.post('/registration', EmailFormValidation, EmailUsageValidation, loginValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const newUser = yield authService_1.authService.createUser(req.body.password, req.body.email, req.body.login);
+    if (!newUser) {
+        res.sendStatus(400);
+        return;
+    }
+    yield emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
+    res.sendStatus(204);
+    return;
+}));
+exports.authRouter.post('/registration-confirmation', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const isConfirmationAccept = yield usersService_1.userService.userEmailConfirmationAccept(req.body.code);
+    if (!isConfirmationAccept) {
+        res.sendStatus(400);
+        return;
+    }
+    else {
+        res.sendStatus(204);
+        return;
+    }
+}));
+exports.authRouter.post('/registration-email-resending', EmailFormValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield UsersRepository_1.usersRepository.findDBUser(req.body.email);
+    if (!user) {
+        res.sendStatus(400);
+        return;
+    }
+    if (user.emailConfirmationData.isConfirmed === true) {
+        res.sendStatus(400);
+        return;
+    }
+    emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
+    res.sendStatus(204);
+    return;
+}));
+/////

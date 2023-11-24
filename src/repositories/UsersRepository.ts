@@ -9,11 +9,18 @@ export type userViewType = {
 
 export type UserDbType = {
 	id: string
-	login: string
-	email: string
-	createdAt: Date
-	passwordSalt: string
-	passwordHash: string
+	accountData: {
+		login: string
+		email: string
+		createdAt: Date
+		passwordSalt: string
+		passwordHash: string
+	}
+	emailConfirmationData: {
+		confirmationCode: any
+		expirationDate: Date
+		isConfirmed: boolean
+	}
 }
 
 export type usersPaginationType = {
@@ -48,15 +55,12 @@ export const usersRepository = {
 		const users = await client
 			.db('hm03')
 			.collection<UserDbType>('users')
-			.find(
-				{
-					$or: [
-						{ login: { $regex: searchLoginTerm, $options: 'i' } },
-						{ email: { $regex: searchEmailTerm, $options: 'i' } },
-					],
-				},
-				{ projection: { _id: 0, passwordSalt: 0, passwordHash: 0 } }
-			)
+			.find({
+				$or: [
+					{ 'accountData.login': { $regex: searchLoginTerm, $options: 'i' } },
+					{ 'accountData.email': { $regex: searchEmailTerm, $options: 'i' } },
+				],
+			})
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
@@ -66,17 +70,23 @@ export const usersRepository = {
 			.collection<UserDbType>('users')
 			.countDocuments({
 				$or: [
-					{ login: { $regex: searchLoginTerm, $options: 'i' } },
-					{ email: { $regex: searchEmailTerm, $options: 'i' } },
+					{ 'accountData.login': { $regex: searchLoginTerm, $options: 'i' } },
+					{ 'accountData.email': { $regex: searchEmailTerm, $options: 'i' } },
 				],
 			})
 		const pagesCount = Math.ceil(totalCount / pageSize)
+		const usersView = users.map(({ id, accountData }) => ({
+			id,
+			login: accountData.login,
+			email: accountData.email,
+			createdAt: accountData.createdAt,
+		}))
 		const usersPagination = {
 			pagesCount: pagesCount,
 			page: Number(page),
 			pageSize: pageSize,
 			totalCount: totalCount,
-			items: users,
+			items: usersView,
 		}
 		return usersPagination
 	},
@@ -85,7 +95,12 @@ export const usersRepository = {
 		let user = await client
 			.db('hm03')
 			.collection<UserDbType>('users')
-			.findOne({ $or: [{ email: loginOrEmail }, { login: loginOrEmail }] })
+			.findOne({
+				$or: [
+					{ 'accountData.email': loginOrEmail },
+					{ 'accountData.login': loginOrEmail },
+				],
+			})
 		//@ts-ignore
 		return user
 	},
@@ -96,15 +111,41 @@ export const usersRepository = {
 			.collection<UserDbType>('users')
 			.insertOne(newUser)
 		//@ts-ignore
-		const { _id, passwordHash, passwordSalt, ...userView } = newUser
+		const userView = {
+			id: newUser.id,
+			login: newUser.accountData.login,
+			email: newUser.accountData.login,
+			createdAt: newUser.accountData.createdAt,
+		}
 		return userView
 	},
 
 	async deleteUser(params: { id: string }): Promise<boolean> {
-		let result = await client
+		const result = await client
 			.db('hm03')
 			.collection<UserDbType>('users')
 			.deleteOne({ id: params.id })
 		return result.deletedCount === 1
 	},
+	async userEmailConfirmationAccept(confirmationCode: any): Promise<Boolean> {
+		const user = await client
+			.db('hm03')
+			.collection<UserDbType>('users')
+			.findOne({ 'emailConfirmationData.confirmationCode': confirmationCode })
+		if (!user) {
+			return false
+		}
+		if (new Date() > user?.emailConfirmationData.expirationDate) {
+			return false
+		}
+		const resultOfUpdate = await client
+			.db('hm03')
+			.collection<UserDbType>('users')
+			.updateOne(
+				{ 'emailConfirmationData.confirmationCode': confirmationCode },
+				{ $set: { 'emailConfirmationData.isConfirmed': true } }
+			)
+		return resultOfUpdate.modifiedCount === 1
+	},
 }
+//
