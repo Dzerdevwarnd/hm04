@@ -116,8 +116,8 @@ exports.authRouter.post('/registration-confirmation', confirmationCodeIsAlreadyC
     }
 }));
 exports.authRouter.post('/registration-email-resending', EmailFormValidation, emailExistValidation, confirmationCodeIsAlreadyConfirmedValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    //usersRepository.userConfirmationCodeUpdate(req.body.email)
-    emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
+    yield UsersRepository_1.usersRepository.userConfirmationCodeUpdate(req.body.email);
+    yield emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
     res.sendStatus(204);
     return;
 }));
