@@ -152,8 +152,8 @@ authRouter.post(
 	confirmationCodeIsAlreadyConfirmedValidation,
 	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
-		usersRepository.userConfirmationCodeUpdate(req.body.email)
-		emailAdapter.sendConfirmEmail(req.body.email)
+		await usersRepository.userConfirmationCodeUpdate(req.body.email)
+		await emailAdapter.sendConfirmEmail(req.body.email)
 		res.sendStatus(204)
 		return
 	}
