@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authService = void 0;
 const add_1 = __importDefault(require("date-fns/add"));
 const uuid_1 = require("uuid");
-const emailAdapter_1 = require("../adapters/emailAdapter");
 const jwt_service_1 = require("../application/jwt-service");
 const UsersRepository_1 = require("../repositories/UsersRepository");
 const usersService_1 = require("../services/usersService");
@@ -54,9 +53,6 @@ exports.authService = {
                 },
             };
             const userView = yield UsersRepository_1.usersRepository.createUser(newUser);
-            if (userView) {
-                emailAdapter_1.emailAdapter.sendConfirmEmail(email);
-            }
             return userView;
         });
     },

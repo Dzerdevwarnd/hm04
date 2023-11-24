@@ -1,6 +1,5 @@
 import add from 'date-fns/add'
 import { v4 as uuidv4 } from 'uuid'
-import { emailAdapter } from '../adapters/emailAdapter'
 import { jwtService } from '../application/jwt-service'
 import {
 	UserDbType,
@@ -47,9 +46,6 @@ export const authService = {
 			},
 		}
 		const userView = await usersRepository.createUser(newUser)
-		if (userView) {
-			emailAdapter.sendConfirmEmail(email)
-		}
 		return userView
 	},
 }
