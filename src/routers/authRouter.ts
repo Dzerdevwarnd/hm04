@@ -41,8 +41,31 @@ const loginOrEmailValidation = body('loginOrEmail')
 
 const passwordValidation = body('password')
 	.trim()
-	.isLength({ min: 1, max: 20 })
-	.withMessage('Password or Email length should be from 1 to 20')
+	.isLength({ min: 6, max: 20 })
+	.withMessage('Password or Email length should be from 6 to 20')
+
+const confirmationCodeValidation = body('code').custom(async (code: string) => {
+	const user = await userService.findDBUserByConfirmationCode(code)
+	if (!user) {
+		throw new Error('Invalid Code')
+	}
+})
+
+const confirmationCodeIsAlreadyConfirmedValidation = body('code').custom(
+	async (code: string) => {
+		const user = await userService.findDBUserByConfirmationCode(code)
+		if (user?.emailConfirmationData.isConfirmed === true) {
+			throw new Error('Code is already confirmed')
+		}
+	}
+)
+
+const emailExistValidation = body('email').custom(async (email: string) => {
+	const user = await usersRepository.findDBUser(email)
+	if (!user) {
+		throw new Error('User with this email not exist')
+	}
+})
 
 authRouter.get('/me', async (req: Request, res: Response) => {
 	const token = req.headers.authorization!.split(' ')[1]
@@ -106,6 +129,8 @@ authRouter.post(
 
 authRouter.post(
 	'/registration-confirmation',
+	confirmationCodeIsAlreadyConfirmedValidation,
+	confirmationCodeValidation,
 	async (req: Request, res: Response) => {
 		const isConfirmationAccept = await userService.userEmailConfirmationAccept(
 			req.body.code
@@ -123,17 +148,11 @@ authRouter.post(
 authRouter.post(
 	'/registration-email-resending',
 	EmailFormValidation,
+	emailExistValidation,
+	confirmationCodeIsAlreadyConfirmedValidation,
 	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
-		const user = await usersRepository.findDBUser(req.body.email)
-		if (!user) {
-			res.sendStatus(400)
-			return
-		}
-		if (user.emailConfirmationData.isConfirmed === true) {
-			res.sendStatus(400)
-			return
-		}
+		usersRepository.userConfirmationCodeUpdate(req.body.email)
 		emailAdapter.sendConfirmEmail(req.body.email)
 		res.sendStatus(204)
 		return

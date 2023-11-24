@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.usersRepository = void 0;
+const uuid_1 = require("uuid");
 const db_1 = require("../db");
 exports.usersRepository = {
     findUser(id) {
@@ -131,6 +132,30 @@ exports.usersRepository = {
                 .collection('users')
                 .updateOne({ 'emailConfirmationData.confirmationCode': confirmationCode }, { $set: { 'emailConfirmationData.isConfirmed': true } });
             return resultOfUpdate.modifiedCount === 1;
+        });
+    },
+    userConfirmationCodeUpdate(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const confirmationCode = yield (0, uuid_1.v4)();
+            const resultOfUpdate = yield db_1.client
+                .db('hm03')
+                .collection('users')
+                .updateOne({ 'accountData.email': email }, { $set: { 'emailConfirmationData.confirmationCode': confirmationCode } });
+            if (resultOfUpdate.matchedCount === 1) {
+                return confirmationCode;
+            }
+            else {
+                return;
+            }
+        });
+    },
+    findDBUserByConfirmationCode(confirmationCode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield db_1.client
+                .db('hm03')
+                .collection('users')
+                .findOne({ 'emailConfirmationData.confirmationCode': confirmationCode });
+            return user;
         });
     },
 };

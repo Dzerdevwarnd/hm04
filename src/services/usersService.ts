@@ -76,4 +76,10 @@ export const userService = {
 			await usersRepository.userEmailConfirmationAccept(confirmationCode)
 		return isConfirmationAccept
 	},
+	async findDBUserByConfirmationCode(confirmationCode: any) {
+		const user = await usersRepository.findDBUserByConfirmationCode(
+			confirmationCode
+		)
+		return user
+	},
 }

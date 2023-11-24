@@ -47,8 +47,26 @@ const loginOrEmailValidation = (0, express_validator_1.body)('loginOrEmail')
     .withMessage('login or Email length should be from 1 to 100');
 const passwordValidation = (0, express_validator_1.body)('password')
     .trim()
-    .isLength({ min: 1, max: 20 })
-    .withMessage('Password or Email length should be from 1 to 20');
+    .isLength({ min: 6, max: 20 })
+    .withMessage('Password or Email length should be from 6 to 20');
+const confirmationCodeValidation = (0, express_validator_1.body)('code').custom((code) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield usersService_1.userService.findDBUserByConfirmationCode(code);
+    if (!user) {
+        throw new Error('Invalid Code');
+    }
+}));
+const confirmationCodeIsAlreadyConfirmedValidation = (0, express_validator_1.body)('code').custom((code) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield usersService_1.userService.findDBUserByConfirmationCode(code);
+    if ((user === null || user === void 0 ? void 0 : user.emailConfirmationData.isConfirmed) === true) {
+        throw new Error('Code is already confirmed');
+    }
+}));
+const emailExistValidation = (0, express_validator_1.body)('email').custom((email) => __awaiter(void 0, void 0, void 0, function* () {
+    const user = yield UsersRepository_1.usersRepository.findDBUser(email);
+    if (!user) {
+        throw new Error('User with this email not exist');
+    }
+}));
 exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const token = req.headers.authorization.split(' ')[1];
     const userId = yield jwt_service_1.jwtService.getUserIdByToken(token);
@@ -86,7 +104,7 @@ exports.authRouter.post('/registration', EmailFormValidation, EmailUsageValidati
     res.sendStatus(204);
     return;
 }));
-exports.authRouter.post('/registration-confirmation', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authRouter.post('/registration-confirmation', confirmationCodeIsAlreadyConfirmedValidation, confirmationCodeValidation, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const isConfirmationAccept = yield usersService_1.userService.userEmailConfirmationAccept(req.body.code);
     if (!isConfirmationAccept) {
         res.sendStatus(400);
@@ -97,16 +115,8 @@ exports.authRouter.post('/registration-confirmation', (req, res) => __awaiter(vo
         return;
     }
 }));
-exports.authRouter.post('/registration-email-resending', EmailFormValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const user = yield UsersRepository_1.usersRepository.findDBUser(req.body.email);
-    if (!user) {
-        res.sendStatus(400);
-        return;
-    }
-    if (user.emailConfirmationData.isConfirmed === true) {
-        res.sendStatus(400);
-        return;
-    }
+exports.authRouter.post('/registration-email-resending', EmailFormValidation, emailExistValidation, confirmationCodeIsAlreadyConfirmedValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    UsersRepository_1.usersRepository.userConfirmationCodeUpdate(req.body.email);
     emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
     res.sendStatus(204);
     return;

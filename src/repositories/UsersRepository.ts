@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid'
 import { client } from '../db'
 
 export type userViewType = {
@@ -146,6 +147,29 @@ export const usersRepository = {
 				{ $set: { 'emailConfirmationData.isConfirmed': true } }
 			)
 		return resultOfUpdate.modifiedCount === 1
+	},
+
+	async userConfirmationCodeUpdate(email: string) {
+		const confirmationCode = await uuidv4()
+		const resultOfUpdate = await client
+			.db('hm03')
+			.collection<UserDbType>('users')
+			.updateOne(
+				{ 'accountData.email': email },
+				{ $set: { 'emailConfirmationData.confirmationCode': confirmationCode } }
+			)
+		if (resultOfUpdate.matchedCount === 1) {
+			return confirmationCode
+		} else {
+			return
+		}
+	},
+	async findDBUserByConfirmationCode(confirmationCode: any) {
+		const user = await client
+			.db('hm03')
+			.collection<UserDbType>('users')
+			.findOne({ 'emailConfirmationData.confirmationCode': confirmationCode })
+		return user
 	},
 }
 //

@@ -92,4 +92,10 @@ exports.userService = {
             return isConfirmationAccept;
         });
     },
+    findDBUserByConfirmationCode(confirmationCode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield UsersRepository_1.usersRepository.findDBUserByConfirmationCode(confirmationCode);
+            return user;
+        });
+    },
 };
