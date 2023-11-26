@@ -49,6 +49,9 @@ const confirmationCodeValidation = body('code').custom(async (code: string) => {
 	if (!user) {
 		throw new Error('Invalid Code')
 	}
+	if (new Date() > user.emailConfirmationData.confirmationCode) {
+		throw new Error('Invalid Code')
+	}
 })
 
 const confirmationCodeIsAlreadyConfirmedValidation = body('code').custom(
@@ -56,6 +59,15 @@ const confirmationCodeIsAlreadyConfirmedValidation = body('code').custom(
 		const user = await userService.findDBUserByConfirmationCode(code)
 		if (user?.emailConfirmationData.isConfirmed === true) {
 			throw new Error('Code is already confirmed')
+		}
+	}
+)
+
+const EmailIsAlreadyConfirmedValidation = body('email').custom(
+	async (email: string) => {
+		const user = await usersRepository.findDBUser(email)
+		if (user?.emailConfirmationData.isConfirmed === true) {
+			throw new Error('Email is already confirmed')
 		}
 	}
 )
@@ -131,6 +143,7 @@ authRouter.post(
 	'/registration-confirmation',
 	confirmationCodeIsAlreadyConfirmedValidation,
 	confirmationCodeValidation,
+	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
 		const isConfirmationAccept = await userService.userEmailConfirmationAccept(
 			req.body.code
@@ -149,7 +162,7 @@ authRouter.post(
 	'/registration-email-resending',
 	EmailFormValidation,
 	emailExistValidation,
-	confirmationCodeIsAlreadyConfirmedValidation,
+	EmailIsAlreadyConfirmedValidation,
 	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
 		await usersRepository.userConfirmationCodeUpdate(req.body.email)

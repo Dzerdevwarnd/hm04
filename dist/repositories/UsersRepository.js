@@ -117,16 +117,6 @@ exports.usersRepository = {
     },
     userEmailConfirmationAccept(confirmationCode) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .findOne({ 'emailConfirmationData.confirmationCode': confirmationCode });
-            if (!user) {
-                return false;
-            }
-            if (new Date() > (user === null || user === void 0 ? void 0 : user.emailConfirmationData.expirationDate)) {
-                return false;
-            }
             const resultOfUpdate = yield db_1.client
                 .db('hm03')
                 .collection('users')

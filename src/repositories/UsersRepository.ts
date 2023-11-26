@@ -129,16 +129,6 @@ export const usersRepository = {
 		return result.deletedCount === 1
 	},
 	async userEmailConfirmationAccept(confirmationCode: any): Promise<Boolean> {
-		const user = await client
-			.db('hm03')
-			.collection<UserDbType>('users')
-			.findOne({ 'emailConfirmationData.confirmationCode': confirmationCode })
-		if (!user) {
-			return false
-		}
-		if (new Date() > user?.emailConfirmationData.expirationDate) {
-			return false
-		}
 		const resultOfUpdate = await client
 			.db('hm03')
 			.collection<UserDbType>('users')
