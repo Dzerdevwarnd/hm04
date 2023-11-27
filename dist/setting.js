@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.routersPaths = exports.settings = exports.app = void 0;
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const express_1 = __importDefault(require("express"));
 const authRouter_1 = require("./routers/authRouter");
 const blogsRouter_1 = require("./routers/blogsRouter");
@@ -16,6 +17,8 @@ exports.settings = {
     MONGO_URL: process.env.MONGO_URL ||
         'mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/?retryWrites=true&w=majority',
     JWT_SECRET: process.env.JWT_SECRET || '123',
+    accessTokenLifeTime: '10s',
+    refreshTokenLifeTime: '20s',
 };
 exports.routersPaths = {
     auth: '/auth',
@@ -26,6 +29,7 @@ exports.routersPaths = {
     comments: '/comments',
 };
 exports.app.use(express_1.default.json());
+exports.app.use((0, cookie_parser_1.default)());
 exports.app.use(exports.routersPaths.auth, authRouter_1.authRouter);
 exports.app.use(exports.routersPaths.blogs, blogsRouter_1.blogsRouter);
 exports.app.use(exports.routersPaths.posts, postsRouter_1.postsRouter);

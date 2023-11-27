@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser'
 import express from 'express'
 import { authRouter } from './routers/authRouter'
 import { blogsRouter } from './routers/blogsRouter'
@@ -13,6 +14,8 @@ export const settings = {
 		process.env.MONGO_URL ||
 		'mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/?retryWrites=true&w=majority',
 	JWT_SECRET: process.env.JWT_SECRET || '123',
+	accessTokenLifeTime: '10s',
+	refreshTokenLifeTime: '20s',
 }
 
 export const routersPaths = {
@@ -25,6 +28,7 @@ export const routersPaths = {
 }
 
 app.use(express.json())
+app.use(cookieParser())
 
 app.use(routersPaths.auth, authRouter)
 app.use(routersPaths.blogs, blogsRouter)

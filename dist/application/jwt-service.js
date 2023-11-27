@@ -16,15 +16,15 @@ exports.jwtService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const setting_1 = require("../setting");
 exports.jwtService = {
-    createJWT(user) {
+    createJWT(user, expirationTime) {
         return __awaiter(this, void 0, void 0, function* () {
             const token = jsonwebtoken_1.default.sign({ userId: user.id }, setting_1.settings.JWT_SECRET, {
-                expiresIn: '1h',
+                expiresIn: expirationTime,
             });
             return token;
         });
     },
-    getUserIdByToken(token) {
+    verifyAndGetUserIdByToken(token) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const result = yield jsonwebtoken_1.default.verify(token, setting_1.settings.JWT_SECRET);

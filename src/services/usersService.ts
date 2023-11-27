@@ -54,7 +54,7 @@ export const userService = {
 		const salt = await bcrypt.genSalt(10)
 		return salt
 	},
-	async checkCredentionalsAndReturnUser(
+	async checkCredentialsAndReturnUser(
 		loginOrEmail: string,
 		password: string
 	): Promise<UserDbType | undefined> {

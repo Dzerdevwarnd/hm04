@@ -3,7 +3,7 @@ import { body } from 'express-validator'
 import { emailAdapter } from '../adapters/emailAdapter'
 import { jwtService } from '../application/jwt-service'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
-import { usersRepository } from '../repositories/UsersRepository'
+import { UserDbType, usersRepository } from '../repositories/UsersRepository'
 import { authService } from '../services/authService'
 import { userService } from '../services/usersService'
 
@@ -102,19 +102,49 @@ authRouter.post(
 	passwordValidation,
 	inputValidationMiddleware,
 	async (req: Request, res: Response) => {
-		const accessToken = await authService.loginAndReturnJwtKey(
+		const tokens = await authService.loginAndReturnJwtKey(
 			req.body.loginOrEmail,
 			req.body.password
 		)
-		if (!accessToken) {
+		if (!tokens?.accessToken) {
 			res.sendStatus(401)
 			return
 		} else {
-			res.status(200).send(accessToken)
+			res
+				.cookie('refreshToken', tokens.refreshToken, {
+					httpOnly: true,
+					secure: true,
+				})
+				.status(200)
+				.send(tokens.accessToken)
 			return
 		}
 	}
 )
+
+authRouter.post('/refresh-token', async (req: Request, res: Response) => {
+	const userId: string = await jwtService.verifyAndGetUserIdByToken(
+		req.body.accessToken
+	)
+	const user: UserDbType | null = await usersRepository.findUser(userId)
+	if (!user) {
+		res.sendStatus(401)
+	}
+	const tokens = await authService.refreshTokens(user!)
+	if (!tokens?.accessToken) {
+		res.sendStatus(401)
+		return
+	} else {
+		res
+			.cookie('refreshToken', tokens.refreshToken, {
+				httpOnly: true,
+				secure: true,
+			})
+			.status(200)
+			.send(tokens.accessToken)
+		return
+	}
+})
 
 authRouter.post(
 	'/registration',

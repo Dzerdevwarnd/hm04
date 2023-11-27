@@ -93,13 +93,41 @@ exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, fu
     return;
 }));
 exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const accessToken = yield authService_1.authService.loginAndReturnJwtKey(req.body.loginOrEmail, req.body.password);
-    if (!accessToken) {
+    const tokens = yield authService_1.authService.loginAndReturnJwtKey(req.body.loginOrEmail, req.body.password);
+    if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken)) {
         res.sendStatus(401);
         return;
     }
     else {
-        res.status(200).send(accessToken);
+        res
+            .cookie('refreshToken', tokens.refreshToken, {
+            httpOnly: true,
+            secure: true,
+        })
+            .status(200)
+            .send(tokens.accessToken);
+        return;
+    }
+}));
+exports.authRouter.post('/refresh-token', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.body.accessToken);
+    const user = yield UsersRepository_1.usersRepository.findUser(userId);
+    if (!user) {
+        res.sendStatus(401);
+    }
+    const tokens = yield authService_1.authService.refreshTokens(user);
+    if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken)) {
+        res.sendStatus(401);
+        return;
+    }
+    else {
+        res
+            .cookie('refreshToken', tokens.refreshToken, {
+            httpOnly: true,
+            secure: true,
+        })
+            .status(200)
+            .send(tokens.accessToken);
         return;
     }
 }));

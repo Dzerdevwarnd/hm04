@@ -18,18 +18,26 @@ const uuid_1 = require("uuid");
 const jwt_service_1 = require("../application/jwt-service");
 const UsersRepository_1 = require("../repositories/UsersRepository");
 const usersService_1 = require("../services/usersService");
+const setting_1 = require("../setting");
 exports.authService = {
-    loginAndReturnJwtKey(loginOrEmail, password) {
+    loginAndReturnJwtKeys(loginOrEmail, password) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield usersService_1.userService.checkCredentionalsAndReturnUser(loginOrEmail, password);
+            const user = yield usersService_1.userService.checkCredentialsAndReturnUser(loginOrEmail, password);
             if (user == undefined) {
                 return;
             }
             else {
-                const token = yield jwt_service_1.jwtService.createJWT(user);
-                const accessToken = { accessToken: token };
-                return accessToken;
+                const accessToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.accessTokenLifeTime);
+                const refreshToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.refreshTokenLifeTime);
+                return { accessToken: accessToken, refreshToken: refreshToken };
             }
+        });
+    },
+    refreshTokens(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const accessToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.accessTokenLifeTime);
+            const refreshToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.refreshTokenLifeTime);
+            return { accessToken: accessToken, refreshToken: refreshToken };
         });
     },
     createUser(password, email, login) {
@@ -54,6 +62,16 @@ exports.authService = {
             };
             const userView = yield UsersRepository_1.usersRepository.createUser(newUser);
             return userView;
+        });
+    },
+    refreshToken(body) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(body.accessToken);
+            const user = yield UsersRepository_1.usersRepository.findUser(userId);
+            if (!user) {
+                return;
+            }
+            return user;
         });
     },
 };

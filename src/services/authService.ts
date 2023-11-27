@@ -7,20 +7,38 @@ import {
 	usersRepository,
 } from '../repositories/UsersRepository'
 import { userService } from '../services/usersService'
+import { settings } from '../setting'
 
 export const authService = {
-	async loginAndReturnJwtKey(loginOrEmail: string, password: string) {
-		const user = await userService.checkCredentionalsAndReturnUser(
+	async loginAndReturnJwtKeys(loginOrEmail: string, password: string) {
+		const user = await userService.checkCredentialsAndReturnUser(
 			loginOrEmail,
 			password
 		)
 		if (user == undefined) {
 			return
 		} else {
-			const token = await jwtService.createJWT(user)
-			const accessToken = { accessToken: token }
-			return accessToken
+			const accessToken = await jwtService.createJWT(
+				user,
+				settings.accessTokenLifeTime
+			)
+			const refreshToken = await jwtService.createJWT(
+				user,
+				settings.refreshTokenLifeTime
+			)
+			return { accessToken: accessToken, refreshToken: refreshToken }
 		}
+	},
+	async refreshTokens(user: UserDbType) {
+		const accessToken = await jwtService.createJWT(
+			user,
+			settings.accessTokenLifeTime
+		)
+		const refreshToken = await jwtService.createJWT(
+			user,
+			settings.refreshTokenLifeTime
+		)
+		return { accessToken: accessToken, refreshToken: refreshToken }
 	},
 	async createUser(
 		password: string,
@@ -47,5 +65,15 @@ export const authService = {
 		}
 		const userView = await usersRepository.createUser(newUser)
 		return userView
+	},
+	async refreshToken(body: { accessToken: string }) {
+		const userId: string = await jwtService.verifyAndGetUserIdByToken(
+			body.accessToken
+		)
+		const user: UserDbType | null = await usersRepository.findUser(userId)
+		if (!user) {
+			return
+		}
+		return user
 	},
 }
