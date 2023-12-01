@@ -17,13 +17,14 @@ const add_1 = __importDefault(require("date-fns/add"));
 const uuid_1 = require("uuid");
 const jwt_service_1 = require("../application/jwt-service");
 const UsersRepository_1 = require("../repositories/UsersRepository");
+const blacklistRepository_1 = require("../repositories/blacklistRepository");
 const usersService_1 = require("../services/usersService");
 const setting_1 = require("../setting");
 exports.authService = {
     loginAndReturnJwtKeys(loginOrEmail, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield usersService_1.userService.checkCredentialsAndReturnUser(loginOrEmail, password);
-            if (user == undefined) {
+            if (!user) {
                 return;
             }
             else {
@@ -64,14 +65,10 @@ exports.authService = {
             return userView;
         });
     },
-    refreshToken(body) {
+    addTokensInBlacklist(reqBody, reqCookies) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(body.accessToken);
-            const user = yield UsersRepository_1.usersRepository.findUser(userId);
-            if (!user) {
-                return;
-            }
-            return user;
+            const isAdded = yield blacklistRepository_1.blacklistRepository.addTokensInBlacklist(reqBody, reqCookies);
+            return isAdded;
         });
     },
 };

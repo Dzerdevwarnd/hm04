@@ -36,7 +36,7 @@ describe('/comments', () => {
 		postId = (await postsRepository.returnAllPosts('')).items[0].id
 
 		userService.createUser({ login, password, email }) // создание юзера и jwt ключа
-		const accessToken = await authService.loginAndReturnJwtKey(login, password)
+		const accessToken = await authService.loginAndReturnJwtKeys(login, password)
 		jwtToken = accessToken?.accessToken
 
 		const res = await request(app)

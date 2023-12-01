@@ -2,10 +2,16 @@ import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
 import { emailAdapter } from '../adapters/emailAdapter'
 import { jwtService } from '../application/jwt-service'
+import { client } from '../db'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { UserDbType, usersRepository } from '../repositories/UsersRepository'
+import {
+	TokenDBType,
+	blacklistRepository,
+} from '../repositories/blacklistRepository'
 import { authService } from '../services/authService'
 import { userService } from '../services/usersService'
+import { RequestWithBody, RequestWithCookies } from '../types/RequestsTypes'
 
 export const authRouter = Router({})
 
@@ -80,15 +86,19 @@ const emailExistValidation = body('email').custom(async (email: string) => {
 })
 
 authRouter.get('/me', async (req: Request, res: Response) => {
+	if (!req.headers.authorization) {
+		res.sendStatus(401)
+		return
+	}
 	const token = req.headers.authorization!.split(' ')[1]
-	const userId = await jwtService.getUserIdByToken(token)
+	const userId = await jwtService.verifyAndGetUserIdByToken(token)
 	if (!userId) {
 		res.sendStatus(401)
 		return
 	}
 	const user = await userService.findUser(userId)
 	const userInfo = {
-		id: userId,
+		userId: userId,
 		login: user!.accountData.login,
 		email: user!.accountData.email,
 	}
@@ -101,8 +111,11 @@ authRouter.post(
 	loginOrEmailValidation,
 	passwordValidation,
 	inputValidationMiddleware,
-	async (req: Request, res: Response) => {
-		const tokens = await authService.loginAndReturnJwtKey(
+	async (
+		req: RequestWithBody<{ loginOrEmail: string; password: string }>,
+		res: Response
+	) => {
+		const tokens = await authService.loginAndReturnJwtKeys(
 			req.body.loginOrEmail,
 			req.body.password
 		)
@@ -116,35 +129,87 @@ authRouter.post(
 					secure: true,
 				})
 				.status(200)
-				.send(tokens.accessToken)
+				.send({ accessToken: tokens.accessToken })
 			return
 		}
 	}
 )
 
-authRouter.post('/refresh-token', async (req: Request, res: Response) => {
-	const userId: string = await jwtService.verifyAndGetUserIdByToken(
-		req.body.accessToken
-	)
-	const user: UserDbType | null = await usersRepository.findUser(userId)
-	if (!user) {
-		res.sendStatus(401)
-	}
-	const tokens = await authService.refreshTokens(user!)
-	if (!tokens?.accessToken) {
-		res.sendStatus(401)
-		return
-	} else {
+authRouter.post(
+	'/refresh-token',
+	async (req: RequestWithCookies<{ refreshToken: string }>, res: Response) => {
+		const tokenInBlackList = await client
+			.db('hm03')
+			.collection<TokenDBType>('BlacklistTokens')
+			.findOne({ token: req.cookies.refreshToken })
+		if (tokenInBlackList) {
+			res.sendStatus(401)
+			return
+		}
+		const userId: string = await jwtService.verifyAndGetUserIdByToken(
+			req.cookies.refreshToken
+		)
+		const user: UserDbType | null = await usersRepository.findUser(userId)
+		if (!user) {
+			res.sendStatus(401)
+			return
+		}
+		const tokens = await authService.refreshTokens(user!)
+		if (!tokens?.accessToken || !tokens.refreshToken) {
+			res.sendStatus(401) //
+			return
+		}
+		const isAdded = await blacklistRepository.addRefreshTokenInBlacklist(
+			req.cookies
+		)
+		if (!isAdded) {
+			res.status(555).send('BlacklistError')
+			return
+		}
 		res
 			.cookie('refreshToken', tokens.refreshToken, {
 				httpOnly: true,
 				secure: true,
 			})
 			.status(200)
-			.send(tokens.accessToken)
+			.send({ accessToken: tokens.accessToken })
 		return
 	}
-})
+)
+
+authRouter.post(
+	'/logout',
+	async (
+		req: RequestWithCookies<{ cookies: { refreshToken: string } }>,
+		res: Response
+	) => {
+		const tokenInBlackList = await client
+			.db('hm03')
+			.collection<TokenDBType>('BlacklistTokens')
+			.findOne({ token: req.cookies.refreshToken })
+		if (tokenInBlackList) {
+			res.sendStatus(401)
+			return
+		}
+		const userId = await jwtService.verifyAndGetUserIdByToken(
+			req.cookies.refreshToken
+		)
+		if (!userId) {
+			res.sendStatus(401)
+			return
+		}
+		const isAdded = await blacklistRepository.addRefreshTokenInBlacklist({
+			refreshToken: req.cookies.refreshToken,
+		})
+		if (!isAdded) {
+			res.sendStatus(555)
+			return
+		} else {
+			res.sendStatus(204)
+			return
+		}
+	}
+)
 
 authRouter.post(
 	'/registration',
@@ -153,7 +218,10 @@ authRouter.post(
 	loginValidation,
 	passwordValidation,
 	inputValidationMiddleware,
-	async (req: Request, res: Response) => {
+	async (
+		req: RequestWithBody<{ password: string; email: string; login: string }>,
+		res: Response
+	) => {
 		const newUser = await authService.createUser(
 			req.body.password,
 			req.body.email,
@@ -174,7 +242,7 @@ authRouter.post(
 	confirmationCodeIsAlreadyConfirmedValidation,
 	confirmationCodeValidation,
 	inputValidationMiddleware,
-	async (req: Request, res: Response) => {
+	async (req: RequestWithBody<{ code: string }>, res: Response) => {
 		const isConfirmationAccept = await userService.userEmailConfirmationAccept(
 			req.body.code
 		)
@@ -194,11 +262,11 @@ authRouter.post(
 	emailExistValidation,
 	EmailIsAlreadyConfirmedValidation,
 	inputValidationMiddleware,
-	async (req: Request, res: Response) => {
+	async (req: RequestWithBody<{ email: string }>, res: Response) => {
 		await usersRepository.userConfirmationCodeUpdate(req.body.email)
 		await emailAdapter.sendConfirmEmail(req.body.email)
 		res.sendStatus(204)
 		return
 	}
 )
-/////
+///////

@@ -14,8 +14,10 @@ const express_1 = require("express");
 const express_validator_1 = require("express-validator");
 const emailAdapter_1 = require("../adapters/emailAdapter");
 const jwt_service_1 = require("../application/jwt-service");
+const db_1 = require("../db");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const UsersRepository_1 = require("../repositories/UsersRepository");
+const blacklistRepository_1 = require("../repositories/blacklistRepository");
 const authService_1 = require("../services/authService");
 const usersService_1 = require("../services/usersService");
 exports.authRouter = (0, express_1.Router)({});
@@ -77,15 +79,19 @@ const emailExistValidation = (0, express_validator_1.body)('email').custom((emai
     }
 }));
 exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    if (!req.headers.authorization) {
+        res.sendStatus(401);
+        return;
+    }
     const token = req.headers.authorization.split(' ')[1];
-    const userId = yield jwt_service_1.jwtService.getUserIdByToken(token);
+    const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(token);
     if (!userId) {
         res.sendStatus(401);
         return;
     }
     const user = yield usersService_1.userService.findUser(userId);
     const userInfo = {
-        id: userId,
+        userId: userId,
         login: user.accountData.login,
         email: user.accountData.email,
     };
@@ -93,7 +99,7 @@ exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, fu
     return;
 }));
 exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const tokens = yield authService_1.authService.loginAndReturnJwtKey(req.body.loginOrEmail, req.body.password);
+    const tokens = yield authService_1.authService.loginAndReturnJwtKeys(req.body.loginOrEmail, req.body.password);
     if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken)) {
         res.sendStatus(401);
         return;
@@ -105,29 +111,67 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
             secure: true,
         })
             .status(200)
-            .send(tokens.accessToken);
+            .send({ accessToken: tokens.accessToken });
         return;
     }
 }));
 exports.authRouter.post('/refresh-token', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.body.accessToken);
-    const user = yield UsersRepository_1.usersRepository.findUser(userId);
-    if (!user) {
-        res.sendStatus(401);
-    }
-    const tokens = yield authService_1.authService.refreshTokens(user);
-    if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken)) {
+    const tokenInBlackList = yield db_1.client
+        .db('hm03')
+        .collection('BlacklistTokens')
+        .findOne({ token: req.cookies.refreshToken });
+    if (tokenInBlackList) {
         res.sendStatus(401);
         return;
     }
+    const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.cookies.refreshToken);
+    const user = yield UsersRepository_1.usersRepository.findUser(userId);
+    if (!user) {
+        res.sendStatus(401);
+        return;
+    }
+    const tokens = yield authService_1.authService.refreshTokens(user);
+    if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken) || !tokens.refreshToken) {
+        res.sendStatus(401); //
+        return;
+    }
+    const isAdded = yield blacklistRepository_1.blacklistRepository.addRefreshTokenInBlacklist(req.cookies);
+    if (!isAdded) {
+        res.status(555).send('BlacklistError');
+        return;
+    }
+    res
+        .cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: true,
+    })
+        .status(200)
+        .send({ accessToken: tokens.accessToken });
+    return;
+}));
+exports.authRouter.post('/logout', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const tokenInBlackList = yield db_1.client
+        .db('hm03')
+        .collection('BlacklistTokens')
+        .findOne({ token: req.cookies.refreshToken });
+    if (tokenInBlackList) {
+        res.sendStatus(401);
+        return;
+    }
+    const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.cookies.refreshToken);
+    if (!userId) {
+        res.sendStatus(401);
+        return;
+    }
+    const isAdded = yield blacklistRepository_1.blacklistRepository.addRefreshTokenInBlacklist({
+        refreshToken: req.cookies.refreshToken,
+    });
+    if (!isAdded) {
+        res.sendStatus(555);
+        return;
+    }
     else {
-        res
-            .cookie('refreshToken', tokens.refreshToken, {
-            httpOnly: true,
-            secure: true,
-        })
-            .status(200)
-            .send(tokens.accessToken);
+        res.sendStatus(204);
         return;
     }
 }));
@@ -158,4 +202,4 @@ exports.authRouter.post('/registration-email-resending', EmailFormValidation, em
     res.sendStatus(204);
     return;
 }));
-/////
+///////

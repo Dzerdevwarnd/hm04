@@ -60,17 +60,6 @@ export const postsValidation = {
 		.trim()
 		.isLength({ min: 20, max: 300 })
 		.withMessage('Content length should be from 20 to 300'),
-	/*blogIdExistValidationFromUrl: param('id').custom(
-		async (value: string, { req }) => {
-			const id = value
-			const params = { id }
-			const blog: blogType | undefined = await blogsService.findBlog(params)
-			if (!blog) {
-				const error = new Error('Blog URL id does not exist')
-				throw error 
-			}
-		}
-	),*/
 }
 postsRouter.get(
 	'/',

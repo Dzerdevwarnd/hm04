@@ -7,8 +7,6 @@ import { userService } from '../services/usersService'
 
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
-type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
-type RequestParamsQuery<P, Q> = Request<P, {}, {}, Q>
 type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 
 const loginValidation = body('login')

@@ -6,6 +6,7 @@ import {
 	userViewType,
 	usersRepository,
 } from '../repositories/UsersRepository'
+import { blacklistRepository } from '../repositories/blacklistRepository'
 import { userService } from '../services/usersService'
 import { settings } from '../setting'
 
@@ -15,7 +16,7 @@ export const authService = {
 			loginOrEmail,
 			password
 		)
-		if (user == undefined) {
+		if (!user) {
 			return
 		} else {
 			const accessToken = await jwtService.createJWT(
@@ -66,14 +67,14 @@ export const authService = {
 		const userView = await usersRepository.createUser(newUser)
 		return userView
 	},
-	async refreshToken(body: { accessToken: string }) {
-		const userId: string = await jwtService.verifyAndGetUserIdByToken(
-			body.accessToken
+	async addTokensInBlacklist(
+		reqBody: { accessToken: string },
+		reqCookies: { refreshToken: string }
+	) {
+		const isAdded = await blacklistRepository.addTokensInBlacklist(
+			reqBody,
+			reqCookies
 		)
-		const user: UserDbType | null = await usersRepository.findUser(userId)
-		if (!user) {
-			return
-		}
-		return user
+		return isAdded
 	},
 }
