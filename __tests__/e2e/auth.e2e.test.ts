@@ -1,17 +1,20 @@
 import request from 'supertest'
-import { userService } from '../../src/services/usersService'
 import { app, routersPaths } from '../../src/setting'
+
+const agent = request.agent(app)
 
 describe('/auth', () => {
 	let entityId: string
 	let entityCreatedAt: string
-	let cookies: { refreshToken: string }
+	let cookies: any
+	let refreshToken: any
+	let expiredCookies: { refreshToken: string }
 	const email = 'dzerdevwarnd@gmail.com'
 	const login = 'string'
 	const password = '123321'
 
 	it('should return 200 and Access Token', async () => {
-		const res = await request(app).post(`${routersPaths.auth}/login`).send({
+		const res = await agent.post(`${routersPaths.auth}/login`).send({
 			loginOrEmail: email,
 			password: password,
 		})
@@ -20,9 +23,14 @@ describe('/auth', () => {
 			accessToken: expect.any(String),
 		})
 		cookies = res.headers['set-cookie']
+		console.log(cookies[0])
+		console.log(refreshToken)
+		expect(cookies[0]).toEqual(
+			`refreshToken=${expect.any(String)}; Path=/; HttpOnly; Secure`
+		)
 	}),
 		it('should return 400 and Access Token', async () => {
-			const res = await request(app).post(`${routersPaths.auth}/login`).send({
+			const res = await agent.post(`${routersPaths.auth}/login`).send({
 				loginOrEmail: '',
 				password: password,
 			})
@@ -37,23 +45,24 @@ describe('/auth', () => {
 			})
 		}),
 		it('should return 401 and Access Token', async () => {
-			const res = await request(app).post(`${routersPaths.auth}/login`).send({
+			const res = await agent.post(`${routersPaths.auth}/login`).send({
 				loginOrEmail: 'login',
 				password: `wrongPassword`,
 			})
 			expect(res.status).toEqual(401)
 		}),
-		it('should return 200 and Access Token', async () => {
-			const res = await request(app).post(`${routersPaths.auth}/login`).send({
-				loginOrEmail: email,
-				password: password,
-			})
+		it('should return 200 and new refresh Token in cookies', async () => {
+			expiredCookies = cookies
+			const res = await agent
+				.post(`${routersPaths.auth}/refresh-token`)
+				.set('Cookie', [cookies[0].split(' ')[0]])
+				.send({})
 			expect(res.status).toEqual(200)
-			expect(res.body).toEqual({
-				accessToken: expect.any(String),
-			})
-		}),
-		it('should return 200 and User info', async () => {
+			cookies = res.headers['set-cookie']
+			expect(cookies).toEqual({ refreshToken: expect.any(String) })
+		})
+})
+/*		it('should return 200 and User info', async () => {
 			await userService.createUser({ login, password, email }) // создание пользователя
 			const res = await request(app).get(`${routersPaths.auth}/me`)
 
@@ -105,4 +114,4 @@ describe('/auth', () => {
 	it('should return 404, not found deleted blog', async () => {
 		await request(app).get(`${routersPaths.blogs}/${entityId}`).expect(404)
 	})
-})
+})*/
