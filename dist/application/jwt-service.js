@@ -16,12 +16,20 @@ exports.jwtService = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const setting_1 = require("../setting");
 exports.jwtService = {
-    createJWT(user, expirationTime) {
+    createAccessToken(user, expirationTime) {
         return __awaiter(this, void 0, void 0, function* () {
-            const token = jsonwebtoken_1.default.sign({ userId: user.id }, setting_1.settings.JWT_SECRET, {
+            const AccessToken = jsonwebtoken_1.default.sign({ userId: user.id }, setting_1.settings.JWT_SECRET, {
                 expiresIn: expirationTime,
             });
-            return token;
+            return AccessToken;
+        });
+    },
+    createRefreshToken(deviceId, expirationTime) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const RefreshToken = jsonwebtoken_1.default.sign({ deviceId: deviceId }, setting_1.settings.JWT_SECRET, {
+                expiresIn: expirationTime,
+            });
+            return RefreshToken;
         });
     },
     verifyAndGetUserIdByToken(token) {

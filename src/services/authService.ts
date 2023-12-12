@@ -11,7 +11,11 @@ import { userService } from '../services/usersService'
 import { settings } from '../setting'
 
 export const authService = {
-	async loginAndReturnJwtKeys(loginOrEmail: string, password: string) {
+	async loginAndReturnJwtKeys(
+		loginOrEmail: string,
+		password: string,
+		deviceId: string
+	) {
 		const user = await userService.checkCredentialsAndReturnUser(
 			loginOrEmail,
 			password
@@ -19,12 +23,12 @@ export const authService = {
 		if (!user) {
 			return
 		} else {
-			const accessToken = await jwtService.createJWT(
+			const accessToken = await jwtService.createAccessToken(
 				user,
 				settings.accessTokenLifeTime
 			)
-			const refreshToken = await jwtService.createJWT(
-				user,
+			const refreshToken = await jwtService.createRefreshToken(
+				deviceId,
 				settings.refreshTokenLifeTime
 			)
 			return { accessToken: accessToken, refreshToken: refreshToken }

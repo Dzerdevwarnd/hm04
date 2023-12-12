@@ -115,14 +115,26 @@ authRouter.post(
 		req: RequestWithBody<{ loginOrEmail: string; password: string }>,
 		res: Response
 	) => {
+		const deviceId = String(Date.now())
 		const tokens = await authService.loginAndReturnJwtKeys(
 			req.body.loginOrEmail,
-			req.body.password
+			req.body.password,
+			deviceId
 		)
 		if (!tokens?.accessToken) {
 			res.sendStatus(401)
 			return
 		} else {
+			const user = await usersRepository.findDBUser(req.body.loginOrEmail)
+			const RefreshTokenMeta ={
+				userId : user?.id,
+				deviceId: deviceId,
+				deviceName: req.headers['user-agent'] || "unknown"
+				Ip: string,
+				usedAt: new Date()
+			}
+			const refreshTokenMeta = await refreshTokensMetaRepository.createRefreshToken(UserId,deviceId,devic)
+
 			res
 				.cookie('refreshToken', tokens.refreshToken, {
 					httpOnly: true,

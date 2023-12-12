@@ -3,11 +3,17 @@ import { UserDbType } from '../repositories/UsersRepository'
 import { settings } from '../setting'
 
 export const jwtService = {
-	async createJWT(user: UserDbType, expirationTime: string) {
-		const token = jwt.sign({ userId: user.id }, settings.JWT_SECRET, {
+	async createAccessToken(user: UserDbType, expirationTime: string) {
+		const AccessToken = jwt.sign({ userId: user.id }, settings.JWT_SECRET, {
 			expiresIn: expirationTime,
 		})
-		return token
+		return AccessToken
+	},
+	async createRefreshToken(deviceId: string, expirationTime: string) {
+		const RefreshToken = jwt.sign({ deviceId: deviceId }, settings.JWT_SECRET, {
+			expiresIn: expirationTime,
+		})
+		return RefreshToken
 	},
 	async verifyAndGetUserIdByToken(token: string) {
 		try {

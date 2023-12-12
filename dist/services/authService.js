@@ -21,15 +21,15 @@ const blacklistRepository_1 = require("../repositories/blacklistRepository");
 const usersService_1 = require("../services/usersService");
 const setting_1 = require("../setting");
 exports.authService = {
-    loginAndReturnJwtKeys(loginOrEmail, password) {
+    loginAndReturnJwtKeys(loginOrEmail, password, deviceId) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield usersService_1.userService.checkCredentialsAndReturnUser(loginOrEmail, password);
             if (!user) {
                 return;
             }
             else {
-                const accessToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.accessTokenLifeTime);
-                const refreshToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.refreshTokenLifeTime);
+                const accessToken = yield jwt_service_1.jwtService.createAccessToken(user, setting_1.settings.accessTokenLifeTime);
+                const refreshToken = yield jwt_service_1.jwtService.createRefreshToken(deviceId, setting_1.settings.refreshTokenLifeTime);
                 return { accessToken: accessToken, refreshToken: refreshToken };
             }
         });

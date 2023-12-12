@@ -99,12 +99,22 @@ exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, fu
     return;
 }));
 exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const tokens = yield authService_1.authService.loginAndReturnJwtKeys(req.body.loginOrEmail, req.body.password);
+    const deviceId = String(Date.now());
+    const tokens = yield authService_1.authService.loginAndReturnJwtKeys(req.body.loginOrEmail, req.body.password, deviceId);
     if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken)) {
         res.sendStatus(401);
         return;
     }
     else {
+        const user = yield UsersRepository_1.usersRepository.findDBUser(req.body.loginOrEmail);
+        const RefreshTokenMeta = {
+            userId: user === null || user === void 0 ? void 0 : user.id,
+            deviceId: deviceId,
+            deviceName: req.headers['user-agent'] || "unknown",
+            Ip: string,
+            usedAt: new Date()
+        };
+        const refreshTokenMeta = yield refreshTokensMetaRepository.createRefreshToken(UserId, deviceId, devic);
         res
             .cookie('refreshToken', tokens.refreshToken, {
             httpOnly: true,
