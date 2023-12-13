@@ -3,14 +3,20 @@ import { body } from 'express-validator'
 import { emailAdapter } from '../adapters/emailAdapter'
 import { jwtService } from '../application/jwt-service'
 import { client } from '../db'
+import { antiSpamMiddleware } from '../middleware/antiSpamMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { UserDbType, usersRepository } from '../repositories/UsersRepository'
 import {
 	TokenDBType,
 	blacklistRepository,
 } from '../repositories/blacklistRepository'
+import {
+	refreshTokensMetaRepository,
+	refreshTokensMetaTypeDB,
+} from '../repositories/refreshTokensMetaRepository'
 import { authService } from '../services/authService'
 import { userService } from '../services/usersService'
+import { settings } from '../setting'
 import { RequestWithBody, RequestWithCookies } from '../types/RequestsTypes'
 
 export const authRouter = Router({})
@@ -111,6 +117,7 @@ authRouter.post(
 	loginOrEmailValidation,
 	passwordValidation,
 	inputValidationMiddleware,
+	antiSpamMiddleware,
 	async (
 		req: RequestWithBody<{ loginOrEmail: string; password: string }>,
 		res: Response
@@ -126,15 +133,27 @@ authRouter.post(
 			return
 		} else {
 			const user = await usersRepository.findDBUser(req.body.loginOrEmail)
-			const RefreshTokenMeta ={
-				userId : user?.id,
+			const ipAddress =
+				req.ip ||
+				req.headers['x-forwarded-for'] ||
+				req.headers['x-real-ip'] ||
+				req.socket.remoteAddress
+			console.log(ipAddress)
+			const RefreshTokenMeta: refreshTokensMetaTypeDB = {
+				userId: user!.id,
 				deviceId: deviceId,
-				deviceName: req.headers['user-agent'] || "unknown"
-				Ip: string,
-				usedAt: new Date()
+				deviceName: req.headers['user-agent'] || 'unknown',
+				ip: ipAddress,
+				usedAt: new Date(),
+				expiredAt: new Date(Date.now + settings.refreshTokenLifeTime),
 			}
-			const refreshTokenMeta = await refreshTokensMetaRepository.createRefreshToken(UserId,deviceId,devic)
-
+			const isCreated = await refreshTokensMetaRepository.createRefreshToken(
+				RefreshTokenMeta
+			)
+			if (!isCreated) {
+				res.status(400).send('RefreshTokenMeta error')
+				return
+			}
 			res
 				.cookie('refreshToken', tokens.refreshToken, {
 					httpOnly: true,
@@ -158,15 +177,21 @@ authRouter.post(
 			res.sendStatus(401)
 			return
 		}
-		const userId: string = await jwtService.verifyAndGetUserIdByToken(
-			req.cookies.refreshToken
-		)
+		const userId: string | undefined =
+			await userService.getUserIdFromRefreshToken(req.cookies.refreshToken)
+		if (!userId) {
+			res.sendStatus(401)
+			return
+		}
 		const user: UserDbType | null = await usersRepository.findUser(userId)
 		if (!user) {
 			res.sendStatus(401)
 			return
 		}
-		const tokens = await authService.refreshTokens(user!)
+		const deviceId = await jwtService.verifyAndGetDeviceIdByToken(
+			req.cookies.refreshToken
+		)
+		const tokens = await authService.refreshTokens(user!, deviceId)
 		if (!tokens?.accessToken || !tokens.refreshToken) {
 			res.sendStatus(401) //
 			return
@@ -176,6 +201,24 @@ authRouter.post(
 		)
 		if (!isAdded) {
 			res.status(555).send('BlacklistError')
+			return
+		}
+		const ipAddress =
+			req.ip ||
+			req.headers['x-forwarded-for'] ||
+			req.headers['x-real-ip'] ||
+			req.socket.remoteAddress
+		console.log(ipAddress)
+		const RefreshTokenMetaUpd = {
+			usedAt: new Date(),
+			expiredAt: new Date(Date.now + settings.refreshTokenLifeTime),
+		}
+		const isUpdated = await refreshTokensMetaRepository.updateRefreshTokenMeta(
+			deviceId,
+			RefreshTokenMetaUpd
+		)
+		if (!isUpdated) {
+			res.status(400).send('RefreshTokenMeta error')
 			return
 		}
 		res

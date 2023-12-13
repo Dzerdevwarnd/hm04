@@ -1,12 +1,14 @@
 import bcrypt from 'bcrypt'
 import add from 'date-fns/add'
 import { v4 as uuidv4 } from 'uuid'
+import { jwtService } from '../application/jwt-service'
 import {
 	UserDbType,
 	userViewType,
 	usersPaginationType,
 	usersRepository,
 } from '../repositories/UsersRepository'
+import { refreshTokensMetaRepository } from '../repositories/refreshTokensMetaRepository'
 
 export const userService = {
 	async findUser(id: string): Promise<UserDbType | null> {
@@ -81,5 +83,12 @@ export const userService = {
 			confirmationCode
 		)
 		return user
+	},
+	async getUserIdFromRefreshToken(
+		refreshToken: string
+	): Promise<string | undefined> {
+		const deviceId = await jwtService.verifyAndGetDeviceIdByToken(refreshToken)
+		const userId = refreshTokensMetaRepository.findUserIdByDeviceId(deviceId)
+		return userId
 	},
 }

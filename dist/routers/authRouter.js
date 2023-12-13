@@ -15,11 +15,14 @@ const express_validator_1 = require("express-validator");
 const emailAdapter_1 = require("../adapters/emailAdapter");
 const jwt_service_1 = require("../application/jwt-service");
 const db_1 = require("../db");
+const antiSpamMiddleware_1 = require("../middleware/antiSpamMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const UsersRepository_1 = require("../repositories/UsersRepository");
 const blacklistRepository_1 = require("../repositories/blacklistRepository");
+const refreshTokensMetaRepository_1 = require("../repositories/refreshTokensMetaRepository");
 const authService_1 = require("../services/authService");
 const usersService_1 = require("../services/usersService");
+const setting_1 = require("../setting");
 exports.authRouter = (0, express_1.Router)({});
 const loginValidation = (0, express_validator_1.body)('login')
     .trim()
@@ -98,7 +101,7 @@ exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, fu
     res.status(200).send(userInfo);
     return;
 }));
-exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, antiSpamMiddleware_1.antiSpamMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const deviceId = String(Date.now());
     const tokens = yield authService_1.authService.loginAndReturnJwtKeys(req.body.loginOrEmail, req.body.password, deviceId);
     if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken)) {
@@ -107,14 +110,24 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
     }
     else {
         const user = yield UsersRepository_1.usersRepository.findDBUser(req.body.loginOrEmail);
+        const ipAddress = req.ip ||
+            req.headers['x-forwarded-for'] ||
+            req.headers['x-real-ip'] ||
+            req.socket.remoteAddress;
+        console.log(ipAddress);
         const RefreshTokenMeta = {
-            userId: user === null || user === void 0 ? void 0 : user.id,
+            userId: user.id,
             deviceId: deviceId,
-            deviceName: req.headers['user-agent'] || "unknown",
-            Ip: string,
-            usedAt: new Date()
+            deviceName: req.headers['user-agent'] || 'unknown',
+            ip: ipAddress,
+            usedAt: new Date(),
+            expiredAt: new Date(Date.now + setting_1.settings.refreshTokenLifeTime),
         };
-        const refreshTokenMeta = yield refreshTokensMetaRepository.createRefreshToken(UserId, deviceId, devic);
+        const isCreated = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.createRefreshToken(RefreshTokenMeta);
+        if (!isCreated) {
+            res.status(400).send('RefreshTokenMeta error');
+            return;
+        }
         res
             .cookie('refreshToken', tokens.refreshToken, {
             httpOnly: true,
@@ -134,13 +147,18 @@ exports.authRouter.post('/refresh-token', (req, res) => __awaiter(void 0, void 0
         res.sendStatus(401);
         return;
     }
-    const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.cookies.refreshToken);
+    const userId = yield usersService_1.userService.getUserIdFromRefreshToken(req.cookies.refreshToken);
+    if (!userId) {
+        res.sendStatus(401);
+        return;
+    }
     const user = yield UsersRepository_1.usersRepository.findUser(userId);
     if (!user) {
         res.sendStatus(401);
         return;
     }
-    const tokens = yield authService_1.authService.refreshTokens(user);
+    const deviceId = yield jwt_service_1.jwtService.verifyAndGetDeviceIdByToken(req.cookies.refreshToken);
+    const tokens = yield authService_1.authService.refreshTokens(user, deviceId);
     if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken) || !tokens.refreshToken) {
         res.sendStatus(401); //
         return;
@@ -148,6 +166,20 @@ exports.authRouter.post('/refresh-token', (req, res) => __awaiter(void 0, void 0
     const isAdded = yield blacklistRepository_1.blacklistRepository.addRefreshTokenInBlacklist(req.cookies);
     if (!isAdded) {
         res.status(555).send('BlacklistError');
+        return;
+    }
+    const ipAddress = req.ip ||
+        req.headers['x-forwarded-for'] ||
+        req.headers['x-real-ip'] ||
+        req.socket.remoteAddress;
+    console.log(ipAddress);
+    const RefreshTokenMetaUpd = {
+        usedAt: new Date(),
+        expiredAt: new Date(Date.now + setting_1.settings.refreshTokenLifeTime),
+    };
+    const isUpdated = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.updateRefreshTokenMeta(deviceId, RefreshTokenMetaUpd);
+    if (!isUpdated) {
+        res.status(400).send('RefreshTokenMeta error');
         return;
     }
     res

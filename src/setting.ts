@@ -4,6 +4,7 @@ import { authRouter } from './routers/authRouter'
 import { blogsRouter } from './routers/blogsRouter'
 import { commentsRouter } from './routers/commentsRouter'
 import { postsRouter } from './routers/postsRouter'
+import { securityRouter } from './routers/securityRouter'
 import { testingRouter } from './routers/testingRouter'
 import { usersRouter } from './routers/usersRouter'
 
@@ -25,6 +26,7 @@ export const routersPaths = {
 	users: '/users',
 	testing: '/testing',
 	comments: '/comments',
+	security: '/security',
 }
 
 app.use(express.json())
@@ -36,3 +38,4 @@ app.use(routersPaths.posts, postsRouter)
 app.use(routersPaths.users, usersRouter)
 app.use(routersPaths.testing, testingRouter)
 app.use(routersPaths.comments, commentsRouter)
+app.use(routersPaths.security, securityRouter)

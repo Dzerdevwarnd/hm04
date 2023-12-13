@@ -10,6 +10,7 @@ const authRouter_1 = require("./routers/authRouter");
 const blogsRouter_1 = require("./routers/blogsRouter");
 const commentsRouter_1 = require("./routers/commentsRouter");
 const postsRouter_1 = require("./routers/postsRouter");
+const securityRouter_1 = require("./routers/securityRouter");
 const testingRouter_1 = require("./routers/testingRouter");
 const usersRouter_1 = require("./routers/usersRouter");
 exports.app = (0, express_1.default)();
@@ -27,6 +28,7 @@ exports.routersPaths = {
     users: '/users',
     testing: '/testing',
     comments: '/comments',
+    security: '/security',
 };
 exports.app.use(express_1.default.json());
 exports.app.use((0, cookie_parser_1.default)());
@@ -36,3 +38,4 @@ exports.app.use(exports.routersPaths.posts, postsRouter_1.postsRouter);
 exports.app.use(exports.routersPaths.users, usersRouter_1.usersRouter);
 exports.app.use(exports.routersPaths.testing, testingRouter_1.testingRouter);
 exports.app.use(exports.routersPaths.comments, commentsRouter_1.commentsRouter);
+exports.app.use(exports.routersPaths.security, securityRouter_1.securityRouter);

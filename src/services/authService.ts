@@ -34,13 +34,13 @@ export const authService = {
 			return { accessToken: accessToken, refreshToken: refreshToken }
 		}
 	},
-	async refreshTokens(user: UserDbType) {
-		const accessToken = await jwtService.createJWT(
+	async refreshTokens(user: UserDbType, deviceId: string) {
+		const accessToken = await jwtService.createAccessToken(
 			user,
 			settings.accessTokenLifeTime
 		)
-		const refreshToken = await jwtService.createJWT(
-			user,
+		const refreshToken = await jwtService.createRefreshToken(
+			deviceId,
 			settings.refreshTokenLifeTime
 		)
 		return { accessToken: accessToken, refreshToken: refreshToken }

@@ -43,4 +43,15 @@ exports.jwtService = {
             }
         });
     },
+    verifyAndGetDeviceIdByToken(token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const result = yield jsonwebtoken_1.default.verify(token, setting_1.settings.JWT_SECRET);
+                return result.deviceId;
+            }
+            catch (error) {
+                return;
+            }
+        });
+    },
 };

@@ -23,4 +23,12 @@ export const jwtService = {
 			return
 		}
 	},
+	async verifyAndGetDeviceIdByToken(token: string) {
+		try {
+			const result: any = await jwt.verify(token, settings.JWT_SECRET)
+			return result.deviceId
+		} catch (error) {
+			return
+		}
+	},
 }

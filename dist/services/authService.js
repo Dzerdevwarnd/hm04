@@ -34,10 +34,10 @@ exports.authService = {
             }
         });
     },
-    refreshTokens(user) {
+    refreshTokens(user, deviceId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const accessToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.accessTokenLifeTime);
-            const refreshToken = yield jwt_service_1.jwtService.createJWT(user, setting_1.settings.refreshTokenLifeTime);
+            const accessToken = yield jwt_service_1.jwtService.createAccessToken(user, setting_1.settings.accessTokenLifeTime);
+            const refreshToken = yield jwt_service_1.jwtService.createRefreshToken(deviceId, setting_1.settings.refreshTokenLifeTime);
             return { accessToken: accessToken, refreshToken: refreshToken };
         });
     },
