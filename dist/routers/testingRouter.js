@@ -38,6 +38,10 @@ exports.testingRouter.delete('/all-data', (req, res) => __awaiter(void 0, void 0
         .db('hm03')
         .collection('ipRequests')
         .deleteMany({});
+    let resultOfDeleteRefreshTokenMeta = yield db_1.client
+        .db('hm03')
+        .collection('refreshTokensMeta')
+        .deleteMany({});
     res.sendStatus(204);
     return;
 }));

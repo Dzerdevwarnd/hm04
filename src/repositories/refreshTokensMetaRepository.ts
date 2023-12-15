@@ -37,7 +37,7 @@ export const refreshTokensMetaRepository = {
 				{ deviceId: deviceId },
 				{
 					$set: {
-						usedAt: refreshTokenMetaUpd.lastActiveDate,
+						lastActiveDate: refreshTokenMetaUpd.lastActiveDate,
 						expiredAt: refreshTokenMetaUpd.expiredAt,
 					},
 				}
@@ -103,6 +103,8 @@ export const refreshTokensMetaRepository = {
 			return 404
 		}
 		if (deviceId !== requestDeviceId) {
+			console.log(deviceId)
+			console.log(requestDeviceId)
 			return 403
 		}
 		const UserId = await this.findUserIdByDeviceId(deviceId)
