@@ -118,9 +118,9 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
         const RefreshTokenMeta = {
             userId: user.id,
             deviceId: deviceId,
-            deviceName: req.headers['user-agent'] || 'unknown',
+            title: req.headers['user-agent'] || 'unknown',
             ip: ipAddress,
-            usedAt: new Date(),
+            lastActiveDate: new Date(),
             expiredAt: new Date(Date.now + setting_1.settings.refreshTokenLifeTime),
         };
         const isCreated = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.createRefreshToken(RefreshTokenMeta);
@@ -138,7 +138,7 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
         return;
     }
 }));
-exports.authRouter.post('/refresh-token', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authRouter.post('/refresh-token', antiSpamMiddleware_1.antiSpamMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const tokenInBlackList = yield db_1.client
         .db('hm03')
         .collection('BlacklistTokens')
@@ -174,7 +174,7 @@ exports.authRouter.post('/refresh-token', (req, res) => __awaiter(void 0, void 0
         req.socket.remoteAddress;
     console.log(ipAddress);
     const RefreshTokenMetaUpd = {
-        usedAt: new Date(),
+        lastActiveDate: new Date(),
         expiredAt: new Date(Date.now + setting_1.settings.refreshTokenLifeTime),
     };
     const isUpdated = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.updateRefreshTokenMeta(deviceId, RefreshTokenMetaUpd);
@@ -191,7 +191,7 @@ exports.authRouter.post('/refresh-token', (req, res) => __awaiter(void 0, void 0
         .send({ accessToken: tokens.accessToken });
     return;
 }));
-exports.authRouter.post('/logout', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authRouter.post('/logout', antiSpamMiddleware_1.antiSpamMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const tokenInBlackList = yield db_1.client
         .db('hm03')
         .collection('BlacklistTokens')
@@ -217,7 +217,7 @@ exports.authRouter.post('/logout', (req, res) => __awaiter(void 0, void 0, void 
         return;
     }
 }));
-exports.authRouter.post('/registration', EmailFormValidation, EmailUsageValidation, loginValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authRouter.post('/registration', antiSpamMiddleware_1.antiSpamMiddleware, EmailFormValidation, EmailUsageValidation, loginValidation, passwordValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const newUser = yield authService_1.authService.createUser(req.body.password, req.body.email, req.body.login);
     if (!newUser) {
         res.status(400).send('User create error');
@@ -227,7 +227,7 @@ exports.authRouter.post('/registration', EmailFormValidation, EmailUsageValidati
     res.sendStatus(204);
     return;
 }));
-exports.authRouter.post('/registration-confirmation', confirmationCodeIsAlreadyConfirmedValidation, confirmationCodeValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authRouter.post('/registration-confirmation', antiSpamMiddleware_1.antiSpamMiddleware, confirmationCodeIsAlreadyConfirmedValidation, confirmationCodeValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const isConfirmationAccept = yield usersService_1.userService.userEmailConfirmationAccept(req.body.code);
     if (!isConfirmationAccept) {
         res.status(400).send('user confirm error');
@@ -238,7 +238,7 @@ exports.authRouter.post('/registration-confirmation', confirmationCodeIsAlreadyC
         return;
     }
 }));
-exports.authRouter.post('/registration-email-resending', EmailFormValidation, emailExistValidation, EmailIsAlreadyConfirmedValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.authRouter.post('/registration-email-resending', antiSpamMiddleware_1.antiSpamMiddleware, EmailFormValidation, emailExistValidation, EmailIsAlreadyConfirmedValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield UsersRepository_1.usersRepository.userConfirmationCodeUpdate(req.body.email);
     yield emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
     res.sendStatus(204);

@@ -35,5 +35,14 @@ export const antiSpamMiddleware = async (
 		.db('hm03')
 		.collection<ipRequest>('ipRequests')
 		.insertOne(ipRequest)
+	const ipRequests = await client
+		.db('hm03')
+		.collection<ipRequest>('ipRequests')
+		.find({ ip: ipAddress, URL: url })
+		.toArray()
+	if (ipRequests.length > 5) {
+		res.sendStatus(429)
+		return
+	}
 	next()
 }

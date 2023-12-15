@@ -28,10 +28,6 @@ exports.securityRouter.get('/devices', (req, res) => __awaiter(void 0, void 0, v
     }
     res.sendStatus(204);
 })), exports.securityRouter.delete('/devices/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const isDeleted = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.deleteOneUserDevice(req.cookies.refreshToken);
-    if (!isDeleted) {
-        res.sendStatus(401);
-        return;
-    }
-    res.sendStatus(204);
+    const StatusCode = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.deleteOneUserDeviceAndReturnStatusCode(req.params.id, req.cookies.refreshToken);
+    res.sendStatus(StatusCode);
 })));

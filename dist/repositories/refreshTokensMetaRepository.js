@@ -36,7 +36,7 @@ exports.refreshTokensMetaRepository = {
                 .collection('refreshTokensMeta')
                 .updateOne({ deviceId: deviceId }, {
                 $set: {
-                    usedAt: refreshTokenMetaUpd.usedAt,
+                    usedAt: refreshTokenMetaUpd.lastActiveDate,
                     expiredAt: refreshTokenMetaUpd.expiredAt,
                 },
             });
@@ -69,9 +69,9 @@ exports.refreshTokensMetaRepository = {
             for (let i = 0; i < devicesDB.length; i++) {
                 const deviceView = {
                     ip: devicesDB[i].ip,
-                    tittle: devicesDB[i].deviceName,
+                    title: devicesDB[i].title,
                     deviceId: devicesDB[i].deviceId,
-                    lastActive: devicesDB[i].usedAt,
+                    lastActiveDate: devicesDB[i].lastActiveDate,
                 };
                 devicesView.push(deviceView);
             }
@@ -92,18 +92,31 @@ exports.refreshTokensMetaRepository = {
             return resultOfDelete.acknowledged;
         });
     },
-    deleteOneUserDevice(refreshToken) {
+    deleteOneUserDeviceAndReturnStatusCode(requestDeviceId, refreshToken) {
         return __awaiter(this, void 0, void 0, function* () {
             const deviceId = yield jwt_service_1.jwtService.verifyAndGetDeviceIdByToken(refreshToken);
             if (!deviceId) {
-                return;
+                return 401;
+            }
+            const userDevice = yield db_1.client
+                .db('hm03')
+                .collection('refreshTokensMeta')
+                .findOne({ deviceId: deviceId });
+            if (!userDevice) {
+                return 404;
+            }
+            if (deviceId !== requestDeviceId) {
+                return 403;
             }
             const UserId = yield this.findUserIdByDeviceId(deviceId);
             const resultOfDelete = yield db_1.client
                 .db('hm03')
                 .collection('refreshTokensMeta')
                 .deleteOne({ deviceId: deviceId });
-            return resultOfDelete.acknowledged;
+            if (!resultOfDelete.acknowledged) {
+                return 404;
+            }
+            return 204;
         });
     },
 };

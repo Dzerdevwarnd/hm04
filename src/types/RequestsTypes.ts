@@ -7,3 +7,4 @@ export type RequestParamsQuery<P, Q> = Request<P, {}, {}, Q>
 export type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 export type RequestWithParamsAndQuery<P, Q> = Request<P, {}, {}, Q>
 export type RequestWithCookies<C> = Request<{}, {}, {}, C>
+export type RequestWithParamsAndCookies<P, C> = Request<P, {}, {}, C>

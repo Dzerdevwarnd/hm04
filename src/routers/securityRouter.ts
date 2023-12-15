@@ -1,6 +1,9 @@
 import { Response, Router } from 'express'
 import { refreshTokensMetaRepository } from '../repositories/refreshTokensMetaRepository'
-import { RequestWithCookies } from '../types/RequestsTypes'
+import {
+	RequestWithCookies,
+	RequestWithParamsAndCookies,
+} from '../types/RequestsTypes'
 
 export const securityRouter = Router({})
 
@@ -35,17 +38,18 @@ securityRouter.get(
 	securityRouter.delete(
 		'/devices/:id',
 		async (
-			req: RequestWithCookies<{ refreshToken: string }>,
+			req: RequestWithParamsAndCookies<
+				{ id: string },
+				{ refreshToken: string }
+			>,
 			res: Response
 		) => {
-			const isDeleted = await refreshTokensMetaRepository.deleteOneUserDevice(
-				req.cookies.refreshToken
-			)
-			if (!isDeleted) {
-				res.sendStatus(401)
-				return
-			}
-			res.sendStatus(204)
+			const StatusCode =
+				await refreshTokensMetaRepository.deleteOneUserDeviceAndReturnStatusCode(
+					req.params.id,
+					req.cookies.refreshToken
+				)
+			res.sendStatus(StatusCode)
 		}
 	)
 )

@@ -142,9 +142,9 @@ authRouter.post(
 			const RefreshTokenMeta: refreshTokensMetaTypeDB = {
 				userId: user!.id,
 				deviceId: deviceId,
-				deviceName: req.headers['user-agent'] || 'unknown',
+				title: req.headers['user-agent'] || 'unknown',
 				ip: ipAddress,
-				usedAt: new Date(),
+				lastActiveDate: new Date(),
 				expiredAt: new Date(Date.now + settings.refreshTokenLifeTime),
 			}
 			const isCreated = await refreshTokensMetaRepository.createRefreshToken(
@@ -168,6 +168,7 @@ authRouter.post(
 
 authRouter.post(
 	'/refresh-token',
+	antiSpamMiddleware,
 	async (req: RequestWithCookies<{ refreshToken: string }>, res: Response) => {
 		const tokenInBlackList = await client
 			.db('hm03')
@@ -210,7 +211,7 @@ authRouter.post(
 			req.socket.remoteAddress
 		console.log(ipAddress)
 		const RefreshTokenMetaUpd = {
-			usedAt: new Date(),
+			lastActiveDate: new Date(),
 			expiredAt: new Date(Date.now + settings.refreshTokenLifeTime),
 		}
 		const isUpdated = await refreshTokensMetaRepository.updateRefreshTokenMeta(
@@ -234,6 +235,7 @@ authRouter.post(
 
 authRouter.post(
 	'/logout',
+	antiSpamMiddleware,
 	async (
 		req: RequestWithCookies<{ cookies: { refreshToken: string } }>,
 		res: Response
@@ -268,6 +270,7 @@ authRouter.post(
 
 authRouter.post(
 	'/registration',
+	antiSpamMiddleware,
 	EmailFormValidation,
 	EmailUsageValidation,
 	loginValidation,
@@ -294,6 +297,7 @@ authRouter.post(
 
 authRouter.post(
 	'/registration-confirmation',
+	antiSpamMiddleware,
 	confirmationCodeIsAlreadyConfirmedValidation,
 	confirmationCodeValidation,
 	inputValidationMiddleware,
@@ -313,6 +317,7 @@ authRouter.post(
 
 authRouter.post(
 	'/registration-email-resending',
+	antiSpamMiddleware,
 	EmailFormValidation,
 	emailExistValidation,
 	EmailIsAlreadyConfirmedValidation,

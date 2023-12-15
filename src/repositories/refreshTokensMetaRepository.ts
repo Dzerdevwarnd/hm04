@@ -5,9 +5,9 @@ import { settings } from '../setting'
 export type refreshTokensMetaTypeDB = {
 	userId: string
 	deviceId: string
-	deviceName: string
+	title: string
 	ip: any
-	usedAt: Date
+	lastActiveDate: Date
 	expiredAt: Date
 }
 
@@ -28,7 +28,7 @@ export const refreshTokensMetaRepository = {
 	},
 	async updateRefreshTokenMeta(
 		deviceId: string,
-		refreshTokenMetaUpd: { usedAt: Date; expiredAt: Date }
+		refreshTokenMetaUpd: { lastActiveDate: Date; expiredAt: Date }
 	) {
 		const result = await client
 			.db('hm03')
@@ -37,7 +37,7 @@ export const refreshTokensMetaRepository = {
 				{ deviceId: deviceId },
 				{
 					$set: {
-						usedAt: refreshTokenMetaUpd.usedAt,
+						usedAt: refreshTokenMetaUpd.lastActiveDate,
 						expiredAt: refreshTokenMetaUpd.expiredAt,
 					},
 				}
@@ -67,9 +67,9 @@ export const refreshTokensMetaRepository = {
 		for (let i = 0; i < devicesDB.length; i++) {
 			const deviceView = {
 				ip: devicesDB[i].ip,
-				tittle: devicesDB[i].deviceName,
+				title: devicesDB[i].title,
 				deviceId: devicesDB[i].deviceId,
-				lastActive: devicesDB[i].usedAt,
+				lastActiveDate: devicesDB[i].lastActiveDate,
 			}
 			devicesView.push(deviceView)
 		}
@@ -87,16 +87,32 @@ export const refreshTokensMetaRepository = {
 			.deleteMany({ userId: UserId })
 		return resultOfDelete.acknowledged
 	},
-	async deleteOneUserDevice(refreshToken: string) {
+	async deleteOneUserDeviceAndReturnStatusCode(
+		requestDeviceId: string,
+		refreshToken: string
+	) {
 		const deviceId = await jwtService.verifyAndGetDeviceIdByToken(refreshToken)
 		if (!deviceId) {
-			return
+			return 401
+		}
+		const userDevice = await client
+			.db('hm03')
+			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
+			.findOne({ deviceId: deviceId })
+		if (!userDevice) {
+			return 404
+		}
+		if (deviceId !== requestDeviceId) {
+			return 403
 		}
 		const UserId = await this.findUserIdByDeviceId(deviceId)
 		const resultOfDelete = await client
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
 			.deleteOne({ deviceId: deviceId })
-		return resultOfDelete.acknowledged
+		if (!resultOfDelete.acknowledged) {
+			return 404
+		}
+		return 204
 	},
 }

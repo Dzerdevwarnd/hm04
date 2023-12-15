@@ -1,7 +1,9 @@
 import { Request, Response, Router } from 'express'
 import { client } from '../db'
+import { ipRequest } from '../middleware/antiSpamMiddleware'
 import { postType } from '../repositories/PostsRepository'
 import { UserDbType } from '../repositories/UsersRepository'
+import { TokenDBType } from '../repositories/blacklistRepository'
 import { blogType } from '../repositories/blogsRepository'
 import { commentDBType } from '../repositories/commentRepository'
 
@@ -26,6 +28,14 @@ testingRouter.delete('/all-data', async (req: Request, res: Response) => {
 	let resultOfDeleteComments = await client
 		.db('hm03')
 		.collection<commentDBType>('comments')
+		.deleteMany({})
+	let resultOfDeleteBlacklistTokens = await client
+		.db('hm03')
+		.collection<TokenDBType>('BlacklistTokens')
+		.deleteMany({})
+	let resultOfDeleteIpRequests = await client
+		.db('hm03')
+		.collection<ipRequest>('ipRequests')
 		.deleteMany({})
 
 	res.sendStatus(204)

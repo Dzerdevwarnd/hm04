@@ -33,6 +33,15 @@ const antiSpamMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0,
         .db('hm03')
         .collection('ipRequests')
         .insertOne(ipRequest);
+    const ipRequests = yield db_1.client
+        .db('hm03')
+        .collection('ipRequests')
+        .find({ ip: ipAddress, URL: url })
+        .toArray();
+    if (ipRequests.length > 5) {
+        res.sendStatus(429);
+        return;
+    }
     next();
 });
 exports.antiSpamMiddleware = antiSpamMiddleware;

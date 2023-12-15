@@ -30,6 +30,14 @@ exports.testingRouter.delete('/all-data', (req, res) => __awaiter(void 0, void 0
         .db('hm03')
         .collection('comments')
         .deleteMany({});
+    let resultOfDeleteBlacklistTokens = yield db_1.client
+        .db('hm03')
+        .collection('BlacklistTokens')
+        .deleteMany({});
+    let resultOfDeleteIpRequests = yield db_1.client
+        .db('hm03')
+        .collection('ipRequests')
+        .deleteMany({});
     res.sendStatus(204);
     return;
 }));

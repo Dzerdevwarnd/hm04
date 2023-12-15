@@ -31,6 +31,7 @@ export const routersPaths = {
 
 app.use(express.json())
 app.use(cookieParser())
+app.set('trust proxy', true)
 
 app.use(routersPaths.auth, authRouter)
 app.use(routersPaths.blogs, blogsRouter)

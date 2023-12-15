@@ -32,6 +32,7 @@ exports.routersPaths = {
 };
 exports.app.use(express_1.default.json());
 exports.app.use((0, cookie_parser_1.default)());
+exports.app.set('trust proxy', true);
 exports.app.use(exports.routersPaths.auth, authRouter_1.authRouter);
 exports.app.use(exports.routersPaths.blogs, blogsRouter_1.blogsRouter);
 exports.app.use(exports.routersPaths.posts, postsRouter_1.postsRouter);
