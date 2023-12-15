@@ -95,11 +95,11 @@ export const refreshTokensMetaRepository = {
 		if (!deviceId) {
 			return 401
 		}
-		const userDevice = await client
+		const refreshTokensMeta = await client
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.findOne({ deviceId: deviceId })
-		if (!userDevice) {
+			.findOne({ deviceId: requestDeviceId })
+		if (!refreshTokensMeta) {
 			return 404
 		}
 		if (deviceId !== requestDeviceId) {

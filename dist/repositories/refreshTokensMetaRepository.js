@@ -98,11 +98,11 @@ exports.refreshTokensMetaRepository = {
             if (!deviceId) {
                 return 401;
             }
-            const userDevice = yield db_1.client
+            const refreshTokensMeta = yield db_1.client
                 .db('hm03')
                 .collection('refreshTokensMeta')
-                .findOne({ deviceId: deviceId });
-            if (!userDevice) {
+                .findOne({ deviceId: requestDeviceId });
+            if (!refreshTokensMeta) {
                 return 404;
             }
             if (deviceId !== requestDeviceId) {

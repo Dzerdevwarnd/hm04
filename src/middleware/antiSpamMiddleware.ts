@@ -18,7 +18,7 @@ export const antiSpamMiddleware = async (
 		req.headers['x-forwarded-for'] ||
 		req.headers['x-real-ip'] ||
 		req.socket.remoteAddress
-	const url = req.baseUrl
+	const url = req.originalUrl
 	const date = new Date()
 	const dateToDelete = new Date(Date.now() + 10000)
 	const ipRequest = {
