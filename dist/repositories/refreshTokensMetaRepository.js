@@ -105,12 +105,16 @@ exports.refreshTokensMetaRepository = {
             if (!refreshTokensMeta) {
                 return 404;
             }
-            if (deviceId !== requestDeviceId) {
+            const userId = yield this.findUserIdByDeviceId(deviceId);
+            const requestRefreshTokensMeta = yield db_1.client
+                .db('hm03')
+                .collection('refreshTokensMeta')
+                .findOne({ deviceId: requestDeviceId });
+            if (userId !== (requestRefreshTokensMeta === null || requestRefreshTokensMeta === void 0 ? void 0 : requestRefreshTokensMeta.userId)) {
                 console.log(deviceId);
                 console.log(requestDeviceId);
                 return 403;
             }
-            const UserId = yield this.findUserIdByDeviceId(deviceId);
             const resultOfDelete = yield db_1.client
                 .db('hm03')
                 .collection('refreshTokensMeta')

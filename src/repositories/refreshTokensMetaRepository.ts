@@ -102,12 +102,16 @@ export const refreshTokensMetaRepository = {
 		if (!refreshTokensMeta) {
 			return 404
 		}
-		if (deviceId !== requestDeviceId) {
+		const userId = await this.findUserIdByDeviceId(deviceId)
+		const requestRefreshTokensMeta = await client
+			.db('hm03')
+			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
+			.findOne({ deviceId: requestDeviceId })
+		if (userId !== requestRefreshTokensMeta?.userId) {
 			console.log(deviceId)
 			console.log(requestDeviceId)
 			return 403
 		}
-		const UserId = await this.findUserIdByDeviceId(deviceId)
 		const resultOfDelete = await client
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
