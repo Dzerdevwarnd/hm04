@@ -13,11 +13,12 @@ securityRouter.get(
 		const devices = await refreshTokensMetaRepository.returnAllUserDevices(
 			req.cookies.refreshToken
 		)
-		if (!devices) {
+		if (devices?.length === 0) {
 			res.sendStatus(401)
 			return
 		}
 		res.status(200).send(devices)
+		return
 	},
 	securityRouter.delete(
 		'/devices',
@@ -33,6 +34,7 @@ securityRouter.get(
 				return
 			}
 			res.sendStatus(204)
+			return
 		}
 	),
 	securityRouter.delete(
@@ -50,6 +52,7 @@ securityRouter.get(
 					req.cookies.refreshToken
 				)
 			res.sendStatus(StatusCode)
+			return
 		}
 	)
 )

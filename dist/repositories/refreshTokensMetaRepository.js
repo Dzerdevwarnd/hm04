@@ -66,8 +66,9 @@ exports.refreshTokensMetaRepository = {
                 .find({ userId: UserId })
                 .toArray();
             const devicesView = [];
+            console.log(devicesDB);
             for (let i = 0; i < devicesDB.length; i++) {
-                const deviceView = {
+                let deviceView = {
                     ip: devicesDB[i].ip,
                     title: devicesDB[i].title,
                     deviceId: devicesDB[i].deviceId,
@@ -98,28 +99,22 @@ exports.refreshTokensMetaRepository = {
             if (!deviceId) {
                 return 401;
             }
-            const refreshTokensMeta = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .findOne({ deviceId: requestDeviceId });
-            if (!refreshTokensMeta) {
-                return 404;
-            }
-            const userId = yield this.findUserIdByDeviceId(deviceId);
             const requestRefreshTokensMeta = yield db_1.client
                 .db('hm03')
                 .collection('refreshTokensMeta')
                 .findOne({ deviceId: requestDeviceId });
+            if (!requestRefreshTokensMeta) {
+                return 404;
+            }
+            const userId = yield this.findUserIdByDeviceId(deviceId);
             if (userId !== (requestRefreshTokensMeta === null || requestRefreshTokensMeta === void 0 ? void 0 : requestRefreshTokensMeta.userId)) {
-                console.log(deviceId);
-                console.log(requestDeviceId);
                 return 403;
             }
             const resultOfDelete = yield db_1.client
                 .db('hm03')
                 .collection('refreshTokensMeta')
                 .deleteOne({ deviceId: deviceId });
-            if (!resultOfDelete.acknowledged) {
+            if (resultOfDelete.deletedCount === 0) {
                 return 404;
             }
             return 204;

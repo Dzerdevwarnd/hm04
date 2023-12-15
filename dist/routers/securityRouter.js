@@ -15,11 +15,12 @@ const refreshTokensMetaRepository_1 = require("../repositories/refreshTokensMeta
 exports.securityRouter = (0, express_1.Router)({});
 exports.securityRouter.get('/devices', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const devices = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.returnAllUserDevices(req.cookies.refreshToken);
-    if (!devices) {
+    if ((devices === null || devices === void 0 ? void 0 : devices.length) === 0) {
         res.sendStatus(401);
         return;
     }
     res.status(200).send(devices);
+    return;
 }), exports.securityRouter.delete('/devices', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const isDeleted = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.deleteAllUserDevices(req.cookies.refreshToken);
     if (!isDeleted) {
@@ -27,7 +28,9 @@ exports.securityRouter.get('/devices', (req, res) => __awaiter(void 0, void 0, v
         return;
     }
     res.sendStatus(204);
+    return;
 })), exports.securityRouter.delete('/devices/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const StatusCode = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.deleteOneUserDeviceAndReturnStatusCode(req.params.id, req.cookies.refreshToken);
     res.sendStatus(StatusCode);
+    return;
 })));

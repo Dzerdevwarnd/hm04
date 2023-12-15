@@ -64,8 +64,9 @@ export const refreshTokensMetaRepository = {
 			.find({ userId: UserId })
 			.toArray()
 		const devicesView = []
+		console.log(devicesDB)
 		for (let i = 0; i < devicesDB.length; i++) {
-			const deviceView = {
+			let deviceView = {
 				ip: devicesDB[i].ip,
 				title: devicesDB[i].title,
 				deviceId: devicesDB[i].deviceId,
@@ -95,28 +96,22 @@ export const refreshTokensMetaRepository = {
 		if (!deviceId) {
 			return 401
 		}
-		const refreshTokensMeta = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.findOne({ deviceId: requestDeviceId })
-		if (!refreshTokensMeta) {
-			return 404
-		}
-		const userId = await this.findUserIdByDeviceId(deviceId)
 		const requestRefreshTokensMeta = await client
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
 			.findOne({ deviceId: requestDeviceId })
+		if (!requestRefreshTokensMeta) {
+			return 404
+		}
+		const userId = await this.findUserIdByDeviceId(deviceId)
 		if (userId !== requestRefreshTokensMeta?.userId) {
-			console.log(deviceId)
-			console.log(requestDeviceId)
 			return 403
 		}
 		const resultOfDelete = await client
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
 			.deleteOne({ deviceId: deviceId })
-		if (!resultOfDelete.acknowledged) {
+		if (resultOfDelete.deletedCount === 0) {
 			return 404
 		}
 		return 204
