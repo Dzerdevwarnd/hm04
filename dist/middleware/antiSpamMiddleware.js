@@ -17,6 +17,15 @@ const antiSpamMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0,
         req.headers['x-real-ip'] ||
         req.socket.remoteAddress;
     const url = req.originalUrl;
+    const ipRequests = yield db_1.client
+        .db('hm03')
+        .collection('ipRequests')
+        .find({ ip: ipAddress, URL: url })
+        .toArray();
+    if (ipRequests.length >= 5) {
+        res.sendStatus(429);
+        return;
+    }
     const date = new Date();
     const dateToDelete = new Date(Date.now() + 10000);
     const ipRequest = {
@@ -33,15 +42,12 @@ const antiSpamMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0,
         .db('hm03')
         .collection('ipRequests')
         .insertOne(ipRequest);
-    const ipRequests = yield db_1.client
-        .db('hm03')
-        .collection('ipRequests')
-        .find({ ip: ipAddress, URL: url })
-        .toArray();
-    if (ipRequests.length > 5) {
-        res.sendStatus(429);
-        return;
-    }
+    setTimeout(() => {
+        db_1.client
+            .db('hm03')
+            .collection('ipRequests')
+            .deleteOne({ ip: ipAddress, URL: url });
+    }, 13000);
     next();
 });
 exports.antiSpamMiddleware = antiSpamMiddleware;

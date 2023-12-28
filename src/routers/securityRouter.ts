@@ -13,7 +13,7 @@ securityRouter.get(
 		const devices = await refreshTokensMetaRepository.returnAllUserDevices(
 			req.cookies.refreshToken
 		)
-		if (devices?.length === 0) {
+		if (!devices) {
 			res.sendStatus(401)
 			return
 		}

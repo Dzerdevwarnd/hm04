@@ -248,17 +248,27 @@ authRouter.post(
 			res.sendStatus(401)
 			return
 		}
-		const userId = await jwtService.verifyAndGetUserIdByToken(
+		const userId = await userService.getUserIdFromRefreshToken(
 			req.cookies.refreshToken
 		)
 		if (!userId) {
 			res.sendStatus(401)
 			return
 		}
-		const isAdded = await blacklistRepository.addRefreshTokenInBlacklist({
-			refreshToken: req.cookies.refreshToken,
-		})
-		if (!isAdded) {
+		const deviceId = await jwtService.verifyAndGetDeviceIdByToken(
+			req.cookies.refreshToken
+		)
+		const isDeletedFromRefreshTokenMeta =
+			await refreshTokensMetaRepository.deleteOneUserDeviceAndReturnStatusCode(
+				deviceId,
+				req.cookies.refreshToken
+			)
+		console.log(isDeletedFromRefreshTokenMeta)
+		const isAddedToBlacklist =
+			await blacklistRepository.addRefreshTokenInBlacklist({
+				refreshToken: req.cookies.refreshToken,
+			})
+		if (!isAddedToBlacklist) {
 			res.sendStatus(555)
 			return
 		} else {

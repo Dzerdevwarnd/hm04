@@ -15,7 +15,7 @@ const refreshTokensMetaRepository_1 = require("../repositories/refreshTokensMeta
 exports.securityRouter = (0, express_1.Router)({});
 exports.securityRouter.get('/devices', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const devices = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.returnAllUserDevices(req.cookies.refreshToken);
-    if ((devices === null || devices === void 0 ? void 0 : devices.length) === 0) {
+    if (!devices) {
         res.sendStatus(401);
         return;
     }

@@ -19,6 +19,15 @@ export const antiSpamMiddleware = async (
 		req.headers['x-real-ip'] ||
 		req.socket.remoteAddress
 	const url = req.originalUrl
+	const ipRequests = await client
+		.db('hm03')
+		.collection<ipRequest>('ipRequests')
+		.find({ ip: ipAddress, URL: url })
+		.toArray()
+	if (ipRequests.length >= 5) {
+		res.sendStatus(429)
+		return
+	}
 	const date = new Date()
 	const dateToDelete = new Date(Date.now() + 10000)
 	const ipRequest = {
@@ -35,14 +44,11 @@ export const antiSpamMiddleware = async (
 		.db('hm03')
 		.collection<ipRequest>('ipRequests')
 		.insertOne(ipRequest)
-	const ipRequests = await client
-		.db('hm03')
-		.collection<ipRequest>('ipRequests')
-		.find({ ip: ipAddress, URL: url })
-		.toArray()
-	if (ipRequests.length > 5) {
-		res.sendStatus(429)
-		return
-	}
+	setTimeout(() => {
+		client
+			.db('hm03')
+			.collection<ipRequest>('ipRequests')
+			.deleteOne({ ip: ipAddress, URL: url })
+	}, 13000)
 	next()
 }

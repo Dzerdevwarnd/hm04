@@ -64,7 +64,6 @@ export const refreshTokensMetaRepository = {
 			.find({ userId: UserId })
 			.toArray()
 		const devicesView = []
-		console.log(devicesDB)
 		for (let i = 0; i < devicesDB.length; i++) {
 			let deviceView = {
 				ip: devicesDB[i].ip,
@@ -85,7 +84,7 @@ export const refreshTokensMetaRepository = {
 		const resultOfDelete = await client
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.deleteMany({ userId: UserId })
+			.deleteMany({ deviceId: { $ne: deviceId }, userId: UserId })
 		return resultOfDelete.acknowledged
 	},
 	async deleteOneUserDeviceAndReturnStatusCode(
@@ -110,7 +109,7 @@ export const refreshTokensMetaRepository = {
 		const resultOfDelete = await client
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.deleteOne({ deviceId: deviceId })
+			.deleteOne({ deviceId: requestDeviceId })
 		if (resultOfDelete.deletedCount === 0) {
 			return 404
 		}

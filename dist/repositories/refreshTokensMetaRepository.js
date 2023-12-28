@@ -66,7 +66,6 @@ exports.refreshTokensMetaRepository = {
                 .find({ userId: UserId })
                 .toArray();
             const devicesView = [];
-            console.log(devicesDB);
             for (let i = 0; i < devicesDB.length; i++) {
                 let deviceView = {
                     ip: devicesDB[i].ip,
@@ -89,7 +88,7 @@ exports.refreshTokensMetaRepository = {
             const resultOfDelete = yield db_1.client
                 .db('hm03')
                 .collection('refreshTokensMeta')
-                .deleteMany({ userId: UserId });
+                .deleteMany({ deviceId: { $ne: deviceId }, userId: UserId });
             return resultOfDelete.acknowledged;
         });
     },
@@ -113,7 +112,7 @@ exports.refreshTokensMetaRepository = {
             const resultOfDelete = yield db_1.client
                 .db('hm03')
                 .collection('refreshTokensMeta')
-                .deleteOne({ deviceId: deviceId });
+                .deleteOne({ deviceId: requestDeviceId });
             if (resultOfDelete.deletedCount === 0) {
                 return 404;
             }

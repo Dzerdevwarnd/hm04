@@ -200,15 +200,18 @@ exports.authRouter.post('/logout', antiSpamMiddleware_1.antiSpamMiddleware, (req
         res.sendStatus(401);
         return;
     }
-    const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.cookies.refreshToken);
+    const userId = yield usersService_1.userService.getUserIdFromRefreshToken(req.cookies.refreshToken);
     if (!userId) {
         res.sendStatus(401);
         return;
     }
-    const isAdded = yield blacklistRepository_1.blacklistRepository.addRefreshTokenInBlacklist({
+    const deviceId = yield jwt_service_1.jwtService.verifyAndGetDeviceIdByToken(req.cookies.refreshToken);
+    const isDeletedFromRefreshTokenMeta = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.deleteOneUserDeviceAndReturnStatusCode(deviceId, req.cookies.refreshToken);
+    console.log(isDeletedFromRefreshTokenMeta);
+    const isAddedToBlacklist = yield blacklistRepository_1.blacklistRepository.addRefreshTokenInBlacklist({
         refreshToken: req.cookies.refreshToken,
     });
-    if (!isAdded) {
+    if (!isAddedToBlacklist) {
         res.sendStatus(555);
         return;
     }
