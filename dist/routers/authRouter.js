@@ -14,11 +14,10 @@ const express_1 = require("express");
 const express_validator_1 = require("express-validator");
 const emailAdapter_1 = require("../adapters/emailAdapter");
 const jwt_service_1 = require("../application/jwt-service");
-const db_1 = require("../db");
 const antiSpamMiddleware_1 = require("../middleware/antiSpamMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const UsersRepository_1 = require("../repositories/UsersRepository");
-const blacklistRepository_1 = require("../repositories/blacklistRepository");
+const blacklistTokensRepository_1 = require("../repositories/blacklistTokensRepository");
 const refreshTokensMetaRepository_1 = require("../repositories/refreshTokensMetaRepository");
 const authService_1 = require("../services/authService");
 const usersService_1 = require("../services/usersService");
@@ -59,7 +58,7 @@ const confirmationCodeValidation = (0, express_validator_1.body)('code').custom(
     if (!user) {
         throw new Error('Invalid Code');
     }
-    if (new Date() > user.emailConfirmationData.confirmationCode) {
+    if (new Date() > user.emailConfirmationData.expirationDate) {
         throw new Error('Invalid Code');
     }
 }));
@@ -114,14 +113,13 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
             req.headers['x-forwarded-for'] ||
             req.headers['x-real-ip'] ||
             req.socket.remoteAddress;
-        console.log(ipAddress);
         const RefreshTokenMeta = {
             userId: user.id,
             deviceId: deviceId,
             title: req.headers['user-agent'] || 'unknown',
             ip: ipAddress,
             lastActiveDate: new Date(),
-            expiredAt: new Date(Date.now + setting_1.settings.refreshTokenLifeTime),
+            expiredAt: new Date(Date.now() + +setting_1.settings.refreshTokenLifeTime), //
         };
         const isCreated = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.createRefreshToken(RefreshTokenMeta);
         if (!isCreated) {
@@ -139,10 +137,9 @@ exports.authRouter.post('/login', loginOrEmailValidation, passwordValidation, in
     }
 }));
 exports.authRouter.post('/refresh-token', antiSpamMiddleware_1.antiSpamMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const tokenInBlackList = yield db_1.client
-        .db('hm03')
-        .collection('BlacklistTokens')
-        .findOne({ token: req.cookies.refreshToken });
+    const tokenInBlackList = yield blacklistTokensRepository_1.BlacklistTokensModel.findOne({
+        token: req.cookies.refreshToken,
+    });
     if (tokenInBlackList) {
         res.sendStatus(401);
         return;
@@ -160,10 +157,10 @@ exports.authRouter.post('/refresh-token', antiSpamMiddleware_1.antiSpamMiddlewar
     const deviceId = yield jwt_service_1.jwtService.verifyAndGetDeviceIdByToken(req.cookies.refreshToken);
     const tokens = yield authService_1.authService.refreshTokens(user, deviceId);
     if (!(tokens === null || tokens === void 0 ? void 0 : tokens.accessToken) || !tokens.refreshToken) {
-        res.sendStatus(401); //
+        res.sendStatus(401); ///
         return;
     }
-    const isAdded = yield blacklistRepository_1.blacklistRepository.addRefreshTokenInBlacklist(req.cookies);
+    const isAdded = yield blacklistTokensRepository_1.blacklistRepository.addRefreshTokenInBlacklist(req.cookies);
     if (!isAdded) {
         res.status(555).send('BlacklistError');
         return;
@@ -175,7 +172,7 @@ exports.authRouter.post('/refresh-token', antiSpamMiddleware_1.antiSpamMiddlewar
     console.log(ipAddress);
     const RefreshTokenMetaUpd = {
         lastActiveDate: new Date(),
-        expiredAt: new Date(Date.now + setting_1.settings.refreshTokenLifeTime),
+        expiredAt: new Date(Date.now() + +setting_1.settings.refreshTokenLifeTime),
     };
     const isUpdated = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.updateRefreshTokenMeta(deviceId, RefreshTokenMetaUpd);
     if (!isUpdated) {
@@ -192,10 +189,9 @@ exports.authRouter.post('/refresh-token', antiSpamMiddleware_1.antiSpamMiddlewar
     return;
 }));
 exports.authRouter.post('/logout', antiSpamMiddleware_1.antiSpamMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const tokenInBlackList = yield db_1.client
-        .db('hm03')
-        .collection('BlacklistTokens')
-        .findOne({ token: req.cookies.refreshToken });
+    const tokenInBlackList = yield blacklistTokensRepository_1.BlacklistTokensModel.findOne({
+        token: req.cookies.refreshToken,
+    });
     if (tokenInBlackList) {
         res.sendStatus(401);
         return;
@@ -208,7 +204,7 @@ exports.authRouter.post('/logout', antiSpamMiddleware_1.antiSpamMiddleware, (req
     const deviceId = yield jwt_service_1.jwtService.verifyAndGetDeviceIdByToken(req.cookies.refreshToken);
     const isDeletedFromRefreshTokenMeta = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.deleteOneUserDeviceAndReturnStatusCode(deviceId, req.cookies.refreshToken);
     console.log(isDeletedFromRefreshTokenMeta);
-    const isAddedToBlacklist = yield blacklistRepository_1.blacklistRepository.addRefreshTokenInBlacklist({
+    const isAddedToBlacklist = yield blacklistTokensRepository_1.blacklistRepository.addRefreshTokenInBlacklist({
         refreshToken: req.cookies.refreshToken,
     });
     if (!isAddedToBlacklist) {

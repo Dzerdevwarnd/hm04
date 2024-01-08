@@ -17,7 +17,7 @@ const add_1 = __importDefault(require("date-fns/add"));
 const uuid_1 = require("uuid");
 const jwt_service_1 = require("../application/jwt-service");
 const UsersRepository_1 = require("../repositories/UsersRepository");
-const blacklistRepository_1 = require("../repositories/blacklistRepository");
+const blacklistTokensRepository_1 = require("../repositories/blacklistTokensRepository");
 const usersService_1 = require("../services/usersService");
 const setting_1 = require("../setting");
 exports.authService = {
@@ -67,7 +67,7 @@ exports.authService = {
     },
     addTokensInBlacklist(reqBody, reqCookies) {
         return __awaiter(this, void 0, void 0, function* () {
-            const isAdded = yield blacklistRepository_1.blacklistRepository.addTokensInBlacklist(reqBody, reqCookies);
+            const isAdded = yield blacklistTokensRepository_1.blacklistRepository.addTokensInBlacklist(reqBody, reqCookies);
             return isAdded;
         });
     },

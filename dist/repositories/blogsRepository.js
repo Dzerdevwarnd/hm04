@@ -19,9 +19,22 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.blogsRepository = void 0;
-const db_1 = require("../db");
+exports.blogsRepository = exports.blogModel = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+const PostsRepository_1 = require("./PostsRepository");
+const blogSchema = new mongoose_1.default.Schema({
+    id: { type: String, required: true },
+    name: { type: String, required: true },
+    description: { type: String, required: true },
+    websiteUrl: { type: String, required: true },
+    createdAt: { type: Date, required: true },
+    isMembership: { type: Boolean, required: true },
+});
+exports.blogModel = mongoose_1.default.model('blogs', blogSchema);
 exports.blogsRepository = {
     returnAllBlogs(query) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -36,18 +49,15 @@ exports.blogsRepository = {
             else {
                 sortDirection = 1;
             }
-            const blogs = yield db_1.client
-                .db('hm03')
-                .collection('blogs')
+            const blogs = yield exports.blogModel
                 .find({ name: { $regex: searchNameTerm, $options: 'i' } }, { projection: { _id: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
-                .toArray();
-            const totalCount = yield db_1.client
-                .db('hm03')
-                .collection('blogs')
-                .countDocuments({ name: { $regex: searchNameTerm, $options: 'i' } });
+                .lean();
+            const totalCount = yield exports.blogModel.countDocuments({
+                name: { $regex: searchNameTerm, $options: 'i' },
+            });
             const pagesCount = Math.ceil(totalCount / pageSize);
             const blogsPagination = {
                 pagesCount: pagesCount,
@@ -61,10 +71,7 @@ exports.blogsRepository = {
     },
     findBlog(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let blog = yield db_1.client
-                .db('hm03')
-                .collection('blogs')
-                .findOne({ id: params.id }, { projection: { _id: 0 } });
+            let blog = yield exports.blogModel.findOne({ id: params.id }, { projection: { _id: 0 } });
             if (blog) {
                 return blog;
             }
@@ -75,10 +82,9 @@ exports.blogsRepository = {
     },
     findPostsByBlogId(params, query) {
         return __awaiter(this, void 0, void 0, function* () {
-            const totalCount = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .countDocuments({ blogId: params.id });
+            const totalCount = yield exports.blogModel.countDocuments({
+                blogId: params.id,
+            });
             const pageSize = Number(query.pageSize) || 10;
             const page = Number(query.pageNumber) || 1;
             const sortBy = query.sortBy || 'createdAt';
@@ -89,14 +95,12 @@ exports.blogsRepository = {
             else {
                 sortDirection = 1;
             }
-            let posts = yield db_1.client
-                .db('hm03')
-                .collection('posts')
+            let posts = yield PostsRepository_1.postModel
                 .find({ blogId: params.id }, { projection: { _id: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
-                .toArray();
+                .lean();
             const pageCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
                 pagesCount: pageCount,
@@ -115,10 +119,7 @@ exports.blogsRepository = {
     },
     createBlog(newBlog) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('blogs')
-                .insertOne(newBlog);
+            const result = yield exports.blogModel.insertMany(newBlog);
             //@ts-ignore
             const { _id } = newBlog, blogWithout_Id = __rest(newBlog, ["_id"]);
             return blogWithout_Id;
@@ -126,10 +127,7 @@ exports.blogsRepository = {
     },
     updateBlog(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('blogs')
-                .updateOne({ id: id }, {
+            const result = yield exports.blogModel.updateOne({ id: id }, {
                 $set: {
                     name: body.name,
                     description: body.description,
@@ -141,10 +139,7 @@ exports.blogsRepository = {
     },
     deleteBlog(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield db_1.client
-                .db('hm03')
-                .collection('blogs')
-                .deleteOne({ id: params.id });
+            let result = yield exports.blogModel.deleteOne({ id: params.id });
             return result.deletedCount === 1;
         });
     },

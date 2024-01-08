@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import { jwtService } from '../application/jwt-service'
 import { client } from '../db'
 import { settings } from '../setting'
@@ -11,6 +12,20 @@ export type refreshTokensMetaTypeDB = {
 	expiredAt: Date
 }
 
+const refreshTokensMetaSchema = new mongoose.Schema({
+	userId: { type: String, required: true },
+	deviceId: { type: String, required: true },
+	title: { type: String, required: true },
+	ip: { type: String, required: true },
+	lastActiveDate: { type: Date, required: true },
+	expiredAt: { type: Date, required: true },
+})
+
+export const refreshTokensMetaModel = mongoose.model(
+	'refreshTokensMeta',
+	refreshTokensMetaSchema
+)
+
 export const refreshTokensMetaRepository = {
 	async createRefreshToken(refreshTokenMeta: refreshTokensMetaTypeDB) {
 		const expireDate = new Date( //@ts-ignore
@@ -20,35 +35,37 @@ export const refreshTokensMetaRepository = {
 			.db('hm03')
 			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
 			.createIndex({ expireDate: 1 }, { expireAfterSeconds: 0 })
-		const result = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.insertOne(refreshTokenMeta)
-		return result.acknowledged
+		const result = await refreshTokensMetaModel.insertMany(refreshTokenMeta)
+
+		setTimeout(
+			() =>
+				refreshTokensMetaModel.deleteOne({
+					deviceId: refreshTokenMeta.deviceId,
+				}),
+			parseInt(settings.refreshTokenLifeTime)
+		)
+
+		return result.length == 1
 	},
 	async updateRefreshTokenMeta(
 		deviceId: string,
 		refreshTokenMetaUpd: { lastActiveDate: Date; expiredAt: Date }
 	) {
-		const result = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.updateOne(
-				{ deviceId: deviceId },
-				{
-					$set: {
-						lastActiveDate: refreshTokenMetaUpd.lastActiveDate,
-						expiredAt: refreshTokenMetaUpd.expiredAt,
-					},
-				}
-			)
+		const result = await refreshTokensMetaModel.updateOne(
+			{ deviceId: deviceId },
+			{
+				$set: {
+					lastActiveDate: refreshTokenMetaUpd.lastActiveDate,
+					expiredAt: refreshTokenMetaUpd.expiredAt,
+				},
+			}
+		)
 		return result.matchedCount === 1
 	},
 	async findUserIdByDeviceId(deviceId: string) {
-		const refreshTokenMeta = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.findOne({ deviceId: deviceId })
+		const refreshTokenMeta = await refreshTokensMetaModel.findOne({
+			deviceId: deviceId,
+		})
 		const userId = refreshTokenMeta?.userId
 		return userId
 	},
@@ -58,11 +75,9 @@ export const refreshTokensMetaRepository = {
 			return
 		}
 		const UserId = await this.findUserIdByDeviceId(deviceId)
-		const devicesDB = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
+		const devicesDB = await refreshTokensMetaModel
 			.find({ userId: UserId })
-			.toArray()
+			.lean()
 		const devicesView = []
 		for (let i = 0; i < devicesDB.length; i++) {
 			let deviceView = {
@@ -81,10 +96,10 @@ export const refreshTokensMetaRepository = {
 			return
 		}
 		const UserId = await this.findUserIdByDeviceId(deviceId)
-		const resultOfDelete = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.deleteMany({ deviceId: { $ne: deviceId }, userId: UserId })
+		const resultOfDelete = await refreshTokensMetaModel.deleteMany({
+			deviceId: { $ne: deviceId },
+			userId: UserId,
+		})
 		return resultOfDelete.acknowledged
 	},
 	async deleteOneUserDeviceAndReturnStatusCode(
@@ -95,10 +110,9 @@ export const refreshTokensMetaRepository = {
 		if (!deviceId) {
 			return 401
 		}
-		const requestRefreshTokensMeta = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.findOne({ deviceId: requestDeviceId })
+		const requestRefreshTokensMeta = await refreshTokensMetaModel.findOne({
+			deviceId: requestDeviceId,
+		})
 		if (!requestRefreshTokensMeta) {
 			return 404
 		}
@@ -106,10 +120,9 @@ export const refreshTokensMetaRepository = {
 		if (userId !== requestRefreshTokensMeta?.userId) {
 			return 403
 		}
-		const resultOfDelete = await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.deleteOne({ deviceId: requestDeviceId })
+		const resultOfDelete = await refreshTokensMetaModel.deleteOne({
+			deviceId: requestDeviceId,
+		})
 		if (resultOfDelete.deletedCount === 0) {
 			return 404
 		}

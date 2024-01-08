@@ -25,7 +25,7 @@ export const postsService = {
 			shortDescription: body.shortDescription,
 			content: body.content,
 			blogId: body.blogId,
-			blogName: '',
+			blogName: 'empty field',
 			createdAt: createdDate,
 		}
 		const postWithout_id = postsRepository.createPost(newPost)
@@ -46,7 +46,7 @@ export const postsService = {
 			shortDescription: body.shortDescription,
 			content: body.content,
 			blogId: id,
-			blogName: '',
+			blogName: 'empty field',
 			createdAt: createdDate,
 		}
 		const postWithout_id = postsRepository.createPost(newPost)

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express'
-import { client } from '../db'
+import { ipRequestRepository } from '../repositories/ipRequestsRepository'
 
 export type ipRequest = {
 	ip: any
@@ -19,11 +19,10 @@ export const antiSpamMiddleware = async (
 		req.headers['x-real-ip'] ||
 		req.socket.remoteAddress
 	const url = req.originalUrl
-	const ipRequests = await client
-		.db('hm03')
-		.collection<ipRequest>('ipRequests')
-		.find({ ip: ipAddress, URL: url })
-		.toArray()
+	const ipRequests = await ipRequestRepository.findRequestsToUrl({
+		ip: ipAddress,
+		url: url,
+	})
 	if (ipRequests.length >= 5) {
 		res.sendStatus(429)
 		return
@@ -36,19 +35,13 @@ export const antiSpamMiddleware = async (
 		date: date,
 		dateToDelete: dateToDelete,
 	}
-	await client
-		.db('hm03')
-		.collection<ipRequest>('ipRequests')
-		.createIndex({ dateToDelete: 1 }, { expireAfterSeconds: 0 })
-	const result = await client
-		.db('hm03')
-		.collection<ipRequest>('ipRequests')
-		.insertOne(ipRequest)
+
+	const result = await ipRequestRepository.addIpRequest(ipRequest)
 	setTimeout(() => {
-		client
-			.db('hm03')
-			.collection<ipRequest>('ipRequests')
-			.deleteOne({ ip: ipAddress, URL: url })
+		ipRequestRepository.deleteIpRequest({
+			ip: ipAddress,
+			url: url,
+		})
 	}, 13000)
 	next()
 }

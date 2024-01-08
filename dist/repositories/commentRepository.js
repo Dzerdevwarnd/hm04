@@ -19,16 +19,30 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commentsRepository = void 0;
-const db_1 = require("../db");
+exports.commentsRepository = exports.commentModel = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+const commentSchema = new mongoose_1.default.Schema({
+    id: { type: String, required: true },
+    postId: { type: String, required: true },
+    content: { type: String, required: true },
+    commentatorInfo: {
+        type: {
+            userId: { type: String, required: true },
+            userLogin: { type: String, required: true },
+        },
+        required: true,
+    },
+    createdAt: { type: Date, required: true },
+});
+exports.commentModel = mongoose_1.default.model('comments', commentSchema);
 exports.commentsRepository = {
     findComment(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const foundComment = yield db_1.client
-                .db('hm03')
-                .collection('comments')
-                .findOne({ id: id }, { projection: { _id: 0, postId: 0 } });
+            const foundComment = yield exports.commentModel.findOne({ id: id }, { projection: { _id: 0, postId: 0 } });
             return foundComment;
         });
     },
@@ -45,18 +59,13 @@ exports.commentsRepository = {
             else {
                 sortDirection = 1;
             }
-            const comments = yield db_1.client
-                .db('hm03')
-                .collection('comments')
+            const comments = yield exports.commentModel
                 .find({ postId: id }, { projection: { _id: 0, postId: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection, createdAt: sortDirection })
                 .limit(pageSize)
-                .toArray();
-            const totalCount = yield db_1.client
-                .db('hm03')
-                .collection('comments')
-                .countDocuments({ postId: id });
+                .lean();
+            const totalCount = yield exports.commentModel.countDocuments({ postId: id });
             const pagesCount = Math.ceil(totalCount / pageSize);
             const commentsPagination = {
                 pagesCount: pagesCount,
@@ -70,19 +79,13 @@ exports.commentsRepository = {
     },
     deleteComment(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resultOfDelete = yield db_1.client
-                .db('hm03')
-                .collection('comments')
-                .deleteOne({ id: id });
+            const resultOfDelete = yield exports.commentModel.deleteOne({ id: id });
             return resultOfDelete.deletedCount === 1;
         });
     },
     updateComment(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resultOfUpdate = yield db_1.client
-                .db('hm03')
-                .collection('comments')
-                .updateOne({ id: id }, {
+            const resultOfUpdate = yield exports.commentModel.updateOne({ id: id }, {
                 $set: {
                     content: body.content,
                 },
@@ -92,10 +95,7 @@ exports.commentsRepository = {
     },
     createComment(newComment) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('comments')
-                .insertOne(newComment);
+            const result = yield exports.commentModel.insertMany(newComment);
             //@ts-ignore
             const { _id, postId } = newComment, commentWithout_Id = __rest(newComment, ["_id", "postId"]);
             return commentWithout_Id;

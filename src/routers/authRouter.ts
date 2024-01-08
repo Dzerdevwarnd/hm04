@@ -2,14 +2,13 @@ import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
 import { emailAdapter } from '../adapters/emailAdapter'
 import { jwtService } from '../application/jwt-service'
-import { client } from '../db'
 import { antiSpamMiddleware } from '../middleware/antiSpamMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { UserDbType, usersRepository } from '../repositories/UsersRepository'
 import {
-	TokenDBType,
+	BlacklistTokensModel,
 	blacklistRepository,
-} from '../repositories/blacklistRepository'
+} from '../repositories/blacklistTokensRepository'
 import {
 	refreshTokensMetaRepository,
 	refreshTokensMetaTypeDB,
@@ -61,7 +60,7 @@ const confirmationCodeValidation = body('code').custom(async (code: string) => {
 	if (!user) {
 		throw new Error('Invalid Code')
 	}
-	if (new Date() > user.emailConfirmationData.confirmationCode) {
+	if (new Date() > user.emailConfirmationData.expirationDate) {
 		throw new Error('Invalid Code')
 	}
 })
@@ -138,14 +137,13 @@ authRouter.post(
 				req.headers['x-forwarded-for'] ||
 				req.headers['x-real-ip'] ||
 				req.socket.remoteAddress
-			console.log(ipAddress)
 			const RefreshTokenMeta: refreshTokensMetaTypeDB = {
 				userId: user!.id,
 				deviceId: deviceId,
 				title: req.headers['user-agent'] || 'unknown',
 				ip: ipAddress,
 				lastActiveDate: new Date(),
-				expiredAt: new Date(Date.now + settings.refreshTokenLifeTime),
+				expiredAt: new Date(Date.now() + +settings.refreshTokenLifeTime), //
 			}
 			const isCreated = await refreshTokensMetaRepository.createRefreshToken(
 				RefreshTokenMeta
@@ -170,10 +168,9 @@ authRouter.post(
 	'/refresh-token',
 	antiSpamMiddleware,
 	async (req: RequestWithCookies<{ refreshToken: string }>, res: Response) => {
-		const tokenInBlackList = await client
-			.db('hm03')
-			.collection<TokenDBType>('BlacklistTokens')
-			.findOne({ token: req.cookies.refreshToken })
+		const tokenInBlackList = await BlacklistTokensModel.findOne({
+			token: req.cookies.refreshToken,
+		})
 		if (tokenInBlackList) {
 			res.sendStatus(401)
 			return
@@ -194,7 +191,7 @@ authRouter.post(
 		)
 		const tokens = await authService.refreshTokens(user!, deviceId)
 		if (!tokens?.accessToken || !tokens.refreshToken) {
-			res.sendStatus(401) //
+			res.sendStatus(401) ///
 			return
 		}
 		const isAdded = await blacklistRepository.addRefreshTokenInBlacklist(
@@ -212,7 +209,7 @@ authRouter.post(
 		console.log(ipAddress)
 		const RefreshTokenMetaUpd = {
 			lastActiveDate: new Date(),
-			expiredAt: new Date(Date.now + settings.refreshTokenLifeTime),
+			expiredAt: new Date(Date.now() + +settings.refreshTokenLifeTime),
 		}
 		const isUpdated = await refreshTokensMetaRepository.updateRefreshTokenMeta(
 			deviceId,
@@ -240,10 +237,9 @@ authRouter.post(
 		req: RequestWithCookies<{ cookies: { refreshToken: string } }>,
 		res: Response
 	) => {
-		const tokenInBlackList = await client
-			.db('hm03')
-			.collection<TokenDBType>('BlacklistTokens')
-			.findOne({ token: req.cookies.refreshToken })
+		const tokenInBlackList = await BlacklistTokensModel.findOne({
+			token: req.cookies.refreshToken,
+		})
 		if (tokenInBlackList) {
 			res.sendStatus(401)
 			return

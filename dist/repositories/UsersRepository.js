@@ -8,17 +8,39 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.usersRepository = void 0;
+exports.usersRepository = exports.userModel = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const uuid_1 = require("uuid");
-const db_1 = require("../db");
+const userSchema = new mongoose_1.default.Schema({
+    id: { type: String, required: true },
+    accountData: {
+        type: {
+            login: { type: String, required: true },
+            email: { type: String, required: true },
+            createdAt: { type: Date, required: true },
+            passwordSalt: { type: String, required: true },
+            passwordHash: { type: String, required: true },
+        },
+        required: true,
+    },
+    emailConfirmationData: {
+        type: {
+            confirmationCode: { type: String, required: true },
+            expirationDate: { type: Date, required: true },
+            isConfirmed: { type: Boolean, required: true },
+        },
+        required: true,
+    },
+});
+exports.userModel = mongoose_1.default.model('users', userSchema);
 exports.usersRepository = {
     findUser(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .findOne({ id: id });
+            const user = yield exports.userModel.findOne({ id: id });
             return user;
         });
     },
@@ -36,9 +58,7 @@ exports.usersRepository = {
             else {
                 sortDirection = 1;
             }
-            const users = yield db_1.client
-                .db('hm03')
-                .collection('users')
+            const users = yield exports.userModel
                 .find({
                 $or: [
                     { 'accountData.login': { $regex: searchLoginTerm, $options: 'i' } },
@@ -48,11 +68,8 @@ exports.usersRepository = {
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection })
                 .limit(pageSize)
-                .toArray();
-            const totalCount = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .countDocuments({
+                .lean();
+            const totalCount = yield exports.userModel.countDocuments({
                 $or: [
                     { 'accountData.login': { $regex: searchLoginTerm, $options: 'i' } },
                     { 'accountData.email': { $regex: searchEmailTerm, $options: 'i' } },
@@ -77,10 +94,7 @@ exports.usersRepository = {
     },
     findDBUser(loginOrEmail) {
         return __awaiter(this, void 0, void 0, function* () {
-            let user = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .findOne({
+            let user = yield exports.userModel.findOne({
                 $or: [
                     { 'accountData.email': loginOrEmail },
                     { 'accountData.login': loginOrEmail },
@@ -92,10 +106,7 @@ exports.usersRepository = {
     },
     createUser(newUser) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .insertOne(newUser);
+            const result = yield exports.userModel.insertMany(newUser);
             //@ts-ignore
             const userView = {
                 id: newUser.id,
@@ -108,29 +119,20 @@ exports.usersRepository = {
     },
     deleteUser(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .deleteOne({ id: params.id });
+            const result = yield exports.userModel.deleteOne({ id: params.id });
             return result.deletedCount === 1;
         });
     },
     userEmailConfirmationAccept(confirmationCode) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resultOfUpdate = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .updateOne({ 'emailConfirmationData.confirmationCode': confirmationCode }, { $set: { 'emailConfirmationData.isConfirmed': true } });
+            const resultOfUpdate = yield exports.userModel.updateOne({ 'emailConfirmationData.confirmationCode': confirmationCode }, { $set: { 'emailConfirmationData.isConfirmed': true } });
             return resultOfUpdate.modifiedCount === 1;
         });
     },
     userConfirmationCodeUpdate(email) {
         return __awaiter(this, void 0, void 0, function* () {
             const confirmationCode = yield (0, uuid_1.v4)();
-            const resultOfUpdate = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .updateOne({ 'accountData.email': email }, { $set: { 'emailConfirmationData.confirmationCode': confirmationCode } });
+            const resultOfUpdate = yield exports.userModel.updateOne({ 'accountData.email': email }, { $set: { 'emailConfirmationData.confirmationCode': confirmationCode } });
             if (resultOfUpdate.matchedCount === 1) {
                 return confirmationCode;
             }
@@ -141,10 +143,9 @@ exports.usersRepository = {
     },
     findDBUserByConfirmationCode(confirmationCode) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield db_1.client
-                .db('hm03')
-                .collection('users')
-                .findOne({ 'emailConfirmationData.confirmationCode': confirmationCode });
+            const user = yield exports.userModel.findOne({
+                'emailConfirmationData.confirmationCode': confirmationCode,
+            });
             return user;
         });
     },

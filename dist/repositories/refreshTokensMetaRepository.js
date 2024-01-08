@@ -8,11 +8,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refreshTokensMetaRepository = void 0;
+exports.refreshTokensMetaRepository = exports.refreshTokensMetaModel = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
 const jwt_service_1 = require("../application/jwt-service");
 const db_1 = require("../db");
 const setting_1 = require("../setting");
+const refreshTokensMetaSchema = new mongoose_1.default.Schema({
+    userId: { type: String, required: true },
+    deviceId: { type: String, required: true },
+    title: { type: String, required: true },
+    ip: { type: String, required: true },
+    lastActiveDate: { type: Date, required: true },
+    expiredAt: { type: Date, required: true },
+});
+exports.refreshTokensMetaModel = mongoose_1.default.model('refreshTokensMeta', refreshTokensMetaSchema);
 exports.refreshTokensMetaRepository = {
     createRefreshToken(refreshTokenMeta) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -22,19 +35,16 @@ exports.refreshTokensMetaRepository = {
                 .db('hm03')
                 .collection('refreshTokensMeta')
                 .createIndex({ expireDate: 1 }, { expireAfterSeconds: 0 });
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .insertOne(refreshTokenMeta);
-            return result.acknowledged;
+            const result = yield exports.refreshTokensMetaModel.insertMany(refreshTokenMeta);
+            setTimeout(() => exports.refreshTokensMetaModel.deleteOne({
+                deviceId: refreshTokenMeta.deviceId,
+            }), parseInt(setting_1.settings.refreshTokenLifeTime));
+            return result.length == 1;
         });
     },
     updateRefreshTokenMeta(deviceId, refreshTokenMetaUpd) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .updateOne({ deviceId: deviceId }, {
+            const result = yield exports.refreshTokensMetaModel.updateOne({ deviceId: deviceId }, {
                 $set: {
                     lastActiveDate: refreshTokenMetaUpd.lastActiveDate,
                     expiredAt: refreshTokenMetaUpd.expiredAt,
@@ -45,10 +55,9 @@ exports.refreshTokensMetaRepository = {
     },
     findUserIdByDeviceId(deviceId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const refreshTokenMeta = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .findOne({ deviceId: deviceId });
+            const refreshTokenMeta = yield exports.refreshTokensMetaModel.findOne({
+                deviceId: deviceId,
+            });
             const userId = refreshTokenMeta === null || refreshTokenMeta === void 0 ? void 0 : refreshTokenMeta.userId;
             return userId;
         });
@@ -60,11 +69,9 @@ exports.refreshTokensMetaRepository = {
                 return;
             }
             const UserId = yield this.findUserIdByDeviceId(deviceId);
-            const devicesDB = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
+            const devicesDB = yield exports.refreshTokensMetaModel
                 .find({ userId: UserId })
-                .toArray();
+                .lean();
             const devicesView = [];
             for (let i = 0; i < devicesDB.length; i++) {
                 let deviceView = {
@@ -85,10 +92,10 @@ exports.refreshTokensMetaRepository = {
                 return;
             }
             const UserId = yield this.findUserIdByDeviceId(deviceId);
-            const resultOfDelete = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .deleteMany({ deviceId: { $ne: deviceId }, userId: UserId });
+            const resultOfDelete = yield exports.refreshTokensMetaModel.deleteMany({
+                deviceId: { $ne: deviceId },
+                userId: UserId,
+            });
             return resultOfDelete.acknowledged;
         });
     },
@@ -98,10 +105,9 @@ exports.refreshTokensMetaRepository = {
             if (!deviceId) {
                 return 401;
             }
-            const requestRefreshTokensMeta = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .findOne({ deviceId: requestDeviceId });
+            const requestRefreshTokensMeta = yield exports.refreshTokensMetaModel.findOne({
+                deviceId: requestDeviceId,
+            });
             if (!requestRefreshTokensMeta) {
                 return 404;
             }
@@ -109,10 +115,9 @@ exports.refreshTokensMetaRepository = {
             if (userId !== (requestRefreshTokensMeta === null || requestRefreshTokensMeta === void 0 ? void 0 : requestRefreshTokensMeta.userId)) {
                 return 403;
             }
-            const resultOfDelete = yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .deleteOne({ deviceId: requestDeviceId });
+            const resultOfDelete = yield exports.refreshTokensMetaModel.deleteOne({
+                deviceId: requestDeviceId,
+            });
             if (resultOfDelete.deletedCount === 0) {
                 return 404;
             }

@@ -10,18 +10,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.antiSpamMiddleware = void 0;
-const db_1 = require("../db");
+const ipRequestsRepository_1 = require("../repositories/ipRequestsRepository");
 const antiSpamMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const ipAddress = req.ip ||
         req.headers['x-forwarded-for'] ||
         req.headers['x-real-ip'] ||
         req.socket.remoteAddress;
     const url = req.originalUrl;
-    const ipRequests = yield db_1.client
-        .db('hm03')
-        .collection('ipRequests')
-        .find({ ip: ipAddress, URL: url })
-        .toArray();
+    const ipRequests = yield ipRequestsRepository_1.ipRequestRepository.findRequestsToUrl({
+        ip: ipAddress,
+        url: url,
+    });
     if (ipRequests.length >= 5) {
         res.sendStatus(429);
         return;
@@ -34,19 +33,12 @@ const antiSpamMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0,
         date: date,
         dateToDelete: dateToDelete,
     };
-    yield db_1.client
-        .db('hm03')
-        .collection('ipRequests')
-        .createIndex({ dateToDelete: 1 }, { expireAfterSeconds: 0 });
-    const result = yield db_1.client
-        .db('hm03')
-        .collection('ipRequests')
-        .insertOne(ipRequest);
+    const result = yield ipRequestsRepository_1.ipRequestRepository.addIpRequest(ipRequest);
     setTimeout(() => {
-        db_1.client
-            .db('hm03')
-            .collection('ipRequests')
-            .deleteOne({ ip: ipAddress, URL: url });
+        ipRequestsRepository_1.ipRequestRepository.deleteIpRequest({
+            ip: ipAddress,
+            url: url,
+        });
     }, 13000);
     next();
 });

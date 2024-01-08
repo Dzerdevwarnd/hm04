@@ -31,12 +31,18 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.runDb = exports.postsCollection = exports.blogsCollection = exports.client = void 0;
 const dotenv = __importStar(require("dotenv"));
 const mongodb_1 = require("mongodb");
+const mongoose_1 = __importDefault(require("mongoose"));
+const setting_1 = require("./setting");
 dotenv.config();
-const mongoUri = 'mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/?retryWrites=true&w=majority';
+const dbName = 'home_works';
+const mongoUri = setting_1.settings.MONGO_URL || `mongodb://0.0.0.0:27017/${1}`;
 console.log('url:', mongoUri);
 if (!mongoUri) {
     throw new Error("Url doesn't found");
@@ -44,14 +50,16 @@ if (!mongoUri) {
 exports.client = new mongodb_1.MongoClient(mongoUri);
 exports.blogsCollection = exports.client.db().collection('blogs');
 exports.postsCollection = exports.client.db().collection('posts');
-const runDb = () => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        yield exports.client.connect();
-        console.log('Connect successfully to server');
-    }
-    catch (e) {
-        console.log('Server connect ERROR');
-        yield exports.client.close();
-    }
-});
+function runDb() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield mongoose_1.default.connect(setting_1.settings.MONGO_URL);
+            console.log('it is ok');
+        }
+        catch (e) {
+            console.log('no connection');
+            yield mongoose_1.default.disconnect();
+        }
+    });
+}
 exports.runDb = runDb;

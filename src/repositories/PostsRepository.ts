@@ -1,4 +1,4 @@
-import { client } from '../db'
+import mongoose from 'mongoose'
 
 export type postType = {
 	id: string
@@ -18,6 +18,18 @@ export type postsByBlogIdPaginationType = {
 	items: postType[]
 }
 
+const postSchema = new mongoose.Schema({
+	id: { type: String, required: true },
+	title: { type: String, required: true },
+	shortDescription: { type: String, required: true },
+	content: { type: String, required: true },
+	blogId: { type: String, required: true },
+	blogName: { type: String, required: true },
+	createdAt: { type: Date, required: true },
+})
+
+export const postModel = mongoose.model('posts', postSchema)
+
 export const postsRepository = {
 	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
 		const pageSize = Number(query?.pageSize) || 10
@@ -29,18 +41,13 @@ export const postsRepository = {
 		} else {
 			sortDirection = 1
 		}
-		const posts = await client
-			.db('hm03')
-			.collection<postType>('posts')
+		const posts = await postModel
 			.find({}, { projection: { _id: 0 } })
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection, createdAt: sortDirection })
 			.limit(pageSize)
-			.toArray()
-		const totalCount = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.countDocuments()
+			.lean()
+		const totalCount = await postModel.countDocuments()
 		const pagesCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
 			pagesCount: pagesCount,
@@ -52,10 +59,10 @@ export const postsRepository = {
 		return postsPagination
 	},
 	async findPost(params: { id: string }): Promise<postType | undefined> {
-		let post: postType | null = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.findOne({ id: params.id }, { projection: { _id: 0 } })
+		let post: postType | null = await postModel.findOne(
+			{ id: params.id },
+			{ projection: { _id: 0 } }
+		)
 		if (post) {
 			return post
 		} else {
@@ -63,10 +70,7 @@ export const postsRepository = {
 		}
 	},
 	async createPost(newPost: postType): Promise<postType> {
-		const result = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.insertOne(newPost)
+		const result = await postModel.insertMany(newPost)
 		//@ts-ignore
 		const { _id, ...postWithout_Id } = newPost
 		return postWithout_Id
@@ -80,27 +84,21 @@ export const postsRepository = {
 			blogId: string
 		}
 	): Promise<boolean> {
-		const result = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.updateOne(
-				{ id: id },
-				{
-					$set: {
-						title: body.title,
-						shortDescription: body.shortDescription,
-						content: body.content,
-						blogId: body.blogId,
-					},
-				}
-			)
+		const result = await postModel.updateOne(
+			{ id: id },
+			{
+				$set: {
+					title: body.title,
+					shortDescription: body.shortDescription,
+					content: body.content,
+					blogId: body.blogId,
+				},
+			}
+		)
 		return result.matchedCount === 1
 	},
 	async deletePost(params: { id: string }): Promise<boolean> {
-		let result = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.deleteOne({ id: params.id })
+		let result = await postModel.deleteOne({ id: params.id })
 		return result.deletedCount === 1
 	},
 }

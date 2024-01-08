@@ -1,12 +1,14 @@
 import * as dotenv from 'dotenv'
 import { MongoClient } from 'mongodb'
+import mongoose from 'mongoose'
 import { postType } from './repositories/PostsRepository'
 import { blogType } from './repositories/blogsRepository'
+import { settings } from './setting'
 
 dotenv.config()
 
-const mongoUri =
-	'mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/?retryWrites=true&w=majority'
+const dbName = 'home_works'
+const mongoUri = settings.MONGO_URL || `mongodb://0.0.0.0:27017/${1}`
 console.log('url:', mongoUri)
 if (!mongoUri) {
 	throw new Error("Url doesn't found")
@@ -16,12 +18,12 @@ export const client = new MongoClient(mongoUri)
 export const blogsCollection = client.db().collection<blogType>('blogs')
 export const postsCollection = client.db().collection<postType>('posts')
 
-export const runDb = async () => {
+export async function runDb() {
 	try {
-		await client.connect()
-		console.log('Connect successfully to server')
+		await mongoose.connect(settings.MONGO_URL)
+		console.log('it is ok')
 	} catch (e) {
-		console.log('Server connect ERROR')
-		await client.close()
+		console.log('no connection')
+		await mongoose.disconnect()
 	}
 }

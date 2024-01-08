@@ -1,5 +1,9 @@
-import { client } from '../db'
-import { postType, postsByBlogIdPaginationType } from './PostsRepository'
+import mongoose from 'mongoose'
+import {
+	postModel,
+	postType,
+	postsByBlogIdPaginationType,
+} from './PostsRepository'
 
 export type blogType = {
 	id: string
@@ -18,6 +22,17 @@ export type blogsPaginationType = {
 	items: blogType[]
 }
 
+const blogSchema = new mongoose.Schema({
+	id: { type: String, required: true },
+	name: { type: String, required: true },
+	description: { type: String, required: true },
+	websiteUrl: { type: String, required: true },
+	createdAt: { type: Date, required: true },
+	isMembership: { type: Boolean, required: true },
+})
+
+export const blogModel = mongoose.model('blogs', blogSchema)
+
 export const blogsRepository = {
 	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
 		const pageSize = Number(query.pageSize) || 10
@@ -30,9 +45,7 @@ export const blogsRepository = {
 		} else {
 			sortDirection = 1
 		}
-		const blogs = await client
-			.db('hm03')
-			.collection<blogType>('blogs')
+		const blogs = await blogModel
 			.find(
 				{ name: { $regex: searchNameTerm, $options: 'i' } },
 				{ projection: { _id: 0 } }
@@ -40,11 +53,10 @@ export const blogsRepository = {
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
-			.toArray()
-		const totalCount = await client
-			.db('hm03')
-			.collection<blogType>('blogs')
-			.countDocuments({ name: { $regex: searchNameTerm, $options: 'i' } })
+			.lean()
+		const totalCount = await blogModel.countDocuments({
+			name: { $regex: searchNameTerm, $options: 'i' },
+		})
 		const pagesCount = Math.ceil(totalCount / pageSize)
 		const blogsPagination = {
 			pagesCount: pagesCount,
@@ -56,10 +68,10 @@ export const blogsRepository = {
 		return blogsPagination
 	},
 	async findBlog(params: { id: string }): Promise<blogType | undefined> {
-		let blog: blogType | null = await client
-			.db('hm03')
-			.collection<blogType>('blogs')
-			.findOne({ id: params.id }, { projection: { _id: 0 } })
+		let blog: blogType | null = await blogModel.findOne(
+			{ id: params.id },
+			{ projection: { _id: 0 } }
+		)
 		if (blog) {
 			return blog
 		} else {
@@ -72,10 +84,9 @@ export const blogsRepository = {
 		},
 		query: any
 	): Promise<postsByBlogIdPaginationType | undefined> {
-		const totalCount: number = await client
-			.db('hm03')
-			.collection<postType>('posts')
-			.countDocuments({ blogId: params.id })
+		const totalCount: number = await blogModel.countDocuments({
+			blogId: params.id,
+		})
 		const pageSize = Number(query.pageSize) || 10
 		const page = Number(query.pageNumber) || 1
 		const sortBy: string = query.sortBy || 'createdAt'
@@ -85,14 +96,12 @@ export const blogsRepository = {
 		} else {
 			sortDirection = 1
 		}
-		let posts: postType[] | null = await client
-			.db('hm03')
-			.collection<postType>('posts')
+		let posts: postType[] = await postModel
 			.find({ blogId: params.id }, { projection: { _id: 0 } })
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection })
 			.limit(pageSize)
-			.toArray()
+			.lean()
 		const pageCount = Math.ceil(totalCount / pageSize)
 		const postsPagination = {
 			pagesCount: pageCount,
@@ -109,10 +118,7 @@ export const blogsRepository = {
 	},
 
 	async createBlog(newBlog: blogType): Promise<blogType> {
-		const result = await client
-			.db('hm03')
-			.collection<blogType>('blogs')
-			.insertOne(newBlog)
+		const result = await blogModel.insertMany(newBlog)
 		//@ts-ignore
 		const { _id, ...blogWithout_Id } = newBlog
 		return blogWithout_Id
@@ -121,26 +127,20 @@ export const blogsRepository = {
 		id: string,
 		body: { name: string; description: string; websiteUrl: string }
 	): Promise<boolean> {
-		const result = await client
-			.db('hm03')
-			.collection<blogType>('blogs')
-			.updateOne(
-				{ id: id },
-				{
-					$set: {
-						name: body.name,
-						description: body.description,
-						websiteUrl: body.websiteUrl,
-					},
-				}
-			)
+		const result = await blogModel.updateOne(
+			{ id: id },
+			{
+				$set: {
+					name: body.name,
+					description: body.description,
+					websiteUrl: body.websiteUrl,
+				},
+			}
+		)
 		return result.matchedCount === 1
 	},
 	async deleteBlog(params: { id: string }): Promise<boolean> {
-		let result = await client
-			.db('hm03')
-			.collection<blogType>('blogs')
-			.deleteOne({ id: params.id })
+		let result = await blogModel.deleteOne({ id: params.id })
 		return result.deletedCount === 1
 	},
 }

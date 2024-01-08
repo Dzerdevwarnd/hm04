@@ -19,9 +19,22 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.postsRepository = void 0;
-const db_1 = require("../db");
+exports.postsRepository = exports.postModel = void 0;
+const mongoose_1 = __importDefault(require("mongoose"));
+const postSchema = new mongoose_1.default.Schema({
+    id: { type: String, required: true },
+    title: { type: String, required: true },
+    shortDescription: { type: String, required: true },
+    content: { type: String, required: true },
+    blogId: { type: String, required: true },
+    blogName: { type: String, required: true },
+    createdAt: { type: Date, required: true },
+});
+exports.postModel = mongoose_1.default.model('posts', postSchema);
 exports.postsRepository = {
     returnAllPosts(query) {
         var _a, _b;
@@ -36,18 +49,13 @@ exports.postsRepository = {
             else {
                 sortDirection = 1;
             }
-            const posts = yield db_1.client
-                .db('hm03')
-                .collection('posts')
+            const posts = yield exports.postModel
                 .find({}, { projection: { _id: 0 } })
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection, createdAt: sortDirection })
                 .limit(pageSize)
-                .toArray();
-            const totalCount = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .countDocuments();
+                .lean();
+            const totalCount = yield exports.postModel.countDocuments();
             const pagesCount = Math.ceil(totalCount / pageSize);
             const postsPagination = {
                 pagesCount: pagesCount,
@@ -61,10 +69,7 @@ exports.postsRepository = {
     },
     findPost(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let post = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .findOne({ id: params.id }, { projection: { _id: 0 } });
+            let post = yield exports.postModel.findOne({ id: params.id }, { projection: { _id: 0 } });
             if (post) {
                 return post;
             }
@@ -75,10 +80,7 @@ exports.postsRepository = {
     },
     createPost(newPost) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .insertOne(newPost);
+            const result = yield exports.postModel.insertMany(newPost);
             //@ts-ignore
             const { _id } = newPost, postWithout_Id = __rest(newPost, ["_id"]);
             return postWithout_Id;
@@ -86,10 +88,7 @@ exports.postsRepository = {
     },
     updatePost(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .updateOne({ id: id }, {
+            const result = yield exports.postModel.updateOne({ id: id }, {
                 $set: {
                     title: body.title,
                     shortDescription: body.shortDescription,
@@ -102,10 +101,7 @@ exports.postsRepository = {
     },
     deletePost(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield db_1.client
-                .db('hm03')
-                .collection('posts')
-                .deleteOne({ id: params.id });
+            let result = yield exports.postModel.deleteOne({ id: params.id });
             return result.deletedCount === 1;
         });
     },

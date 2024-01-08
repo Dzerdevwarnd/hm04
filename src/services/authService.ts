@@ -6,7 +6,7 @@ import {
 	userViewType,
 	usersRepository,
 } from '../repositories/UsersRepository'
-import { blacklistRepository } from '../repositories/blacklistRepository'
+import { blacklistRepository } from '../repositories/blacklistTokensRepository'
 import { userService } from '../services/usersService'
 import { settings } from '../setting'
 
