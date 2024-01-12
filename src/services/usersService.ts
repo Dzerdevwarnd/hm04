@@ -91,4 +91,25 @@ export const userService = {
 		const userId = refreshTokensMetaRepository.findUserIdByDeviceId(deviceId)
 		return userId
 	},
+
+	async updateRecoveryCode(
+		email: string,
+		recoveryCode: string
+	): Promise<boolean> {
+		const result = await usersRepository.updateRecoveryCode(email, recoveryCode)
+		return result
+	},
+	async updateUserPassword(
+		recoveryCode: string,
+		newPassword: string
+	): Promise<boolean> {
+		const passwordSalt = await this.generateSalt()
+		const passwordHash = await this.generateHash(newPassword, passwordSalt)
+		const result = await usersRepository.updateUserSaltAndHash(
+			recoveryCode,
+			passwordSalt,
+			passwordHash
+		)
+		return result
+	},
 }

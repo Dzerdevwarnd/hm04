@@ -10,13 +10,15 @@ import { usersRouter } from './routers/usersRouter'
 
 export const app = express()
 
+export const dbName = 'homeWorks'
 export const settings = {
 	MONGO_URL:
 		process.env.MONGO_URL ||
-		'mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/?retryWrites=true&w=majority',
+		`mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/${dbName}?retryWrites=true&w=majority`,
 	JWT_SECRET: process.env.JWT_SECRET || '123',
 	accessTokenLifeTime: '100000',
 	refreshTokenLifeTime: '200000',
+	recoveryCodeLifeTime: '1000000',
 }
 
 export const routersPaths = {

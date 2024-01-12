@@ -36,4 +36,23 @@ exports.emailAdapter = {
             return;
         });
     },
+    sendRecoveryCode(email, recoveryCode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let transport = yield nodemailer_1.default.createTransport({
+                service: 'gmail',
+                auth: { user: 'dzerdevwarnd3@gmail.com', pass: 'tjqt bbvt kmzl onzs' },
+            });
+            let info = yield transport.sendMail({
+                from: 'Warnd<dzerdevwarnd3@gmail.com>',
+                to: email,
+                subject: 'Email confirmation',
+                html: `<h1>Password recovery</h1>
+			<p>To finish password recovery please follow the link below:
+				 <a href='https://somesite.com/password-recovery?recoveryCode=${recoveryCode}'>recovery password</a>
+		 </p>`,
+            });
+            console.log(info);
+            return;
+        });
+    },
 };

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.routersPaths = exports.settings = exports.app = void 0;
+exports.routersPaths = exports.settings = exports.dbName = exports.app = void 0;
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const express_1 = __importDefault(require("express"));
 const authRouter_1 = require("./routers/authRouter");
@@ -14,12 +14,14 @@ const securityRouter_1 = require("./routers/securityRouter");
 const testingRouter_1 = require("./routers/testingRouter");
 const usersRouter_1 = require("./routers/usersRouter");
 exports.app = (0, express_1.default)();
+exports.dbName = 'homeWorks';
 exports.settings = {
     MONGO_URL: process.env.MONGO_URL ||
-        'mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/?retryWrites=true&w=majority',
+        `mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/${exports.dbName}?retryWrites=true&w=majority`,
     JWT_SECRET: process.env.JWT_SECRET || '123',
     accessTokenLifeTime: '100000',
     refreshTokenLifeTime: '200000',
+    recoveryCodeLifeTime: '1000000',
 };
 exports.routersPaths = {
     auth: '/auth',

@@ -54,4 +54,23 @@ exports.jwtService = {
             }
         });
     },
+    createRecoveryCode(email) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const RecoveryCode = yield jsonwebtoken_1.default.sign({ email: email }, setting_1.settings.JWT_SECRET, {
+                expiresIn: setting_1.settings.recoveryCodeLifeTime,
+            });
+            return RecoveryCode;
+        });
+    },
+    verifyJwtToken(token) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const result = yield jsonwebtoken_1.default.verify(token, setting_1.settings.JWT_SECRET);
+                return true;
+            }
+            catch (error) {
+                return;
+            }
+        });
+    },
 };

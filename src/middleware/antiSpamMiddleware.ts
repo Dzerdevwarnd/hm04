@@ -42,6 +42,6 @@ export const antiSpamMiddleware = async (
 			ip: ipAddress,
 			url: url,
 		})
-	}, 13000)
+	}, 12000)
 	next()
 }

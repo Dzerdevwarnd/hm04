@@ -15,7 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.refreshTokensMetaRepository = exports.refreshTokensMetaModel = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const jwt_service_1 = require("../application/jwt-service");
-const db_1 = require("../db");
 const setting_1 = require("../setting");
 const refreshTokensMetaSchema = new mongoose_1.default.Schema({
     userId: { type: String, required: true },
@@ -31,10 +30,6 @@ exports.refreshTokensMetaRepository = {
         return __awaiter(this, void 0, void 0, function* () {
             const expireDate = new Date(//@ts-ignore
             Date.now() + parseInt(setting_1.settings.refreshTokenLifeTime.match(/\d+/)));
-            yield db_1.client
-                .db('hm03')
-                .collection('refreshTokensMeta')
-                .createIndex({ expireDate: 1 }, { expireAfterSeconds: 0 });
             const result = yield exports.refreshTokensMetaModel.insertMany(refreshTokenMeta);
             setTimeout(() => exports.refreshTokensMetaModel.deleteOne({
                 deviceId: refreshTokenMeta.deviceId,

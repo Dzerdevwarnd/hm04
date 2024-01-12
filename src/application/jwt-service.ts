@@ -31,4 +31,19 @@ export const jwtService = {
 			return
 		}
 	},
+	async createRecoveryCode(email: string) {
+		const RecoveryCode = await jwt.sign({ email: email }, settings.JWT_SECRET, {
+			expiresIn: settings.recoveryCodeLifeTime,
+		})
+
+		return RecoveryCode
+	},
+	async verifyJwtToken(token: string) {
+		try {
+			const result: any = await jwt.verify(token, settings.JWT_SECRET)
+			return true
+		} catch (error) {
+			return
+		}
+	},
 }

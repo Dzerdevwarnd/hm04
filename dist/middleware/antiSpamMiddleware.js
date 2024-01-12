@@ -39,7 +39,7 @@ const antiSpamMiddleware = (req, res, next) => __awaiter(void 0, void 0, void 0,
             ip: ipAddress,
             url: url,
         });
-    }, 13000);
+    }, 12000);
     next();
 });
 exports.antiSpamMiddleware = antiSpamMiddleware;

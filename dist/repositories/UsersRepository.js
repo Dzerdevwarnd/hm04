@@ -24,6 +24,7 @@ const userSchema = new mongoose_1.default.Schema({
             createdAt: { type: Date, required: true },
             passwordSalt: { type: String, required: true },
             passwordHash: { type: String, required: true },
+            recoveryCode: { type: String, default: '' },
         },
         required: true,
     },
@@ -115,6 +116,27 @@ exports.usersRepository = {
                 createdAt: newUser.accountData.createdAt,
             };
             return userView;
+        });
+    },
+    updateRecoveryCode(email, recoveryCode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield exports.userModel.updateOne({ 'accountData.email': email }, {
+                $set: {
+                    'accountData.recoveryCode': recoveryCode,
+                },
+            });
+            return result.matchedCount == 1;
+        });
+    },
+    updateUserSaltAndHash(recoveryCode, passwordSalt, passwordHash) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield exports.userModel.updateOne({ 'accountData.recoveryCode': recoveryCode }, {
+                $set: {
+                    'accountData.passwordSalt': passwordSalt,
+                    'accountData.passwordHash': passwordHash,
+                },
+            });
+            return result.matchedCount == 1;
         });
     },
     deleteUser(params) {

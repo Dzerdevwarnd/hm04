@@ -35,25 +35,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.runDb = exports.postsCollection = exports.blogsCollection = exports.client = void 0;
+exports.runDb = void 0;
 const dotenv = __importStar(require("dotenv"));
-const mongodb_1 = require("mongodb");
 const mongoose_1 = __importDefault(require("mongoose"));
 const setting_1 = require("./setting");
 dotenv.config();
-const dbName = 'home_works';
+const dbName = 'home_Works';
 const mongoUri = setting_1.settings.MONGO_URL || `mongodb://0.0.0.0:27017/${1}`;
 console.log('url:', mongoUri);
 if (!mongoUri) {
     throw new Error("Url doesn't found");
 }
-exports.client = new mongodb_1.MongoClient(mongoUri);
-exports.blogsCollection = exports.client.db().collection('blogs');
-exports.postsCollection = exports.client.db().collection('posts');
 function runDb() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            yield mongoose_1.default.connect(setting_1.settings.MONGO_URL);
+            yield mongoose_1.default.connect(mongoUri);
             console.log('it is ok');
         }
         catch (e) {

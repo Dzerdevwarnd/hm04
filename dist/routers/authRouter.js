@@ -52,7 +52,7 @@ const loginOrEmailValidation = (0, express_validator_1.body)('loginOrEmail')
 const passwordValidation = (0, express_validator_1.body)('password')
     .trim()
     .isLength({ min: 6, max: 20 })
-    .withMessage('Password or Email length should be from 6 to 20');
+    .withMessage('Password length should be from 6 to 20');
 const confirmationCodeValidation = (0, express_validator_1.body)('code').custom((code) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield usersService_1.userService.findDBUserByConfirmationCode(code);
     if (!user) {
@@ -80,6 +80,16 @@ const emailExistValidation = (0, express_validator_1.body)('email').custom((emai
         throw new Error('User with this email not exist');
     }
 }));
+const recoveryCodeValidation = (0, express_validator_1.body)('recoveryCode').custom((recoveryCode) => __awaiter(void 0, void 0, void 0, function* () {
+    const resultOfVerify = yield jwt_service_1.jwtService.verifyJwtToken(recoveryCode);
+    if (!resultOfVerify) {
+        throw new Error('Recovery code is incorrect');
+    }
+}));
+const newPasswordValidation = (0, express_validator_1.body)('newPassword')
+    .trim()
+    .isLength({ min: 6, max: 20 })
+    .withMessage('Password length should be from 6 to 20');
 exports.authRouter.get('/me', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     if (!req.headers.authorization) {
         res.sendStatus(401);
@@ -169,7 +179,6 @@ exports.authRouter.post('/refresh-token', antiSpamMiddleware_1.antiSpamMiddlewar
         req.headers['x-forwarded-for'] ||
         req.headers['x-real-ip'] ||
         req.socket.remoteAddress;
-    console.log(ipAddress);
     const RefreshTokenMetaUpd = {
         lastActiveDate: new Date(),
         expiredAt: new Date(Date.now() + +setting_1.settings.refreshTokenLifeTime),
@@ -203,7 +212,6 @@ exports.authRouter.post('/logout', antiSpamMiddleware_1.antiSpamMiddleware, (req
     }
     const deviceId = yield jwt_service_1.jwtService.verifyAndGetDeviceIdByToken(req.cookies.refreshToken);
     const isDeletedFromRefreshTokenMeta = yield refreshTokensMetaRepository_1.refreshTokensMetaRepository.deleteOneUserDeviceAndReturnStatusCode(deviceId, req.cookies.refreshToken);
-    console.log(isDeletedFromRefreshTokenMeta);
     const isAddedToBlacklist = yield blacklistTokensRepository_1.blacklistRepository.addRefreshTokenInBlacklist({
         refreshToken: req.cookies.refreshToken,
     });
@@ -240,6 +248,29 @@ exports.authRouter.post('/registration-confirmation', antiSpamMiddleware_1.antiS
 exports.authRouter.post('/registration-email-resending', antiSpamMiddleware_1.antiSpamMiddleware, EmailFormValidation, emailExistValidation, EmailIsAlreadyConfirmedValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     yield UsersRepository_1.usersRepository.userConfirmationCodeUpdate(req.body.email);
     yield emailAdapter_1.emailAdapter.sendConfirmEmail(req.body.email);
+    res.sendStatus(204);
+    return;
+}));
+exports.authRouter.post('/password-recovery', antiSpamMiddleware_1.antiSpamMiddleware, EmailFormValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const recoveryCode = yield jwt_service_1.jwtService.createRecoveryCode(req.body.email);
+    console.log(recoveryCode);
+    yield emailAdapter_1.emailAdapter.sendRecoveryCode(req.body.email, recoveryCode);
+    const result = yield usersService_1.userService.updateRecoveryCode(req.body.email, recoveryCode);
+    //Ошибка на случай неудачного поиска и обновления данных пользователя
+    /*if (!result) {
+        res.sendStatus(999)
+        return
+    }*/
+    res.sendStatus(204);
+    return;
+}));
+exports.authRouter.post('/new-password', antiSpamMiddleware_1.antiSpamMiddleware, newPasswordValidation, recoveryCodeValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const resultOfUpdate = yield usersService_1.userService.updateUserPassword(req.body.recoveryCode, req.body.newPassword);
+    //Ошибка на случай неудачного поиска и обновления данных пользователя
+    /*if (!resultOfUpdate) {
+        res.sendStatus(999)
+        return
+    }*/
     res.sendStatus(204);
     return;
 }));

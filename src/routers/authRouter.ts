@@ -53,7 +53,7 @@ const loginOrEmailValidation = body('loginOrEmail')
 const passwordValidation = body('password')
 	.trim()
 	.isLength({ min: 6, max: 20 })
-	.withMessage('Password or Email length should be from 6 to 20')
+	.withMessage('Password length should be from 6 to 20')
 
 const confirmationCodeValidation = body('code').custom(async (code: string) => {
 	const user = await userService.findDBUserByConfirmationCode(code)
@@ -89,6 +89,20 @@ const emailExistValidation = body('email').custom(async (email: string) => {
 		throw new Error('User with this email not exist')
 	}
 })
+
+const recoveryCodeValidation = body('recoveryCode').custom(
+	async (recoveryCode: string) => {
+		const resultOfVerify = await jwtService.verifyJwtToken(recoveryCode)
+		if (!resultOfVerify) {
+			throw new Error('Recovery code is incorrect')
+		}
+	}
+)
+
+const newPasswordValidation = body('newPassword')
+	.trim()
+	.isLength({ min: 6, max: 20 })
+	.withMessage('Password length should be from 6 to 20')
 
 authRouter.get('/me', async (req: Request, res: Response) => {
 	if (!req.headers.authorization) {
@@ -206,7 +220,6 @@ authRouter.post(
 			req.headers['x-forwarded-for'] ||
 			req.headers['x-real-ip'] ||
 			req.socket.remoteAddress
-		console.log(ipAddress)
 		const RefreshTokenMetaUpd = {
 			lastActiveDate: new Date(),
 			expiredAt: new Date(Date.now() + +settings.refreshTokenLifeTime),
@@ -259,7 +272,6 @@ authRouter.post(
 				deviceId,
 				req.cookies.refreshToken
 			)
-		console.log(isDeletedFromRefreshTokenMeta)
 		const isAddedToBlacklist =
 			await blacklistRepository.addRefreshTokenInBlacklist({
 				refreshToken: req.cookies.refreshToken,
@@ -331,6 +343,53 @@ authRouter.post(
 	async (req: RequestWithBody<{ email: string }>, res: Response) => {
 		await usersRepository.userConfirmationCodeUpdate(req.body.email)
 		await emailAdapter.sendConfirmEmail(req.body.email)
+		res.sendStatus(204)
+		return
+	}
+)
+
+authRouter.post(
+	'/password-recovery',
+	antiSpamMiddleware,
+	EmailFormValidation,
+	inputValidationMiddleware,
+	async (req: RequestWithBody<{ email: string }>, res: Response) => {
+		const recoveryCode = await jwtService.createRecoveryCode(req.body.email)
+		console.log(recoveryCode)
+		await emailAdapter.sendRecoveryCode(req.body.email, recoveryCode)
+		const result = await userService.updateRecoveryCode(
+			req.body.email,
+			recoveryCode
+		)
+		//Ошибка на случай неудачного поиска и обновления данных пользователя
+		/*if (!result) {
+			res.sendStatus(999)
+			return
+		}*/
+		res.sendStatus(204)
+		return
+	}
+)
+
+authRouter.post(
+	'/new-password',
+	antiSpamMiddleware,
+	newPasswordValidation,
+	recoveryCodeValidation,
+	inputValidationMiddleware,
+	async (
+		req: RequestWithBody<{ newPassword: string; recoveryCode: string }>,
+		res: Response
+	) => {
+		const resultOfUpdate = await userService.updateUserPassword(
+			req.body.recoveryCode,
+			req.body.newPassword
+		)
+		//Ошибка на случай неудачного поиска и обновления данных пользователя
+		/*if (!resultOfUpdate) {
+			res.sendStatus(999)
+			return
+		}*/
 		res.sendStatus(204)
 		return
 	}

@@ -107,4 +107,18 @@ exports.userService = {
             return userId;
         });
     },
+    updateRecoveryCode(email, recoveryCode) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const result = yield UsersRepository_1.usersRepository.updateRecoveryCode(email, recoveryCode);
+            return result;
+        });
+    },
+    updateUserPassword(recoveryCode, newPassword) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const passwordSalt = yield this.generateSalt();
+            const passwordHash = yield this.generateHash(newPassword, passwordSalt);
+            const result = yield UsersRepository_1.usersRepository.updateUserSaltAndHash(recoveryCode, passwordSalt, passwordHash);
+            return result;
+        });
+    },
 };

@@ -16,6 +16,7 @@ export type UserDbType = {
 		createdAt: Date
 		passwordSalt: string
 		passwordHash: string
+		recoveryCode?: string
 	}
 	emailConfirmationData: {
 		confirmationCode: any
@@ -41,6 +42,7 @@ const userSchema = new mongoose.Schema({
 			createdAt: { type: Date, required: true },
 			passwordSalt: { type: String, required: true },
 			passwordHash: { type: String, required: true },
+			recoveryCode: { type: String, default: '' },
 		},
 		required: true,
 	},
@@ -131,6 +133,37 @@ export const usersRepository = {
 		return userView
 	},
 
+	async updateRecoveryCode(
+		email: string,
+		recoveryCode: string
+	): Promise<boolean> {
+		const result = await userModel.updateOne(
+			{ 'accountData.email': email },
+			{
+				$set: {
+					'accountData.recoveryCode': recoveryCode,
+				},
+			}
+		)
+		return result.matchedCount == 1
+	},
+
+	async updateUserSaltAndHash(
+		recoveryCode: string,
+		passwordSalt: string,
+		passwordHash: string
+	) {
+		const result = await userModel.updateOne(
+			{ 'accountData.recoveryCode': recoveryCode },
+			{
+				$set: {
+					'accountData.passwordSalt': passwordSalt,
+					'accountData.passwordHash': passwordHash,
+				},
+			}
+		)
+		return result.matchedCount == 1
+	},
 	async deleteUser(params: { id: string }): Promise<boolean> {
 		const result = await userModel.deleteOne({ id: params.id })
 		return result.deletedCount === 1

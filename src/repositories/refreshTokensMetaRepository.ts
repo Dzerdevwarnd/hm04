@@ -1,6 +1,5 @@
 import mongoose from 'mongoose'
 import { jwtService } from '../application/jwt-service'
-import { client } from '../db'
 import { settings } from '../setting'
 
 export type refreshTokensMetaTypeDB = {
@@ -31,10 +30,6 @@ export const refreshTokensMetaRepository = {
 		const expireDate = new Date( //@ts-ignore
 			Date.now() + parseInt(settings.refreshTokenLifeTime.match(/\d+/))
 		)
-		await client
-			.db('hm03')
-			.collection<refreshTokensMetaTypeDB>('refreshTokensMeta')
-			.createIndex({ expireDate: 1 }, { expireAfterSeconds: 0 })
 		const result = await refreshTokensMetaModel.insertMany(refreshTokenMeta)
 
 		setTimeout(
