@@ -1,22 +1,23 @@
+import { ObjectId } from 'mongodb'
 import { jwtService } from '../application/jwt-service'
 import { usersRepository } from '../repositories/UsersRepository'
 import {
-	commentDBType,
-	commentType,
-	commentsPaginationType,
+	CommentDBType,
+	CommentType,
+	CommentsPaginationType,
 } from '../repositories/commentRepository'
 
 import { commentsRepository } from '../repositories/commentRepository'
 
 export const commentService = {
-	async findComment(id: string): Promise<commentType | null> {
+	async findComment(id: string): Promise<CommentType | null> {
 		let comment = await commentsRepository.findComment(id)
 		return comment
 	},
 	async findCommentsByPostId(
 		id: string,
 		query: any
-	): Promise<commentsPaginationType | null> {
+	): Promise<CommentsPaginationType | null> {
 		let commentsPagination = await commentsRepository.findCommentsByPostId(
 			id,
 			query
@@ -35,22 +36,20 @@ export const commentService = {
 		id: string,
 		body: { content: string },
 		token: string
-	): Promise<commentType | null> {
+	): Promise<CommentType | null> {
 		const userId = await jwtService.verifyAndGetUserIdByToken(token)
 		const user = await usersRepository.findUser(userId!)
 		if (!user) {
 			return user
 		}
-		const comment: commentDBType = {
-			id: String(Date.now()),
-			postId: id,
-			content: body.content,
-			commentatorInfo: {
-				userId: user?.id,
-				userLogin: user.accountData.login,
-			},
-			createdAt: new Date(),
-		}
+		const comment: CommentDBType = new CommentDBType(
+			new ObjectId(),
+			String(Date.now()),
+			id,
+			body.content,
+			{ userId: user.id, userLogin: user.accountData.login },
+			new Date()
+		)
 		const newCommentWithout_id = await commentsRepository.createComment(comment)
 		return newCommentWithout_id
 	},

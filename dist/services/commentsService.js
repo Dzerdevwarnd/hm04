@@ -10,31 +10,33 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.commentService = void 0;
+const mongodb_1 = require("mongodb");
 const jwt_service_1 = require("../application/jwt-service");
 const UsersRepository_1 = require("../repositories/UsersRepository");
 const commentRepository_1 = require("../repositories/commentRepository");
+const commentRepository_2 = require("../repositories/commentRepository");
 exports.commentService = {
     findComment(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            let comment = yield commentRepository_1.commentsRepository.findComment(id);
+            let comment = yield commentRepository_2.commentsRepository.findComment(id);
             return comment;
         });
     },
     findCommentsByPostId(id, query) {
         return __awaiter(this, void 0, void 0, function* () {
-            let commentsPagination = yield commentRepository_1.commentsRepository.findCommentsByPostId(id, query);
+            let commentsPagination = yield commentRepository_2.commentsRepository.findCommentsByPostId(id, query);
             return commentsPagination;
         });
     },
     deleteComment(commentId) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield commentRepository_1.commentsRepository.deleteComment(commentId);
+            let result = yield commentRepository_2.commentsRepository.deleteComment(commentId);
             return result;
         });
     },
     updateComment(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield commentRepository_1.commentsRepository.updateComment(id, body);
+            let result = yield commentRepository_2.commentsRepository.updateComment(id, body);
             return result;
         });
     },
@@ -45,17 +47,8 @@ exports.commentService = {
             if (!user) {
                 return user;
             }
-            const comment = {
-                id: String(Date.now()),
-                postId: id,
-                content: body.content,
-                commentatorInfo: {
-                    userId: user === null || user === void 0 ? void 0 : user.id,
-                    userLogin: user.accountData.login,
-                },
-                createdAt: new Date(),
-            };
-            const newCommentWithout_id = yield commentRepository_1.commentsRepository.createComment(comment);
+            const comment = new commentRepository_1.CommentDBType(new mongodb_1.ObjectId(), String(Date.now()), id, body.content, { userId: user.id, userLogin: user.accountData.login }, new Date());
+            const newCommentWithout_id = yield commentRepository_2.commentsRepository.createComment(comment);
             return newCommentWithout_id;
         });
     },
