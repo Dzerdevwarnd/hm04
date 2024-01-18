@@ -385,7 +385,7 @@ authRouter.post(
 			req.body.recoveryCode,
 			req.body.newPassword
 		)
-		//Ошибка на случай неудачного поиска и обновления данных пользователя
+		//Ошибка на случай неудачного поиска и/или обновления данных пользователя
 		/*if (!resultOfUpdate) {
 			res.sendStatus(999)
 			return

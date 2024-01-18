@@ -40,6 +40,12 @@ exports.commentService = {
             return result;
         });
     },
+    updateCommentLikeStatus(id, body) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let result = yield commentRepository_2.commentsRepository.updateCommentLikeStatus(id, body);
+            return result;
+        });
+    },
     createCommentsByPostId(id, body, token) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(token);

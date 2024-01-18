@@ -32,6 +32,13 @@ export const commentService = {
 		let result = await commentsRepository.updateComment(id, body)
 		return result
 	},
+	async updateCommentLikeStatus(
+		id: string,
+		body: { likeStatus: string }
+	): Promise<boolean> {
+		let result = await commentsRepository.updateCommentLikeStatus(id, body)
+		return result
+	},
 	async createCommentsByPostId(
 		id: string,
 		body: { content: string },

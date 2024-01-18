@@ -23,17 +23,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commentsRepository = exports.CommentRepository = exports.commentModel = exports.CommentsPaginationType = exports.CommentDBType = exports.CommentType = void 0;
+exports.commentsRepository = exports.CommentRepository = exports.commentModel = exports.CommentsPaginationType = exports.CommentDBType = exports.CommentViewType = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
-class CommentType {
-    constructor(id, content, commentatorInfo, createdAt) {
+class CommentViewType {
+    constructor(id, content, commentatorInfo, createdAt, likesInfo) {
         this.id = id;
         this.content = content;
         this.commentatorInfo = commentatorInfo;
         this.createdAt = createdAt;
+        this.likesInfo = likesInfo;
     }
 }
-exports.CommentType = CommentType;
+exports.CommentViewType = CommentViewType;
 /*export type commentType = {
     id: string
     content: string
@@ -51,6 +52,15 @@ class CommentDBType {
         this.content = content;
         this.commentatorInfo = commentatorInfo;
         this.createdAt = createdAt;
+        this.likesInfo = {
+            likesCount: 0,
+            dislikesCount: 0,
+            myStatus: 'None',
+        };
+        this.arraysOfUsersWhoLikeOrDis = {
+            likeArray: [],
+            dislikeArray: []
+        };
     }
 }
 exports.CommentDBType = CommentDBType;
@@ -93,12 +103,33 @@ const commentSchema = new mongoose_1.default.Schema({
         required: true,
     },
     createdAt: { type: Date, required: true },
+    likesInfo: {
+        type: {
+            likesCount: { type: Number, default: '0' },
+            dislikesCount: { type: Number, default: '0' },
+            arraysOfUsersWhoLikeOrDis: {
+                type: {
+                    likeArray: { type: Array, default: [] },
+                    dislikeArray: { type: Array, default: [] },
+                },
+                required: false,
+            },
+        }, required: false,
+    },
 });
 exports.commentModel = mongoose_1.default.model('comments', commentSchema);
 class CommentRepository {
     findComment(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const foundComment = yield exports.commentModel.findOne({ id: id }, { projection: { _id: 0, postId: 0 } });
+            const foundComment = yield exports.commentModel.findOne({ id: id });
+            const viewComment = new CommentViewType(foundComment === null || foundComment === void 0 ? void 0 : foundComment.id, foundComment === null || foundComment === void 0 ? void 0 : foundComment.content, {
+                userId: foundComment === null || foundComment === void 0 ? void 0 : foundComment.commentatorInfo.userId,
+                userLogin: foundComment === null || foundComment === void 0 ? void 0 : foundComment.commentatorInfo.userLogin
+            }, foundComment === null || foundComment === void 0 ? void 0 : foundComment.createdAt, {
+                likesCount: foundComment === null || foundComment === void 0 ? void 0 : foundComment.likesInfo.,
+                dislikesCount: number,
+                myStatus: string
+            });
             return foundComment;
         });
     }
@@ -138,6 +169,16 @@ class CommentRepository {
             const resultOfUpdate = yield exports.commentModel.updateOne({ id: id }, {
                 $set: {
                     content: body.content,
+                },
+            });
+            return resultOfUpdate.matchedCount === 1;
+        });
+    }
+    updateCommentLikeStatus(id, body) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const resultOfUpdate = yield exports.commentModel.updateOne({ id: id }, {
+                $set: {
+                    likeStatus: body.likeStatus,
                 },
             });
             return resultOfUpdate.matchedCount === 1;

@@ -20,6 +20,14 @@ const contentValidation = (0, express_validator_1.body)('content')
     .trim()
     .isLength({ min: 20, max: 300 })
     .withMessage('Content length should be from 20 to 300');
+const likeStatusValidation = (0, express_validator_1.body)('LikeStatus')
+    .trim()
+    .custom((likeStatus) => __awaiter(void 0, void 0, void 0, function* () {
+    const allowedValues = ['None', 'Like', 'Dislike '];
+    if (!allowedValues.includes(likeStatus)) {
+        throw new Error('Incorrect likeStatus Value');
+    }
+}));
 exports.commentsRouter = (0, express_1.Router)({});
 exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const foundComment = yield commentsService_1.commentService.findComment(req.params.id);
@@ -57,6 +65,16 @@ exports.commentsRouter.put('/:id', authMiddleware_1.AuthMiddleware, contentValid
         return;
     }
     const resultOfUpdate = yield commentsService_1.commentService.updateComment(req.params.id, req.body);
+    res.sendStatus(204);
+    return;
+}));
+exports.commentsRouter.put('/:id/like-status', authMiddleware_1.AuthMiddleware, likeStatusValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const comment = yield commentRepository_1.commentsRepository.findComment(req.params.id);
+    if (!comment) {
+        res.sendStatus(404);
+        return;
+    }
+    const resultOfUpdate = yield commentsService_1.commentService.updateCommentLikeStatus(req.params.id, req.body);
     res.sendStatus(204);
     return;
 }));

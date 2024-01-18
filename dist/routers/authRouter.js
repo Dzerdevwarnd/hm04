@@ -266,7 +266,7 @@ exports.authRouter.post('/password-recovery', antiSpamMiddleware_1.antiSpamMiddl
 }));
 exports.authRouter.post('/new-password', antiSpamMiddleware_1.antiSpamMiddleware, newPasswordValidation, recoveryCodeValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const resultOfUpdate = yield usersService_1.userService.updateUserPassword(req.body.recoveryCode, req.body.newPassword);
-    //Ошибка на случай неудачного поиска и обновления данных пользователя
+    //Ошибка на случай неудачного поиска и/или обновления данных пользователя
     /*if (!resultOfUpdate) {
         res.sendStatus(999)
         return
