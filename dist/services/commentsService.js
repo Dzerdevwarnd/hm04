@@ -16,9 +16,10 @@ const UsersRepository_1 = require("../repositories/UsersRepository");
 const commentRepository_1 = require("../repositories/commentRepository");
 const commentRepository_2 = require("../repositories/commentRepository");
 exports.commentService = {
-    findComment(id) {
+    findComment(id, accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
-            let comment = yield commentRepository_2.commentsRepository.findComment(id);
+            const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(accessToken);
+            let comment = yield commentRepository_2.commentsRepository.findComment(id, userId);
             return comment;
         });
     },
@@ -40,9 +41,10 @@ exports.commentService = {
             return result;
         });
     },
-    updateCommentLikeStatus(id, body) {
+    updateCommentLikeStatus(id, body, accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield commentRepository_2.commentsRepository.updateCommentLikeStatus(id, body);
+            const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(accessToken);
+            let result = yield commentRepository_2.commentsRepository.updateCommentLikeStatus(id, body, userId);
             return result;
         });
     },
@@ -54,8 +56,8 @@ exports.commentService = {
                 return user;
             }
             const comment = new commentRepository_1.CommentDBType(new mongodb_1.ObjectId(), String(Date.now()), id, body.content, { userId: user.id, userLogin: user.accountData.login }, new Date());
-            const newCommentWithout_id = yield commentRepository_2.commentsRepository.createComment(comment);
-            return newCommentWithout_id;
+            const commentView = yield commentRepository_2.commentsRepository.createComment(comment, userId);
+            return commentView;
         });
     },
 };

@@ -14,7 +14,6 @@ const express_1 = require("express");
 const express_validator_1 = require("express-validator");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
-const commentRepository_1 = require("../repositories/commentRepository");
 const commentsService_1 = require("../services/commentsService");
 const contentValidation = (0, express_validator_1.body)('content')
     .trim()
@@ -30,7 +29,7 @@ const likeStatusValidation = (0, express_validator_1.body)('LikeStatus')
 }));
 exports.commentsRouter = (0, express_1.Router)({});
 exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const foundComment = yield commentsService_1.commentService.findComment(req.params.id);
+    const foundComment = yield commentsService_1.commentService.findComment(req.params.id, req.headers.authorization.split(' ')[1]);
     if (!foundComment) {
         res.sendStatus(404);
         return;
@@ -41,7 +40,7 @@ exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 
     }
 }));
 exports.commentsRouter.delete('/:id', authMiddleware_1.AuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comment = yield commentRepository_1.commentsRepository.findComment(req.params.id);
+    const comment = yield commentsService_1.commentService.findComment(req.params.id, req.headers.authorization.split(' ')[1]);
     if (!comment) {
         res.sendStatus(404);
         return;
@@ -55,7 +54,7 @@ exports.commentsRouter.delete('/:id', authMiddleware_1.AuthMiddleware, (req, res
     return;
 }));
 exports.commentsRouter.put('/:id', authMiddleware_1.AuthMiddleware, contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comment = yield commentRepository_1.commentsRepository.findComment(req.params.id);
+    const comment = yield commentsService_1.commentService.findComment(req.params.id, req.headers.authorization.split(' ')[1]);
     if (!comment) {
         res.sendStatus(404);
         return;
@@ -69,12 +68,12 @@ exports.commentsRouter.put('/:id', authMiddleware_1.AuthMiddleware, contentValid
     return;
 }));
 exports.commentsRouter.put('/:id/like-status', authMiddleware_1.AuthMiddleware, likeStatusValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const comment = yield commentRepository_1.commentsRepository.findComment(req.params.id);
+    const comment = yield commentsService_1.commentService.findComment(req.params.id, req.headers.authorization.split(' ')[1]);
     if (!comment) {
         res.sendStatus(404);
         return;
     }
-    const resultOfUpdate = yield commentsService_1.commentService.updateCommentLikeStatus(req.params.id, req.body);
+    const resultOfUpdate = yield commentsService_1.commentService.updateCommentLikeStatus(req.params.id, req.body, req.headers.authorization.split(' ')[1]);
     res.sendStatus(204);
     return;
 }));

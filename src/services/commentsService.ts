@@ -3,24 +3,25 @@ import { jwtService } from '../application/jwt-service'
 import { usersRepository } from '../repositories/UsersRepository'
 import {
 	CommentDBType,
-	CommentType,
+	CommentViewType,
 	CommentsPaginationType,
 } from '../repositories/commentRepository'
 
 import { commentsRepository } from '../repositories/commentRepository'
 
 export const commentService = {
-	async findComment(id: string): Promise<CommentType | null> {
-		let comment = await commentsRepository.findComment(id)
+	async findComment(id: string,accessToken:string): Promise<CommentViewType | null> {
+		const userId = await jwtService.verifyAndGetUserIdByToken(accessToken)
+		let comment = await commentsRepository.findComment(id,userId)
 		return comment
 	},
 	async findCommentsByPostId(
 		id: string,
-		query: any
+		query: any,
 	): Promise<CommentsPaginationType | null> {
 		let commentsPagination = await commentsRepository.findCommentsByPostId(
 			id,
-			query
+			query,
 		)
 		return commentsPagination
 	},
@@ -34,16 +35,18 @@ export const commentService = {
 	},
 	async updateCommentLikeStatus(
 		id: string,
-		body: { likeStatus: string }
+		body: { likeStatus: string },
+		accessToken:string
 	): Promise<boolean> {
-		let result = await commentsRepository.updateCommentLikeStatus(id, body)
+		const userId = await jwtService.verifyAndGetUserIdByToken(accessToken)
+		let result = await commentsRepository.updateCommentLikeStatus(id, body,userId)
 		return result
 	},
 	async createCommentsByPostId(
 		id: string,
 		body: { content: string },
 		token: string
-	): Promise<CommentType | null> {
+	): Promise<CommentViewType | null> {
 		const userId = await jwtService.verifyAndGetUserIdByToken(token)
 		const user = await usersRepository.findUser(userId!)
 		if (!user) {
@@ -57,7 +60,7 @@ export const commentService = {
 			{ userId: user.id, userLogin: user.accountData.login },
 			new Date()
 		)
-		const newCommentWithout_id = await commentsRepository.createComment(comment)
-		return newCommentWithout_id
+		const commentView = await commentsRepository.createComment(comment,userId)
+		return commentView
 	},
 }

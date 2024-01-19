@@ -6,16 +6,15 @@ export class CommentViewType {
 		public id: string,
 		public content: string,
 		public commentatorInfo: {
-        userId: string,
-        userLogin: string
-      },
-			public  createdAt: Date,
-			public likesInfo: {
-        likesCount: number,
-        dislikesCount: number,
-        myStatus: string
-
-    }
+			userId: string
+			userLogin: string
+		},
+		public createdAt: Date,
+		public likesInfo: {
+			likesCount: number
+			dislikesCount: number
+			myStatus: string
+		}
 	) {}
 }
 
@@ -33,11 +32,10 @@ export class CommentDBType {
 	public likesInfo: {
 		likesCount: number
 		dislikesCount: number
-		myStatus: string
-	}
-	public arraysOfUsersWhoLikeOrDis:{
-		likeArray:string[]
-		dislikeArray:string[]
+		arraysOfUsersWhoLikeOrDis: {
+			likeArray: string[]
+			dislikeArray: string[]
+		}
 	}
 	constructor(
 		public _id: ObjectId,
@@ -48,17 +46,15 @@ export class CommentDBType {
 			userId: string
 			userLogin: string
 		},
-		public createdAt: Date,
-
+		public createdAt: Date
 	) {
 		this.likesInfo = {
 			likesCount: 0,
 			dislikesCount: 0,
-			myStatus: 'None',
-		}
-		this.arraysOfUsersWhoLikeOrDis = {
-			likeArray :[],
-			dislikeArray : []
+			arraysOfUsersWhoLikeOrDis: {
+				likeArray: [],
+				dislikeArray: [],
+			},
 		}
 	}
 }
@@ -105,40 +101,64 @@ const commentSchema = new mongoose.Schema({
 	},
 	createdAt: { type: Date, required: true },
 	likesInfo: {
-		type:{
-			likesCount: {type:Number,default:'0'},
-		dislikesCount: {type:Number,default:'0'},
-		arraysOfUsersWhoLikeOrDis:{
-			type:{
-				likeArray:{type:Array,default:[]},
-			dislikeArray:{type:Array,default:[]},
+		type: {
+			likesCount: { type: Number, required: true, default: '0' },
+			dislikesCount: { type: Number, required: true, default: '0' },
+			arraysOfUsersWhoLikeOrDis: {
+				type: {
+					likeArray: { type: Array, default: [] },
+					dislikeArray: { type: Array, default: [] },
+				},
+				required: false,
+			},
 		},
-		required:false,
+		required: true,
 	},
-},required:false,
-},})
+})
 
 export const commentModel = mongoose.model('comments', commentSchema)
 
 export class CommentRepository {
-	async findComment(id: string): Promise<CommentViewType | null> {
-		const foundComment = await commentModel.findOne(
-			{ id: id },
-		)
-	const viewComment:CommentViewType = new CommentViewType(
-		foundComment?.id,
-		foundComment?.content,
-{
-	userId:foundComment?.commentatorInfo.userId,
-	userLogin:foundComment?.commentatorInfo.userLogin
-      },
-			foundComment?.createdAt,
+	async findComment(
+		id: string,
+		userId: string
+	): Promise<CommentViewType | null> {
+		const foundComment = await commentModel.findOne({ id: id })
+		if (!foundComment) {
+			return null
+		}
+		let myStatus: string = ''
+		if (
+			foundComment.likesInfo.arraysOfUsersWhoLikeOrDis?.likeArray.includes(
+				userId
+			)
+		) {
+			myStatus = 'Like'
+		} else if (
+			foundComment.likesInfo.arraysOfUsersWhoLikeOrDis?.dislikeArray.includes(
+				userId
+			)
+		) {
+			myStatus = 'Dislike'
+		} else {
+			myStatus = 'None'
+		}
+		const viewComment: CommentViewType = new CommentViewType(
+			foundComment.id,
+			foundComment.content,
 			{
-        likesCount: foundComment?.likesInfo.,
-        dislikesCount: number,
-        myStatus: string)
+				userId: foundComment.commentatorInfo.userId,
+				userLogin: foundComment.commentatorInfo.userLogin,
+			},
+			foundComment.createdAt,
+			{
+				likesCount: foundComment.likesInfo.likesCount,
+				dislikesCount: foundComment.likesInfo.dislikesCount,
+				myStatus: myStatus,
+			}
+		)
 
-		return foundComment
+		return viewComment
 	}
 
 	async findCommentsByPostId(
@@ -154,12 +174,36 @@ export class CommentRepository {
 		} else {
 			sortDirection = 1
 		}
-		const comments = await commentModel
+		const commentsDB = await commentModel
 			.find({ postId: id }, { projection: { _id: 0, postId: 0 } })
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection, createdAt: sortDirection })
 			.limit(pageSize)
 			.lean()
+		const commentsView = commentsDB.map(comment => {
+			/*let userLikeStatus = ''
+				if (comment.likesInfo.arraysOfUsersWhoLikeOrDis?.likeArray.includes(userId)){
+					userLikeStatus = "Like"
+				} else if (comment.likesInfo.arraysOfUsersWhoLikeOrDis?.dislikeArray.includes(userId)){
+					userLikeStatus = "Dislike"
+				} else {
+					userLikeStatus = "None"
+				}*/
+			return {
+				id: comment.id,
+				content: comment.content,
+				commentatorInfo: {
+					userId: comment.commentatorInfo.userId,
+					userLogin: comment.commentatorInfo.userLogin,
+				},
+				createdAt: comment.createdAt,
+				likesInfo: {
+					likesCount: comment.likesInfo.likesCount,
+					dislikesCount: comment.likesInfo.dislikesCount,
+					myStatus: 'None', //userLikeStatus
+				},
+			}
+		})
 		const totalCount = await commentModel.countDocuments({ postId: id })
 		const pagesCount = Math.ceil(totalCount / pageSize)
 		const commentsPagination: CommentsPaginationType =
@@ -168,7 +212,7 @@ export class CommentRepository {
 				Number(page),
 				pageSize,
 				totalCount,
-				comments
+				commentsView
 			)
 		return commentsPagination
 	}
@@ -192,7 +236,8 @@ export class CommentRepository {
 
 	async updateCommentLikeStatus(
 		id: string,
-		body: { likeStatus: string }
+		body: { likeStatus: string },
+		userId: string
 	): Promise<boolean> {
 		const resultOfUpdate = await commentModel.updateOne(
 			{ id: id },
@@ -205,11 +250,41 @@ export class CommentRepository {
 		return resultOfUpdate.matchedCount === 1
 	}
 
-	async createComment(newComment: CommentDBType): Promise<CommentType> {
+	async createComment(
+		newComment: CommentDBType,
+		userId: string
+	): Promise<CommentViewType> {
 		const result = await commentModel.insertMany(newComment)
 		//@ts-ignore
-		const { _id, postId, ...commentWithout_Id } = newComment
-		return commentWithout_Id
+		let myStatus: string = ''
+		if (
+			newComment.likesInfo.arraysOfUsersWhoLikeOrDis?.likeArray.includes(userId)
+		) {
+			myStatus = 'Like'
+		} else if (
+			newComment.likesInfo.arraysOfUsersWhoLikeOrDis?.dislikeArray.includes(
+				userId
+			)
+		) {
+			myStatus = 'Dislike'
+		} else {
+			myStatus = 'None'
+		}
+		const viewComment: CommentViewType = new CommentViewType(
+			newComment.id,
+			newComment.content,
+			{
+				userId: newComment.commentatorInfo.userId,
+				userLogin: newComment.commentatorInfo.userLogin,
+			},
+			newComment.createdAt,
+			{
+				likesCount: newComment.likesInfo.likesCount,
+				dislikesCount: newComment.likesInfo.dislikesCount,
+				myStatus: myStatus,
+			}
+		)
+		return viewComment
 	}
 }
 

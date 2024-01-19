@@ -2,7 +2,6 @@ import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
 import { AuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
-import { commentsRepository } from '../repositories/commentRepository'
 import { commentService } from '../services/commentsService'
 
 type RequestWithParams<P> = Request<P, {}, {}, {}>
@@ -27,7 +26,10 @@ export const commentsRouter = Router({})
 commentsRouter.get(
 	'/:id',
 	async (req: RequestWithParams<{ id: string }>, res: Response) => {
-		const foundComment = await commentService.findComment(req.params.id)
+		const foundComment = await commentService.findComment(
+			req.params.id,
+			req.headers.authorization!.split(' ')[1]
+		)
 		if (!foundComment) {
 			res.sendStatus(404)
 			return
@@ -42,7 +44,10 @@ commentsRouter.delete(
 	'/:id',
 	AuthMiddleware,
 	async (req: RequestWithParams<{ id: string }>, res: Response) => {
-		const comment = await commentsRepository.findComment(req.params.id)
+		const comment = await commentService.findComment(
+			req.params.id,
+			req.headers.authorization!.split(' ')[1]
+		)
 		if (!comment) {
 			res.sendStatus(404)
 			return
@@ -66,7 +71,10 @@ commentsRouter.put(
 		req: RequestWithParamsAndBody<{ id: string }, { content: string }>,
 		res: Response
 	) => {
-		const comment = await commentsRepository.findComment(req.params.id)
+		const comment = await commentService.findComment(
+			req.params.id,
+			req.headers.authorization!.split(' ')[1]
+		)
 		if (!comment) {
 			res.sendStatus(404)
 			return
@@ -93,7 +101,10 @@ commentsRouter.put(
 		req: RequestWithParamsAndBody<{ id: string }, { likeStatus: string }>,
 		res: Response
 	) => {
-		const comment = await commentsRepository.findComment(req.params.id)
+		const comment = await commentService.findComment(
+			req.params.id,
+			req.headers.authorization!.split(' ')[1]
+		)
 		if (!comment) {
 			res.sendStatus(404)
 			return
@@ -101,7 +112,8 @@ commentsRouter.put(
 
 		const resultOfUpdate = await commentService.updateCommentLikeStatus(
 			req.params.id,
-			req.body
+			req.body,
+			req.headers.authorization!.split(' ')[1]
 		)
 		res.sendStatus(204)
 		return
