@@ -8,20 +8,28 @@ import {
 } from '../repositories/commentRepository'
 
 import { commentsRepository } from '../repositories/commentRepository'
+import { likesService } from './likesService'
 
 export const commentService = {
-	async findComment(id: string,accessToken:string): Promise<CommentViewType | null> {
-		const userId = await jwtService.verifyAndGetUserIdByToken(accessToken)
-		let comment = await commentsRepository.findComment(id,userId)
+	async findComment(
+		commentId: string,
+		userId: string
+	): Promise<CommentViewType | null> {
+		const like = await likesService.findCommentLikeFromUser(userId, commentId)
+		const userLikeStatus = like?.likeStatus || 'None'
+		let comment = await commentsRepository.findComment(
+			commentId,
+			userLikeStatus
+		)
 		return comment
 	},
 	async findCommentsByPostId(
 		id: string,
-		query: any,
+		query: any
 	): Promise<CommentsPaginationType | null> {
 		let commentsPagination = await commentsRepository.findCommentsByPostId(
 			id,
-			query,
+			query
 		)
 		return commentsPagination
 	},
@@ -34,13 +42,43 @@ export const commentService = {
 		return result
 	},
 	async updateCommentLikeStatus(
-		id: string,
+		commentId: string,
 		body: { likeStatus: string },
-		accessToken:string
+		accessToken: string
 	): Promise<boolean> {
 		const userId = await jwtService.verifyAndGetUserIdByToken(accessToken)
-		let result = await commentsRepository.updateCommentLikeStatus(id, body,userId)
-		return result
+		const comment = await commentService.findComment(commentId, userId)
+		let likesCount = comment!.likesInfo.likesCount
+		let dislikesCount = comment!.likesInfo.dislikesCount
+		if (body.likeStatus === 'Like' && comment?.likesInfo.myStatus !== 'Like') {
+			likesCount = likesCount + 1
+			commentsRepository.updateCommentLikesAndDislikesCount(
+				commentId,
+				likesCount.toString(),
+				dislikesCount.toString()
+			)
+		} else if (
+			body.likeStatus === 'Dislike' &&
+			comment?.likesInfo.myStatus !== 'DisLike'
+		) {
+			dislikesCount = dislikesCount + 1
+			commentsRepository.updateCommentLikesAndDislikesCount(
+				commentId,
+				likesCount.toString(),
+				dislikesCount.toString()
+			)
+		}
+		let like = await likesService.findCommentLikeFromUser(userId, commentId)
+		if (!like) {
+			await likesService.addLikeToBdFromUser(userId, commentId, body.likeStatus)
+			return true
+		} else {
+			if (like.likeStatus === body.likeStatus) {
+				return false
+			}
+			likesService.updateUserLikeStatus(userId, commentId, body.likeStatus)
+			return true
+		}
 	},
 	async createCommentsByPostId(
 		id: string,
@@ -60,7 +98,7 @@ export const commentService = {
 			{ userId: user.id, userLogin: user.accountData.login },
 			new Date()
 		)
-		const commentView = await commentsRepository.createComment(comment,userId)
+		const commentView = await commentsRepository.createComment(comment, userId)
 		return commentView
 	},
 }

@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
+import { jwtService } from '../application/jwt-service'
 import { AuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
 import { commentService } from '../services/commentsService'
@@ -26,10 +27,13 @@ export const commentsRouter = Router({})
 commentsRouter.get(
 	'/:id',
 	async (req: RequestWithParams<{ id: string }>, res: Response) => {
-		const foundComment = await commentService.findComment(
-			req.params.id,
-			req.headers.authorization!.split(' ')[1]
-		)
+		let userId = undefined
+		if (req.headers.authorization) {
+			userId = await jwtService.verifyAndGetUserIdByToken(
+				req.headers.authorization
+			)
+		}
+		const foundComment = await commentService.findComment(req.params.id, userId)
 		if (!foundComment) {
 			res.sendStatus(404)
 			return

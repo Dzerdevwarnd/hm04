@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.commentsRouter = void 0;
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
+const jwt_service_1 = require("../application/jwt-service");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const commentsService_1 = require("../services/commentsService");
@@ -29,7 +30,11 @@ const likeStatusValidation = (0, express_validator_1.body)('LikeStatus')
 }));
 exports.commentsRouter = (0, express_1.Router)({});
 exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const foundComment = yield commentsService_1.commentService.findComment(req.params.id, req.headers.authorization.split(' ')[1]);
+    let userId = undefined;
+    if (req.headers.authorization) {
+        userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization);
+    }
+    const foundComment = yield commentsService_1.commentService.findComment(req.params.id, userId);
     if (!foundComment) {
         res.sendStatus(404);
         return;

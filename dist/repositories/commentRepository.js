@@ -44,10 +44,6 @@ class CommentDBType {
         this.likesInfo = {
             likesCount: 0,
             dislikesCount: 0,
-            arraysOfUsersWhoLikeOrDis: {
-                likeArray: [],
-                dislikeArray: [],
-            },
         };
     }
 }
@@ -93,37 +89,19 @@ const commentSchema = new mongoose_1.default.Schema({
     createdAt: { type: Date, required: true },
     likesInfo: {
         type: {
-            likesCount: { type: Number, required: true, default: '0' },
-            dislikesCount: { type: Number, required: true, default: '0' },
-            arraysOfUsersWhoLikeOrDis: {
-                type: {
-                    likeArray: { type: Array, default: [] },
-                    dislikeArray: { type: Array, default: [] },
-                },
-                required: false,
-            },
+            likesCount: { type: string, required: true, default: '0' },
+            dislikesCount: { type: string, required: true, default: '0' },
         },
         required: true,
     },
 });
 exports.commentModel = mongoose_1.default.model('comments', commentSchema);
 class CommentRepository {
-    findComment(id, userId) {
-        var _a, _b;
+    findComment(commentId, userLikeStatus) {
         return __awaiter(this, void 0, void 0, function* () {
-            const foundComment = yield exports.commentModel.findOne({ id: id });
+            const foundComment = yield exports.commentModel.findOne({ id: commentId });
             if (!foundComment) {
                 return null;
-            }
-            let myStatus = '';
-            if ((_a = foundComment.likesInfo.arraysOfUsersWhoLikeOrDis) === null || _a === void 0 ? void 0 : _a.likeArray.includes(userId)) {
-                myStatus = 'Like';
-            }
-            else if ((_b = foundComment.likesInfo.arraysOfUsersWhoLikeOrDis) === null || _b === void 0 ? void 0 : _b.dislikeArray.includes(userId)) {
-                myStatus = 'Dislike';
-            }
-            else {
-                myStatus = 'None';
             }
             const viewComment = new CommentViewType(foundComment.id, foundComment.content, {
                 userId: foundComment.commentatorInfo.userId,
@@ -131,7 +109,7 @@ class CommentRepository {
             }, foundComment.createdAt, {
                 likesCount: foundComment.likesInfo.likesCount,
                 dislikesCount: foundComment.likesInfo.dislikesCount,
-                myStatus: myStatus,
+                myStatus: userLikeStatus,
             });
             return viewComment;
         });
@@ -201,11 +179,12 @@ class CommentRepository {
             return resultOfUpdate.matchedCount === 1;
         });
     }
-    updateCommentLikeStatus(id, body, userId) {
+    updateCommentLikesAndDislikesCount(commentId, likesCount, dislikesCount) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resultOfUpdate = yield exports.commentModel.updateOne({ id: id }, {
+            const resultOfUpdate = yield exports.commentModel.updateOne({ id: commentId }, {
                 $set: {
-                    likeStatus: body.likeStatus,
+                    'likesInfo.likesCount': likesCount,
+                    'likesInfo.dislikesCount': dislikesCount,
                 },
             });
             return resultOfUpdate.matchedCount === 1;

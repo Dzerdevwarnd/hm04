@@ -11,8 +11,8 @@ export class CommentViewType {
 		},
 		public createdAt: Date,
 		public likesInfo: {
-			likesCount: number
-			dislikesCount: number
+			likesCount: string
+			dislikesCount: string
 			myStatus: string
 		}
 	) {}
@@ -32,10 +32,6 @@ export class CommentDBType {
 	public likesInfo: {
 		likesCount: number
 		dislikesCount: number
-		arraysOfUsersWhoLikeOrDis: {
-			likeArray: string[]
-			dislikeArray: string[]
-		}
 	}
 	constructor(
 		public _id: ObjectId,
@@ -51,10 +47,6 @@ export class CommentDBType {
 		this.likesInfo = {
 			likesCount: 0,
 			dislikesCount: 0,
-			arraysOfUsersWhoLikeOrDis: {
-				likeArray: [],
-				dislikeArray: [],
-			},
 		}
 	}
 }
@@ -102,15 +94,8 @@ const commentSchema = new mongoose.Schema({
 	createdAt: { type: Date, required: true },
 	likesInfo: {
 		type: {
-			likesCount: { type: Number, required: true, default: '0' },
-			dislikesCount: { type: Number, required: true, default: '0' },
-			arraysOfUsersWhoLikeOrDis: {
-				type: {
-					likeArray: { type: Array, default: [] },
-					dislikeArray: { type: Array, default: [] },
-				},
-				required: false,
-			},
+			likesCount: { type: string, required: true, default: '0' },
+			dislikesCount: { type: string, required: true, default: '0' },
 		},
 		required: true,
 	},
@@ -120,28 +105,12 @@ export const commentModel = mongoose.model('comments', commentSchema)
 
 export class CommentRepository {
 	async findComment(
-		id: string,
-		userId: string
+		commentId: string,
+		userLikeStatus: string
 	): Promise<CommentViewType | null> {
-		const foundComment = await commentModel.findOne({ id: id })
+		const foundComment = await commentModel.findOne({ id: commentId })
 		if (!foundComment) {
 			return null
-		}
-		let myStatus: string = ''
-		if (
-			foundComment.likesInfo.arraysOfUsersWhoLikeOrDis?.likeArray.includes(
-				userId
-			)
-		) {
-			myStatus = 'Like'
-		} else if (
-			foundComment.likesInfo.arraysOfUsersWhoLikeOrDis?.dislikeArray.includes(
-				userId
-			)
-		) {
-			myStatus = 'Dislike'
-		} else {
-			myStatus = 'None'
 		}
 		const viewComment: CommentViewType = new CommentViewType(
 			foundComment.id,
@@ -154,7 +123,7 @@ export class CommentRepository {
 			{
 				likesCount: foundComment.likesInfo.likesCount,
 				dislikesCount: foundComment.likesInfo.dislikesCount,
-				myStatus: myStatus,
+				myStatus: userLikeStatus,
 			}
 		)
 
@@ -234,16 +203,17 @@ export class CommentRepository {
 		return resultOfUpdate.matchedCount === 1
 	}
 
-	async updateCommentLikeStatus(
-		id: string,
-		body: { likeStatus: string },
-		userId: string
+	async updateCommentLikesAndDislikesCount(
+		commentId: string,
+		likesCount: string,
+		dislikesCount: string
 	): Promise<boolean> {
 		const resultOfUpdate = await commentModel.updateOne(
-			{ id: id },
+			{ id: commentId },
 			{
 				$set: {
-					likeStatus: body.likeStatus,
+					'likesInfo.likesCount': likesCount,
+					'likesInfo.dislikesCount': dislikesCount,
 				},
 			}
 		)

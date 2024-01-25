@@ -15,11 +15,13 @@ const jwt_service_1 = require("../application/jwt-service");
 const UsersRepository_1 = require("../repositories/UsersRepository");
 const commentRepository_1 = require("../repositories/commentRepository");
 const commentRepository_2 = require("../repositories/commentRepository");
+const likesService_1 = require("./likesService");
 exports.commentService = {
-    findComment(id, accessToken) {
+    findComment(commentId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(accessToken);
-            let comment = yield commentRepository_2.commentsRepository.findComment(id, userId);
+            const like = yield likesService_1.likesService.findCommentLikeFromUser(userId, commentId);
+            const userLikeStatus = (like === null || like === void 0 ? void 0 : like.likeStatus) || 'None';
+            let comment = yield commentRepository_2.commentsRepository.findComment(commentId, userLikeStatus);
             return comment;
         });
     },
@@ -41,11 +43,33 @@ exports.commentService = {
             return result;
         });
     },
-    updateCommentLikeStatus(id, body, accessToken) {
+    updateCommentLikeStatus(commentId, body, accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(accessToken);
-            let result = yield commentRepository_2.commentsRepository.updateCommentLikeStatus(id, body, userId);
-            return result;
+            const comment = yield exports.commentService.findComment(commentId, userId);
+            let likesCount = comment.likesInfo.likesCount;
+            let dislikesCount = comment.likesInfo.dislikesCount;
+            if (body.likeStatus === 'Like' && (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) !== 'Like') {
+                likesCount = likesCount + 1;
+                commentRepository_2.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount.toString(), dislikesCount.toString());
+            }
+            else if (body.likeStatus === 'Dislike' &&
+                (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) !== 'DisLike') {
+                dislikesCount = dislikesCount + 1;
+                commentRepository_2.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount.toString(), dislikesCount.toString());
+            }
+            let like = yield likesService_1.likesService.findCommentLikeFromUser(userId, commentId);
+            if (!like) {
+                yield likesService_1.likesService.addLikeToBdFromUser(userId, commentId, body.likeStatus);
+                return true;
+            }
+            else {
+                if (like.likeStatus === body.likeStatus) {
+                    return false;
+                }
+                likesService_1.likesService.updateUserLikeStatus(userId, commentId, body.likeStatus);
+                return true;
+            }
         });
     },
     createCommentsByPostId(id, body, token) {
