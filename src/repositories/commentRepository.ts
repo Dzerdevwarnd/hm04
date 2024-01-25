@@ -30,8 +30,8 @@ export class CommentViewType {
 
 export class CommentDBType {
 	public likesInfo: {
-		likesCount: number
-		dislikesCount: number
+		likesCount: string
+		dislikesCount: string
 	}
 	constructor(
 		public _id: ObjectId,
@@ -45,8 +45,8 @@ export class CommentDBType {
 		public createdAt: Date
 	) {
 		this.likesInfo = {
-			likesCount: 0,
-			dislikesCount: 0,
+			likesCount: '0',
+			dislikesCount: '0',
 		}
 	}
 }
@@ -94,8 +94,8 @@ const commentSchema = new mongoose.Schema({
 	createdAt: { type: Date, required: true },
 	likesInfo: {
 		type: {
-			likesCount: { type: string, required: true, default: '0' },
-			dislikesCount: { type: string, required: true, default: '0' },
+			likesCount: { type: String, required: true, default: '0' },
+			dislikesCount: { type: String, required: true, default: '0' },
 		},
 		required: true,
 	},

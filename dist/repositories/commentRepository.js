@@ -42,8 +42,8 @@ class CommentDBType {
         this.commentatorInfo = commentatorInfo;
         this.createdAt = createdAt;
         this.likesInfo = {
-            likesCount: 0,
-            dislikesCount: 0,
+            likesCount: '0',
+            dislikesCount: '0',
         };
     }
 }
@@ -89,8 +89,8 @@ const commentSchema = new mongoose_1.default.Schema({
     createdAt: { type: Date, required: true },
     likesInfo: {
         type: {
-            likesCount: { type: string, required: true, default: '0' },
-            dislikesCount: { type: string, required: true, default: '0' },
+            likesCount: { type: String, required: true, default: '0' },
+            dislikesCount: { type: String, required: true, default: '0' },
         },
         required: true,
     },
