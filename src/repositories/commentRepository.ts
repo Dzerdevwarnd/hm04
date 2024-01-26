@@ -130,6 +130,25 @@ export class CommentRepository {
 		return viewComment
 	}
 
+	async findDBCommentsByPostIdWithoutLikeStatus(postId:string,query:any):Promise<CommentDBType[]|null>{
+		const pageSize = Number(query?.pageSize) || 10
+		const page = Number(query?.pageNumber) || 1
+		const sortBy: string = query?.sortBy ?? 'createdAt'
+		let sortDirection = query?.sortDirection ?? 'desc'
+		if (sortDirection === 'desc') {
+			sortDirection = -1
+		} else {
+			sortDirection = 1
+		}
+		const commentsDB = await commentModel
+			.find({ postId: postId })
+			.skip((page - 1) * pageSize)
+			.sort({ [sortBy]: sortDirection, createdAt: sortDirection })
+			.limit(pageSize)
+			.lean()
+		return commentsDB
+	}
+
 	async findCommentsByPostId(
 		id: string,
 		query: any
@@ -226,20 +245,6 @@ export class CommentRepository {
 	): Promise<CommentViewType> {
 		const result = await commentModel.insertMany(newComment)
 		//@ts-ignore
-		let myStatus: string = ''
-		if (
-			newComment.likesInfo.arraysOfUsersWhoLikeOrDis?.likeArray.includes(userId)
-		) {
-			myStatus = 'Like'
-		} else if (
-			newComment.likesInfo.arraysOfUsersWhoLikeOrDis?.dislikeArray.includes(
-				userId
-			)
-		) {
-			myStatus = 'Dislike'
-		} else {
-			myStatus = 'None'
-		}
 		const viewComment: CommentViewType = new CommentViewType(
 			newComment.id,
 			newComment.content,
@@ -251,7 +256,7 @@ export class CommentRepository {
 			{
 				likesCount: newComment.likesInfo.likesCount,
 				dislikesCount: newComment.likesInfo.dislikesCount,
-				myStatus: myStatus,
+				myStatus: 'None',
 			}
 		)
 		return viewComment

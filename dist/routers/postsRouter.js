@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.postsValidation = exports.postsRouter = void 0;
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
+const jwt_service_1 = require("../application/jwt-service");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const PostsRepository_1 = require("../repositories/PostsRepository");
@@ -94,7 +95,11 @@ exports.postsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, r
     }
 }));
 exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const commentsPagination = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query);
+    let userId = undefined;
+    if (req.headers.authorization) {
+        userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization.split(' ')[1]);
+    }
+    const commentsPagination = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query, userId);
     if ((commentsPagination === null || commentsPagination === void 0 ? void 0 : commentsPagination.items.length) === 0) {
         res.sendStatus(404);
         return;

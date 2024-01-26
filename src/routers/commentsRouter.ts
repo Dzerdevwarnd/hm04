@@ -13,10 +13,10 @@ const contentValidation = body('content')
 	.isLength({ min: 20, max: 300 })
 	.withMessage('Content length should be from 20 to 300')
 
-const likeStatusValidation = body('LikeStatus')
+const likeStatusValidation = body('likeStatus')
 	.trim()
 	.custom(async (likeStatus: string) => {
-		const allowedValues = ['None', 'Like', 'Dislike ']
+		const allowedValues = ['None', 'Like', 'Dislike']
 		if (!allowedValues.includes(likeStatus)) {
 			throw new Error('Incorrect likeStatus Value')
 		}
@@ -30,7 +30,7 @@ commentsRouter.get(
 		let userId = undefined
 		if (req.headers.authorization) {
 			userId = await jwtService.verifyAndGetUserIdByToken(
-				req.headers.authorization
+				req.headers.authorization.split(' ')[1]
 			)
 		}
 		const foundComment = await commentService.findComment(req.params.id, userId)

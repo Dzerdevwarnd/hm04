@@ -1,5 +1,6 @@
 import {
-	blogType,
+	blogDBType,
+	blogViewType,
 	blogsPaginationType,
 	blogsRepository,
 } from '../repositories/blogsRepository'
@@ -10,7 +11,7 @@ export const blogsService = {
 	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
 		return blogsRepository.returnAllBlogs(query)
 	},
-	async findBlog(params: { id: string }): Promise<blogType | undefined> {
+	async findBlog(params: { id: string }): Promise<blogViewType | undefined> {
 		return blogsRepository.findBlog(params)
 	},
 	async findPostsByBlogId(
@@ -25,9 +26,9 @@ export const blogsService = {
 		name: string
 		description: string
 		websiteUrl: string
-	}): Promise<blogType> {
+	}): Promise<blogViewType> {
 		const createdDate = new Date()
-		const newBlog: blogType = {
+		const newBlog: blogDBType = {
 			id: String(Date.now()),
 			name: body.name,
 			description: body.description,

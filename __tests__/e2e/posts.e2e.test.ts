@@ -1,9 +1,19 @@
+import mongoose from 'mongoose'
 import request from 'supertest'
 import { blogsRepository } from '../../src/repositories/blogsRepository'
 import { blogsService } from '../../src/services/blogsService'
-import { app, routersPaths } from '../../src/setting'
+import { app, routersPaths, settings } from '../../src/setting'
 
 describe('/posts', () => {
+	beforeAll(async () => {
+		/* Connecting to the database. */
+		await mongoose.connect(settings.MONGO_URL)
+	})
+
+	afterAll(async () => {
+		/* Closing database connection after each test. */
+		await mongoose.connection.close()
+	})
 	let entityId: string
 	let entityCreatedAt: string
 	let blogId = ''

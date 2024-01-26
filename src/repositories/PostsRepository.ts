@@ -24,7 +24,7 @@ const postSchema = new mongoose.Schema({
 	shortDescription: { type: String, required: true },
 	content: { type: String, required: true },
 	blogId: { type: String, required: true },
-	blogName: { type: String, required: true },
+	blogName: { type: String, default: '' },
 	createdAt: { type: Date, required: true },
 })
 
@@ -42,7 +42,7 @@ export const postsRepository = {
 			sortDirection = 1
 		}
 		const posts = await postModel
-			.find({}, { projection: { _id: 0 } })
+			.find({}, '-_id -__v')
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection, createdAt: sortDirection })
 			.limit(pageSize)
@@ -61,7 +61,7 @@ export const postsRepository = {
 	async findPost(params: { id: string }): Promise<postType | undefined> {
 		let post: postType | null = await postModel.findOne(
 			{ id: params.id },
-			{ projection: { _id: 0 } }
+			'-_id -__v'
 		)
 		if (post) {
 			return post

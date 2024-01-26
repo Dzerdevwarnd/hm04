@@ -5,6 +5,7 @@ import {
 	CommentDBType,
 	CommentViewType,
 	CommentsPaginationType,
+	commentModel,
 } from '../repositories/commentRepository'
 
 import { commentsRepository } from '../repositories/commentRepository'
@@ -24,13 +25,47 @@ export const commentService = {
 		return comment
 	},
 	async findCommentsByPostId(
-		id: string,
-		query: any
+		postId: string,
+		query: any,
+		userId: string
 	): Promise<CommentsPaginationType | null> {
-		let commentsPagination = await commentsRepository.findCommentsByPostId(
-			id,
-			query
-		)
+		let commentsDB =
+			await commentsRepository.findDBCommentsByPostIdWithoutLikeStatus(
+				postId,
+				query
+			)
+		if (!commentsDB) {
+			return null
+		}
+		const commentsView: CommentViewType[] = []
+		for (const comment of commentsDB) {
+			let like = await likesService.findCommentLikeFromUser(userId, comment.id)
+			let commentView = {
+				id: comment.id,
+				content: comment.content,
+				commentatorInfo: {
+					userId: comment.commentatorInfo.userId,
+					userLogin: comment.commentatorInfo.userLogin,
+				},
+				createdAt: comment.createdAt,
+				likesInfo: {
+					likesCount: comment.likesInfo.likesCount,
+					dislikesCount: comment.likesInfo.dislikesCount,
+					myStatus: like?.likeStatus || 'None',
+				},
+			}
+			commentsView.push(commentView)
+		}
+		const totalCount = await commentModel.countDocuments({ postId: postId })
+		const pagesCount = Math.ceil(totalCount / Number(query?.pageSize) || 10)
+		const commentsPagination: CommentsPaginationType =
+			new CommentsPaginationType(
+				pagesCount,
+				Number(query?.pageNumber) || 1,
+				Number(query?.pageSize) || 10,
+				totalCount,
+				commentsView
+			)
 		return commentsPagination
 	},
 	async deleteComment(commentId: string): Promise<boolean> {
@@ -51,7 +86,7 @@ export const commentService = {
 		let likesCount = comment!.likesInfo.likesCount
 		let dislikesCount = comment!.likesInfo.dislikesCount
 		if (body.likeStatus === 'Like' && comment?.likesInfo.myStatus !== 'Like') {
-			likesCount = likesCount + 1
+			likesCount = (+likesCount + 1).toString()
 			commentsRepository.updateCommentLikesAndDislikesCount(
 				commentId,
 				likesCount.toString(),
@@ -61,7 +96,7 @@ export const commentService = {
 			body.likeStatus === 'Dislike' &&
 			comment?.likesInfo.myStatus !== 'DisLike'
 		) {
-			dislikesCount = dislikesCount + 1
+			dislikesCount = (+dislikesCount + 1).toString()
 			commentsRepository.updateCommentLikesAndDislikesCount(
 				commentId,
 				likesCount.toString(),

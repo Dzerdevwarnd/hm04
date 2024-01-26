@@ -31,7 +31,7 @@ const postSchema = new mongoose_1.default.Schema({
     shortDescription: { type: String, required: true },
     content: { type: String, required: true },
     blogId: { type: String, required: true },
-    blogName: { type: String, required: true },
+    blogName: { type: String, default: '' },
     createdAt: { type: Date, required: true },
 });
 exports.postModel = mongoose_1.default.model('posts', postSchema);
@@ -50,7 +50,7 @@ exports.postsRepository = {
                 sortDirection = 1;
             }
             const posts = yield exports.postModel
-                .find({}, { projection: { _id: 0 } })
+                .find({}, '-_id -__v')
                 .skip((page - 1) * pageSize)
                 .sort({ [sortBy]: sortDirection, createdAt: sortDirection })
                 .limit(pageSize)
@@ -69,7 +69,7 @@ exports.postsRepository = {
     },
     findPost(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let post = yield exports.postModel.findOne({ id: params.id }, { projection: { _id: 0 } });
+            let post = yield exports.postModel.findOne({ id: params.id }, '-_id -__v');
             if (post) {
                 return post;
             }

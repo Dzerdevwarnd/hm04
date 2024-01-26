@@ -5,7 +5,7 @@ import {
 	postsByBlogIdPaginationType,
 } from './PostsRepository'
 
-export type blogType = {
+export type blogDBType = {
 	id: string
 	name: string
 	description: string
@@ -14,12 +14,20 @@ export type blogType = {
 	isMembership: boolean
 }
 
+export type blogViewType = {
+	createdAt: Date
+	description: string
+	id: string
+	isMembership: boolean
+	name: string
+}
+
 export type blogsPaginationType = {
 	pagesCount: number
 	page: number
 	pageSize: number
 	totalCount: number
-	items: blogType[]
+	items: blogDBType[]
 }
 
 const blogSchema = new mongoose.Schema({
@@ -67,16 +75,20 @@ export const blogsRepository = {
 		}
 		return blogsPagination
 	},
-	async findBlog(params: { id: string }): Promise<blogType | undefined> {
-		let blog: blogType | null = await blogModel.findOne(
-			{ id: params.id },
-			{ projection: { _id: 0 } }
-		)
-		if (blog) {
-			return blog
-		} else {
+	async findBlog(params: { id: string }): Promise<blogViewType | undefined> {
+		let blog: blogDBType | null = await blogModel.findOne({ id: params.id })
+		if (!blog) {
 			return
 		}
+		const blogView = {
+			createdAt: blog.createdAt,
+			description: blog.description,
+			id: blog.id,
+			isMembership: blog.isMembership,
+			name: blog.name,
+			websiteUrl: blog.websiteUrl,
+		}
+		return blogView
 	},
 	async findPostsByBlogId(
 		params: {
@@ -117,7 +129,7 @@ export const blogsRepository = {
 		}
 	},
 
-	async createBlog(newBlog: blogType): Promise<blogType> {
+	async createBlog(newBlog: blogDBType): Promise<blogDBType> {
 		const result = await blogModel.insertMany(newBlog)
 		//@ts-ignore
 		const { _id, ...blogWithout_Id } = newBlog

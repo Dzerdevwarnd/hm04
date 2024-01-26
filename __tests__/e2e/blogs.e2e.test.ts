@@ -1,7 +1,17 @@
+import mongoose from 'mongoose'
 import request from 'supertest'
-import { app, routersPaths } from '../../src/setting'
+import { app, routersPaths, settings } from '../../src/setting'
 
 describe('/blogs', () => {
+	beforeAll(async () => {
+		/* Connecting to the database. */
+		await mongoose.connect(settings.MONGO_URL)
+	})
+
+	afterAll(async () => {
+		/* Closing database connection after each test. */
+		await mongoose.connection.close()
+	})
 	let entityId: string
 	let entityCreatedAt: string
 	it('should delete all data', () => {

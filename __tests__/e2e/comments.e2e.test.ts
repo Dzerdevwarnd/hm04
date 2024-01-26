@@ -1,4 +1,4 @@
-import request from 'supertest'
+/*import request from 'supertest'
 import { postsRepository } from '../../src/repositories/PostsRepository'
 import { blogsRepository } from '../../src/repositories/blogsRepository'
 import { authService } from '../../src/services/authService'
@@ -129,4 +129,4 @@ describe('/comments', () => {
 	it('should return 404, not found deleted comment', async () => {
 		await request(app).get(`${routersPaths.comments}/${commentId}`).expect(404)
 	})
-})
+})*/

@@ -71,13 +71,19 @@ exports.blogsRepository = {
     },
     findBlog(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let blog = yield exports.blogModel.findOne({ id: params.id }, { projection: { _id: 0 } });
-            if (blog) {
-                return blog;
-            }
-            else {
+            let blog = yield exports.blogModel.findOne({ id: params.id });
+            if (!blog) {
                 return;
             }
+            const blogView = {
+                createdAt: blog.createdAt,
+                description: blog.description,
+                id: blog.id,
+                isMembership: blog.isMembership,
+                name: blog.name,
+                websiteUrl: blog.websiteUrl,
+            };
+            return blogView;
         });
     },
     findPostsByBlogId(params, query) {

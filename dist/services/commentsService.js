@@ -25,9 +25,34 @@ exports.commentService = {
             return comment;
         });
     },
-    findCommentsByPostId(id, query) {
+    findCommentsByPostId(postId, query, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            let commentsPagination = yield commentRepository_2.commentsRepository.findCommentsByPostId(id, query);
+            let commentsDB = yield commentRepository_2.commentsRepository.findDBCommentsByPostIdWithoutLikeStatus(postId, query);
+            if (!commentsDB) {
+                return null;
+            }
+            const commentsView = [];
+            for (const comment of commentsDB) {
+                let like = yield likesService_1.likesService.findCommentLikeFromUser(userId, comment.id);
+                let commentView = {
+                    id: comment.id,
+                    content: comment.content,
+                    commentatorInfo: {
+                        userId: comment.commentatorInfo.userId,
+                        userLogin: comment.commentatorInfo.userLogin,
+                    },
+                    createdAt: comment.createdAt,
+                    likesInfo: {
+                        likesCount: comment.likesInfo.likesCount,
+                        dislikesCount: comment.likesInfo.dislikesCount,
+                        myStatus: (like === null || like === void 0 ? void 0 : like.likeStatus) || 'None',
+                    },
+                };
+                commentsView.push(commentView);
+            }
+            const totalCount = yield commentRepository_1.commentModel.countDocuments({ postId: postId });
+            const pagesCount = Math.ceil(totalCount / Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10);
+            const commentsPagination = new commentRepository_1.CommentsPaginationType(pagesCount, Number(query === null || query === void 0 ? void 0 : query.pageNumber) || 1, Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10, totalCount, commentsView);
             return commentsPagination;
         });
     },
@@ -50,12 +75,12 @@ exports.commentService = {
             let likesCount = comment.likesInfo.likesCount;
             let dislikesCount = comment.likesInfo.dislikesCount;
             if (body.likeStatus === 'Like' && (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) !== 'Like') {
-                likesCount = likesCount + 1;
+                likesCount = (+likesCount + 1).toString();
                 commentRepository_2.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount.toString(), dislikesCount.toString());
             }
             else if (body.likeStatus === 'Dislike' &&
                 (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) !== 'DisLike') {
-                dislikesCount = dislikesCount + 1;
+                dislikesCount = (+dislikesCount + 1).toString();
                 commentRepository_2.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount.toString(), dislikesCount.toString());
             }
             let like = yield likesService_1.likesService.findCommentLikeFromUser(userId, commentId);

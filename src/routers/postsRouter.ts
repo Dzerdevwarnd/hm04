@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express'
 import { body } from 'express-validator'
+import { jwtService } from '../application/jwt-service'
 import {
 	AuthMiddleware,
 	basicAuthMiddleware,
@@ -9,6 +10,7 @@ import {
 	postsByBlogIdPaginationType,
 	postsRepository,
 } from '../repositories/PostsRepository'
+import { blogViewType } from '../repositories/blogsRepository'
 import { blogsService } from '../services/blogsService'
 import { commentService } from '../services/commentsService'
 import { postsService } from '../services/postsService'
@@ -50,7 +52,7 @@ export const postsValidation = {
 		async (value: string, { req }) => {
 			const id = value
 			const params = { id }
-			const blog: blogType | undefined = await blogsService.findBlog(params)
+			const blog: blogViewType | undefined = await blogsService.findBlog(params)
 			if (!blog) {
 				throw new Error('Blog id does not exist')
 			}
@@ -165,9 +167,16 @@ postsRouter.get(
 		req: RequestWithParamsAndQuery<{ id: string }, { query: any }>,
 		res: Response
 	) => {
+		let userId = undefined
+		if (req.headers.authorization) {
+			userId = await jwtService.verifyAndGetUserIdByToken(
+				req.headers.authorization.split(' ')[1]
+			)
+		}
 		const commentsPagination = await commentService.findCommentsByPostId(
 			req.params.id,
-			req.query
+			req.query,
+			userId
 		)
 		if (commentsPagination?.items.length === 0) {
 			res.sendStatus(404)

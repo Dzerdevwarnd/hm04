@@ -19,8 +19,8 @@ exports.settings = {
     MONGO_URL: process.env.MONGO_URL ||
         `mongodb+srv://admin:qwerty123@cluster0.hzh4nyr.mongodb.net/${exports.dbName}?retryWrites=true&w=majority`,
     JWT_SECRET: process.env.JWT_SECRET || '123',
-    accessTokenLifeTime: '100000',
-    refreshTokenLifeTime: '200000',
+    accessTokenLifeTime: '10000000',
+    refreshTokenLifeTime: '20000000',
     recoveryCodeLifeTime: '1000000',
 };
 exports.routersPaths = {

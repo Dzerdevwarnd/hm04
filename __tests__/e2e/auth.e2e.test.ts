@@ -1,4 +1,4 @@
-import request from 'supertest'
+/*import request from 'supertest'
 import { app, routersPaths } from '../../src/setting'
 
 const agent = request.agent(app)

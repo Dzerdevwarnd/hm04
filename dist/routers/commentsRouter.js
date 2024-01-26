@@ -20,10 +20,10 @@ const contentValidation = (0, express_validator_1.body)('content')
     .trim()
     .isLength({ min: 20, max: 300 })
     .withMessage('Content length should be from 20 to 300');
-const likeStatusValidation = (0, express_validator_1.body)('LikeStatus')
+const likeStatusValidation = (0, express_validator_1.body)('likeStatus')
     .trim()
     .custom((likeStatus) => __awaiter(void 0, void 0, void 0, function* () {
-    const allowedValues = ['None', 'Like', 'Dislike '];
+    const allowedValues = ['None', 'Like', 'Dislike'];
     if (!allowedValues.includes(likeStatus)) {
         throw new Error('Incorrect likeStatus Value');
     }
@@ -32,7 +32,7 @@ exports.commentsRouter = (0, express_1.Router)({});
 exports.commentsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     let userId = undefined;
     if (req.headers.authorization) {
-        userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization);
+        userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization.split(' ')[1]);
     }
     const foundComment = yield commentsService_1.commentService.findComment(req.params.id, userId);
     if (!foundComment) {

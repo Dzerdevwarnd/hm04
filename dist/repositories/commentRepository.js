@@ -114,6 +114,28 @@ class CommentRepository {
             return viewComment;
         });
     }
+    findDBCommentsByPostIdWithoutLikeStatus(postId, query) {
+        var _a, _b;
+        return __awaiter(this, void 0, void 0, function* () {
+            const pageSize = Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10;
+            const page = Number(query === null || query === void 0 ? void 0 : query.pageNumber) || 1;
+            const sortBy = (_a = query === null || query === void 0 ? void 0 : query.sortBy) !== null && _a !== void 0 ? _a : 'createdAt';
+            let sortDirection = (_b = query === null || query === void 0 ? void 0 : query.sortDirection) !== null && _b !== void 0 ? _b : 'desc';
+            if (sortDirection === 'desc') {
+                sortDirection = -1;
+            }
+            else {
+                sortDirection = 1;
+            }
+            const commentsDB = yield exports.commentModel
+                .find({ postId: postId })
+                .skip((page - 1) * pageSize)
+                .sort({ [sortBy]: sortDirection, createdAt: sortDirection })
+                .limit(pageSize)
+                .lean();
+            return commentsDB;
+        });
+    }
     findCommentsByPostId(id, query) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
@@ -191,27 +213,16 @@ class CommentRepository {
         });
     }
     createComment(newComment, userId) {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield exports.commentModel.insertMany(newComment);
             //@ts-ignore
-            let myStatus = '';
-            if ((_a = newComment.likesInfo.arraysOfUsersWhoLikeOrDis) === null || _a === void 0 ? void 0 : _a.likeArray.includes(userId)) {
-                myStatus = 'Like';
-            }
-            else if ((_b = newComment.likesInfo.arraysOfUsersWhoLikeOrDis) === null || _b === void 0 ? void 0 : _b.dislikeArray.includes(userId)) {
-                myStatus = 'Dislike';
-            }
-            else {
-                myStatus = 'None';
-            }
             const viewComment = new CommentViewType(newComment.id, newComment.content, {
                 userId: newComment.commentatorInfo.userId,
                 userLogin: newComment.commentatorInfo.userLogin,
             }, newComment.createdAt, {
                 likesCount: newComment.likesInfo.likesCount,
                 dislikesCount: newComment.likesInfo.dislikesCount,
-                myStatus: myStatus,
+                myStatus: 'None',
             });
             return viewComment;
         });
