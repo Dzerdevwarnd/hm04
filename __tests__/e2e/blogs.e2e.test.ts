@@ -14,9 +14,9 @@ describe('/blogs', () => {
 	})
 	let entityId: string
 	let entityCreatedAt: string
-	it('should delete all data', () => {
+	/*it('should delete all data', () => {
 		request(app).delete(`${routersPaths.testing}/all-data`).expect(204)
-	})
+	})*/
 
 	it('should return 201 and one entity object', async () => {
 		const res = await request(app)

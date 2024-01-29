@@ -1,18 +1,28 @@
-/*import request from 'supertest'
+import mongoose from 'mongoose'
+import request from 'supertest'
 import { postsRepository } from '../../src/repositories/PostsRepository'
 import { blogsRepository } from '../../src/repositories/blogsRepository'
 import { authService } from '../../src/services/authService'
 import { blogsService } from '../../src/services/blogsService'
 import { postsService } from '../../src/services/postsService'
 import { userService } from '../../src/services/usersService'
-import { app, routersPaths } from '../../src/setting'
+import { app, routersPaths, settings } from '../../src/setting'
 
 describe('/comments', () => {
+	beforeAll(async () => {
+		/* Connecting to the database. */
+		await mongoose.connect(settings.MONGO_URL)
+	})
+
+	afterAll(async () => {
+		/* Closing database connection after each test. */
+		await mongoose.connection.close()
+	})
 	let entityId: string | undefined
 	let entityCreatedAt: string | undefined
 	let blogId: string | undefined
 	let postId: string | undefined
-	let jwtToken: string | undefined
+	let jwtAccesToken: string | undefined
 	let commentId: string | undefined
 	const email = 'dzerdevwarnd@gmail.com'
 	const login = 'string'
@@ -36,8 +46,12 @@ describe('/comments', () => {
 		postId = (await postsRepository.returnAllPosts('')).items[0].id
 
 		userService.createUser({ login, password, email }) // создание юзера и jwt ключа
-		const accessToken = await authService.loginAndReturnJwtKeys(login, password)
-		jwtToken = accessToken?.accessToken
+		const accessToken = await authService.loginAndReturnJwtKeys(
+			login,
+			password,
+			'Key for deviceId to refreshToken'
+		)
+		jwtAccesToken = accessToken?.accessToken
 
 		const res = await request(app)
 			.post(`${routersPaths.posts}/${postId}/comments`)
@@ -45,7 +59,7 @@ describe('/comments', () => {
 				content:
 					'test stringtest stringtest stringtest stringtest stringtest string',
 			})
-			.set('Authorization', 'bearer ' + jwtToken)
+			.set('Authorization', 'bearer ' + jwtAccesToken)
 		expect(res.status).toEqual(201)
 		expect(res.body).toEqual({
 			id: expect.any(String),
@@ -56,11 +70,16 @@ describe('/comments', () => {
 				userLogin: login,
 			},
 			createdAt: expect.any(String),
+			likesInfo: {
+				likesCount: '0',
+				dislikesCount: '0',
+				myStatus: 'None',
+			},
 		})
 		entityId = res.body.id
 		entityCreatedAt = res.body.createdAt
 		commentId = res.body.id
-		console.log('JwtToken=', jwtToken)
+		console.log('jwtAccesToken=', jwtAccesToken)
 		console.log('postId=', postId)
 		console.log('commentId=', commentId)
 	})
@@ -85,6 +104,11 @@ describe('/comments', () => {
 						userLogin: login,
 					},
 					createdAt: entityCreatedAt,
+					likesInfo: {
+						likesCount: '0',
+						dislikesCount: '0',
+						myStatus: 'None',
+					},
 				},
 			],
 		})
@@ -102,6 +126,11 @@ describe('/comments', () => {
 				userLogin: login,
 			},
 			createdAt: entityCreatedAt,
+			likesInfo: {
+				likesCount: '0',
+				dislikesCount: '0',
+				myStatus: 'None',
+			},
 		})
 	})
 
@@ -115,18 +144,18 @@ describe('/comments', () => {
 			.send({
 				content: 'New Test stringNew Test stringNew Test stringNew Test string',
 			})
-			.set('Authorization', 'bearer ' + jwtToken)
+			.set('Authorization', 'bearer ' + jwtAccesToken)
 			.expect(204)
 	})
 
 	it('should return 204, delete comment', async () => {
 		await request(app)
 			.delete(`${routersPaths.comments}/${commentId}`)
-			.set('Authorization', 'bearer ' + jwtToken)
+			.set('Authorization', 'bearer ' + jwtAccesToken)
 			.expect(204)
 	})
 
 	it('should return 404, not found deleted comment', async () => {
 		await request(app).get(`${routersPaths.comments}/${commentId}`).expect(404)
 	})
-})*/
+})

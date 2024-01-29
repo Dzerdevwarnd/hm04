@@ -51,7 +51,7 @@ exports.commentService = {
                 commentsView.push(commentView);
             }
             const totalCount = yield commentRepository_1.commentModel.countDocuments({ postId: postId });
-            const pagesCount = Math.ceil(totalCount / Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10);
+            const pagesCount = Math.ceil(totalCount / Number(query === null || query === void 0 ? void 0 : query.pageSize) || 1);
             const commentsPagination = new commentRepository_1.CommentsPaginationType(pagesCount, Number(query === null || query === void 0 ? void 0 : query.pageNumber) || 1, Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10, totalCount, commentsView);
             return commentsPagination;
         });

@@ -57,7 +57,7 @@ export const commentService = {
 			commentsView.push(commentView)
 		}
 		const totalCount = await commentModel.countDocuments({ postId: postId })
-		const pagesCount = Math.ceil(totalCount / Number(query?.pageSize) || 10)
+		const pagesCount = Math.ceil(totalCount / Number(query?.pageSize) || 1)
 		const commentsPagination: CommentsPaginationType =
 			new CommentsPaginationType(
 				pagesCount,
