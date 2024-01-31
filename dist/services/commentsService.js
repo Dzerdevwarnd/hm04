@@ -9,25 +9,27 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commentService = void 0;
+exports.CommentsService = void 0;
 const mongodb_1 = require("mongodb");
 const jwt_service_1 = require("../application/jwt-service");
 const UsersRepository_1 = require("../repositories/UsersRepository");
 const commentRepository_1 = require("../repositories/commentRepository");
-const commentRepository_2 = require("../repositories/commentRepository");
 const likesService_1 = require("./likesService");
-exports.commentService = {
+class CommentsService {
+    constructor(commentsRepository) {
+        this.commentsRepository = commentsRepository;
+    }
     findComment(commentId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const like = yield likesService_1.likesService.findCommentLikeFromUser(userId, commentId);
             const userLikeStatus = (like === null || like === void 0 ? void 0 : like.likeStatus) || 'None';
-            let comment = yield commentRepository_2.commentsRepository.findComment(commentId, userLikeStatus);
+            let comment = yield this.commentsRepository.findComment(commentId, userLikeStatus);
             return comment;
         });
-    },
+    }
     findCommentsByPostId(postId, query, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            let commentsDB = yield commentRepository_2.commentsRepository.findDBCommentsByPostIdWithoutLikeStatus(postId, query);
+            let commentsDB = yield this.commentsRepository.findDBCommentsByPostIdWithoutLikeStatus(postId, query);
             if (!commentsDB) {
                 return null;
             }
@@ -55,33 +57,49 @@ exports.commentService = {
             const commentsPagination = new commentRepository_1.CommentsPaginationType(pagesCount, Number(query === null || query === void 0 ? void 0 : query.pageNumber) || 1, Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10, totalCount, commentsView);
             return commentsPagination;
         });
-    },
+    }
     deleteComment(commentId) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield commentRepository_2.commentsRepository.deleteComment(commentId);
+            let result = yield this.commentsRepository.deleteComment(commentId);
             return result;
         });
-    },
+    }
     updateComment(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
-            let result = yield commentRepository_2.commentsRepository.updateComment(id, body);
+            let result = yield this.commentsRepository.updateComment(id, body);
             return result;
         });
-    },
+    }
     updateCommentLikeStatus(commentId, body, accessToken) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(accessToken);
-            const comment = yield exports.commentService.findComment(commentId, userId);
+            const comment = yield this.findComment(commentId, userId);
             let likesCount = comment.likesInfo.likesCount;
             let dislikesCount = comment.likesInfo.dislikesCount;
             if (body.likeStatus === 'Like' && (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) !== 'Like') {
-                likesCount = (+likesCount + 1).toString();
-                commentRepository_2.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount.toString(), dislikesCount.toString());
+                likesCount = +likesCount + 1;
+                if ((comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) === 'Dislike') {
+                    dislikesCount = +dislikesCount - 1;
+                }
+                this.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount, dislikesCount);
             }
             else if (body.likeStatus === 'Dislike' &&
-                (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) !== 'DisLike') {
-                dislikesCount = (+dislikesCount + 1).toString();
-                commentRepository_2.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount.toString(), dislikesCount.toString());
+                (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) !== 'Dislike') {
+                dislikesCount = +dislikesCount + 1;
+                if ((comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) === 'Like') {
+                    likesCount = +likesCount - 1;
+                }
+                this.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount, dislikesCount);
+            }
+            else if (body.likeStatus === 'None' &&
+                (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) === 'Like') {
+                likesCount = likesCount - 1;
+                this.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount, dislikesCount);
+            }
+            else if (body.likeStatus === 'None' &&
+                (comment === null || comment === void 0 ? void 0 : comment.likesInfo.myStatus) === 'Dislike') {
+                dislikesCount = dislikesCount - 1;
+                this.commentsRepository.updateCommentLikesAndDislikesCount(commentId, likesCount, dislikesCount);
             }
             let like = yield likesService_1.likesService.findCommentLikeFromUser(userId, commentId);
             if (!like) {
@@ -96,7 +114,7 @@ exports.commentService = {
                 return true;
             }
         });
-    },
+    }
     createCommentsByPostId(id, body, token) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(token);
@@ -105,8 +123,164 @@ exports.commentService = {
                 return user;
             }
             const comment = new commentRepository_1.CommentDBType(new mongodb_1.ObjectId(), String(Date.now()), id, body.content, { userId: user.id, userLogin: user.accountData.login }, new Date());
-            const commentView = yield commentRepository_2.commentsRepository.createComment(comment, userId);
+            const commentView = yield this.commentsRepository.createComment(comment, userId);
             return commentView;
         });
+    }
+}
+exports.CommentsService = CommentsService;
+/*
+export const commentService = {
+    async findComment(
+        commentId: string,
+        userId: string
+    ): Promise<CommentViewType | null> {
+        const like = await likesService.findCommentLikeFromUser(userId, commentId)
+        const userLikeStatus = like?.likeStatus || 'None'
+        let comment = await commentsRepository.findComment(
+            commentId,
+            userLikeStatus
+        )
+        return comment
     },
-};
+    async findCommentsByPostId(
+        postId: string,
+        query: any,
+        userId: string
+    ): Promise<CommentsPaginationType | null> {
+        let commentsDB =
+            await commentsRepository.findDBCommentsByPostIdWithoutLikeStatus(
+                postId,
+                query
+            )
+        if (!commentsDB) {
+            return null
+        }
+        const commentsView: CommentViewType[] = []
+        for (const comment of commentsDB) {
+            let like = await likesService.findCommentLikeFromUser(userId, comment.id)
+            let commentView = {
+                id: comment.id,
+                content: comment.content,
+                commentatorInfo: {
+                    userId: comment.commentatorInfo.userId,
+                    userLogin: comment.commentatorInfo.userLogin,
+                },
+                createdAt: comment.createdAt,
+                likesInfo: {
+                    likesCount: comment.likesInfo.likesCount,
+                    dislikesCount: comment.likesInfo.dislikesCount,
+                    myStatus: like?.likeStatus || 'None',
+                },
+            }
+            commentsView.push(commentView)
+        }
+        const totalCount = await commentModel.countDocuments({ postId: postId })
+        const pagesCount = Math.ceil(totalCount / Number(query?.pageSize) || 1)
+        const commentsPagination: CommentsPaginationType =
+            new CommentsPaginationType(
+                pagesCount,
+                Number(query?.pageNumber) || 1,
+                Number(query?.pageSize) || 10,
+                totalCount,
+                commentsView
+            )
+        return commentsPagination
+    },
+    async deleteComment(commentId: string): Promise<boolean> {
+        let result = await commentsRepository.deleteComment(commentId)
+        return result
+    },
+    async updateComment(id: string, body: { content: string }): Promise<boolean> {
+        let result = await commentsRepository.updateComment(id, body)
+        return result
+    },
+    async updateCommentLikeStatus(
+        commentId: string,
+        body: { likeStatus: string },
+        accessToken: string
+    ): Promise<boolean> {
+        const userId = await jwtService.verifyAndGetUserIdByToken(accessToken)
+        const comment = await commentService.findComment(commentId, userId)
+        let likesCount = comment!.likesInfo.likesCount
+        let dislikesCount = comment!.likesInfo.dislikesCount
+        if (body.likeStatus === 'Like' && comment?.likesInfo.myStatus !== 'Like') {
+            likesCount = +likesCount + 1
+            if (comment?.likesInfo.myStatus === 'Dislike') {
+                dislikesCount = +dislikesCount - 1
+            }
+            commentsRepository.updateCommentLikesAndDislikesCount(
+                commentId,
+                likesCount,
+                dislikesCount
+            )
+        } else if (
+            body.likeStatus === 'Dislike' &&
+            comment?.likesInfo.myStatus !== 'Dislike'
+        ) {
+            dislikesCount = +dislikesCount + 1
+            if (comment?.likesInfo.myStatus === 'Like') {
+                likesCount = +likesCount - 1
+            }
+            commentsRepository.updateCommentLikesAndDislikesCount(
+                commentId,
+                likesCount,
+                dislikesCount
+            )
+        } else if (
+            body.likeStatus === 'None' &&
+            comment?.likesInfo.myStatus === 'Like'
+        ) {
+            likesCount = likesCount - 1
+            commentsRepository.updateCommentLikesAndDislikesCount(
+                commentId,
+                likesCount,
+                dislikesCount
+            )
+        } else if (
+            body.likeStatus === 'None' &&
+            comment?.likesInfo.myStatus === 'Dislike'
+        ) {
+            dislikesCount = dislikesCount - 1
+            commentsRepository.updateCommentLikesAndDislikesCount(
+                commentId,
+                likesCount,
+                dislikesCount
+            )
+        }
+        let like = await likesService.findCommentLikeFromUser(userId, commentId)
+        if (!like) {
+            await likesService.addLikeToBdFromUser(userId, commentId, body.likeStatus)
+            return true
+        } else {
+            if (like.likeStatus === body.likeStatus) {
+                return false
+            }
+            likesService.updateUserLikeStatus(userId, commentId, body.likeStatus)
+            return true
+        }
+    },
+    async createCommentsByPostId(
+        id: string,
+        body: { content: string },
+        token: string
+    ): Promise<CommentViewType | null> {
+        const userId = await jwtService.verifyAndGetUserIdByToken(token)
+        const user = await usersRepository.findUser(userId!)
+        if (!user) {
+            return user
+        }
+        const comment: CommentDBType = new CommentDBType(
+            new ObjectId(),
+            String(Date.now()),
+            id,
+            body.content,
+            { userId: user.id, userLogin: user.accountData.login },
+            new Date()
+        )
+        const commentView = await commentsRepository.createComment(comment, userId)
+        return commentView
+    },
+}
+
+*/

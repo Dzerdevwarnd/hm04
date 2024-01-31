@@ -11,8 +11,8 @@ export class CommentViewType {
 		},
 		public createdAt: Date,
 		public likesInfo: {
-			likesCount: string
-			dislikesCount: string
+			likesCount: number
+			dislikesCount: number
 			myStatus: string
 		}
 	) {}
@@ -30,8 +30,8 @@ export class CommentViewType {
 
 export class CommentDBType {
 	public likesInfo: {
-		likesCount: string
-		dislikesCount: string
+		likesCount: number
+		dislikesCount: number
 	}
 	constructor(
 		public _id: ObjectId,
@@ -45,8 +45,8 @@ export class CommentDBType {
 		public createdAt: Date
 	) {
 		this.likesInfo = {
-			likesCount: '0',
-			dislikesCount: '0',
+			likesCount: 0,
+			dislikesCount: 0,
 		}
 	}
 }
@@ -94,8 +94,8 @@ const commentSchema = new mongoose.Schema({
 	createdAt: { type: Date, required: true },
 	likesInfo: {
 		type: {
-			likesCount: { type: String, required: true, default: '0' },
-			dislikesCount: { type: String, required: true, default: '0' },
+			likesCount: { type: Number, required: true, default: '0' },
+			dislikesCount: { type: Number, required: true, default: '0' },
 		},
 		required: true,
 	},
@@ -103,7 +103,7 @@ const commentSchema = new mongoose.Schema({
 
 export const commentModel = mongoose.model('comments', commentSchema)
 
-export class CommentRepository {
+export class CommentsRepository {
 	async findComment(
 		commentId: string,
 		userLikeStatus: string
@@ -130,7 +130,10 @@ export class CommentRepository {
 		return viewComment
 	}
 
-	async findDBCommentsByPostIdWithoutLikeStatus(postId:string,query:any):Promise<CommentDBType[]|null>{
+	async findDBCommentsByPostIdWithoutLikeStatus(
+		postId: string,
+		query: any
+	): Promise<CommentDBType[] | null> {
 		const pageSize = Number(query?.pageSize) || 10
 		const page = Number(query?.pageNumber) || 1
 		const sortBy: string = query?.sortBy ?? 'createdAt'
@@ -224,8 +227,8 @@ export class CommentRepository {
 
 	async updateCommentLikesAndDislikesCount(
 		commentId: string,
-		likesCount: string,
-		dislikesCount: string
+		likesCount: number,
+		dislikesCount: number
 	): Promise<boolean> {
 		const resultOfUpdate = await commentModel.updateOne(
 			{ id: commentId },
@@ -262,8 +265,6 @@ export class CommentRepository {
 		return viewComment
 	}
 }
-
-export const commentsRepository = new CommentRepository()
 
 /*export const commentsRepository = {
 	async findComment(id: string): Promise<CommentType | null> {

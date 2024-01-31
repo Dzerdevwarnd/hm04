@@ -18,7 +18,7 @@ export const AuthMiddleware = async (
 		req.user = await userService.findUser(userId)
 		next()
 	} else {
-		res.send(401)
+		res.sendStatus(401)
 	}
 }
 

@@ -22,7 +22,7 @@ describe('/comments', () => {
 	let entityCreatedAt: string | undefined
 	let blogId: string | undefined
 	let postId: string | undefined
-	let jwtAccesToken: string | undefined
+	let jwtAccessToken: string | undefined
 	let commentId: string | undefined
 	const email = 'dzerdevwarnd@gmail.com'
 	const login = 'string'
@@ -51,7 +51,7 @@ describe('/comments', () => {
 			password,
 			'Key for deviceId to refreshToken'
 		)
-		jwtAccesToken = accessToken?.accessToken
+		jwtAccessToken = accessToken?.accessToken
 
 		const res = await request(app)
 			.post(`${routersPaths.posts}/${postId}/comments`)
@@ -59,7 +59,7 @@ describe('/comments', () => {
 				content:
 					'test stringtest stringtest stringtest stringtest stringtest string',
 			})
-			.set('Authorization', 'bearer ' + jwtAccesToken)
+			.set('Authorization', 'bearer ' + jwtAccessToken)
 		expect(res.status).toEqual(201)
 		expect(res.body).toEqual({
 			id: expect.any(String),
@@ -71,15 +71,15 @@ describe('/comments', () => {
 			},
 			createdAt: expect.any(String),
 			likesInfo: {
-				likesCount: '0',
-				dislikesCount: '0',
+				likesCount: 0,
+				dislikesCount: 0,
 				myStatus: 'None',
 			},
 		})
 		entityId = res.body.id
 		entityCreatedAt = res.body.createdAt
 		commentId = res.body.id
-		console.log('jwtAccesToken=', jwtAccesToken)
+		console.log('jwtAccessToken=', jwtAccessToken)
 		console.log('postId=', postId)
 		console.log('commentId=', commentId)
 	})
@@ -105,8 +105,8 @@ describe('/comments', () => {
 					},
 					createdAt: entityCreatedAt,
 					likesInfo: {
-						likesCount: '0',
-						dislikesCount: '0',
+						likesCount: 0,
+						dislikesCount: 0,
 						myStatus: 'None',
 					},
 				},
@@ -127,8 +127,8 @@ describe('/comments', () => {
 			},
 			createdAt: entityCreatedAt,
 			likesInfo: {
-				likesCount: '0',
-				dislikesCount: '0',
+				likesCount: 0,
+				dislikesCount: 0,
 				myStatus: 'None',
 			},
 		})
@@ -144,14 +144,14 @@ describe('/comments', () => {
 			.send({
 				content: 'New Test stringNew Test stringNew Test stringNew Test string',
 			})
-			.set('Authorization', 'bearer ' + jwtAccesToken)
+			.set('Authorization', 'bearer ' + jwtAccessToken)
 			.expect(204)
 	})
 
 	it('should return 204, delete comment', async () => {
 		await request(app)
 			.delete(`${routersPaths.comments}/${commentId}`)
-			.set('Authorization', 'bearer ' + jwtAccesToken)
+			.set('Authorization', 'bearer ' + jwtAccessToken)
 			.expect(204)
 	})
 

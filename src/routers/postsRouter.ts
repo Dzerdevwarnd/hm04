@@ -11,8 +11,9 @@ import {
 	postsRepository,
 } from '../repositories/PostsRepository'
 import { blogViewType } from '../repositories/blogsRepository'
+import { CommentsRepository } from '../repositories/commentRepository'
 import { blogsService } from '../services/blogsService'
-import { commentService } from '../services/commentsService'
+import { CommentsService } from '../services/commentsService'
 import { postsService } from '../services/postsService'
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
@@ -63,6 +64,9 @@ export const postsValidation = {
 		.isLength({ min: 20, max: 300 })
 		.withMessage('Content length should be from 20 to 300'),
 }
+
+const commentsServiceInstance = new CommentsService(new CommentsRepository())
+
 postsRouter.get(
 	'/',
 	async (req: RequestWithQuery<{ query: any }>, res: Response) => {
@@ -173,11 +177,12 @@ postsRouter.get(
 				req.headers.authorization.split(' ')[1]
 			)
 		}
-		const commentsPagination = await commentService.findCommentsByPostId(
-			req.params.id,
-			req.query,
-			userId
-		)
+		const commentsPagination =
+			await commentsServiceInstance.findCommentsByPostId(
+				req.params.id,
+				req.query,
+				userId
+			)
 		if (commentsPagination?.items.length === 0) {
 			res.sendStatus(404)
 			return
@@ -204,7 +209,7 @@ postsRouter.post(
 		}
 		const token = req.headers.authorization!.split(' ')[1]
 
-		const comment = await commentService.createCommentsByPostId(
+		const comment = await commentsServiceInstance.createCommentsByPostId(
 			req.params.id,
 			req.body,
 			token

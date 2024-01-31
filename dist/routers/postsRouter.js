@@ -16,6 +16,7 @@ const jwt_service_1 = require("../application/jwt-service");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
 const PostsRepository_1 = require("../repositories/PostsRepository");
+const commentRepository_1 = require("../repositories/commentRepository");
 const blogsService_1 = require("../services/blogsService");
 const commentsService_1 = require("../services/commentsService");
 const postsService_1 = require("../services/postsService");
@@ -51,6 +52,7 @@ exports.postsValidation = {
         .isLength({ min: 20, max: 300 })
         .withMessage('Content length should be from 20 to 300'),
 };
+const commentsServiceInstance = new commentsService_1.CommentsService(new commentRepository_1.CommentsRepository());
 exports.postsRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const allPosts = yield postsService_1.postsService.returnAllPosts(req.query);
     res.status(200).send(allPosts);
@@ -99,7 +101,7 @@ exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0,
     if (req.headers.authorization) {
         userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization.split(' ')[1]);
     }
-    const commentsPagination = yield commentsService_1.commentService.findCommentsByPostId(req.params.id, req.query, userId);
+    const commentsPagination = yield commentsServiceInstance.findCommentsByPostId(req.params.id, req.query, userId);
     if ((commentsPagination === null || commentsPagination === void 0 ? void 0 : commentsPagination.items.length) === 0) {
         res.sendStatus(404);
         return;
@@ -116,7 +118,7 @@ exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, expor
         return;
     }
     const token = req.headers.authorization.split(' ')[1];
-    const comment = yield commentsService_1.commentService.createCommentsByPostId(req.params.id, req.body, token);
+    const comment = yield commentsServiceInstance.createCommentsByPostId(req.params.id, req.body, token);
     if (!comment) {
         res.sendStatus(404);
         return;

@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commentsRepository = exports.CommentRepository = exports.commentModel = exports.CommentsPaginationType = exports.CommentDBType = exports.CommentViewType = void 0;
+exports.CommentsRepository = exports.commentModel = exports.CommentsPaginationType = exports.CommentDBType = exports.CommentViewType = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 class CommentViewType {
     constructor(id, content, commentatorInfo, createdAt, likesInfo) {
@@ -42,8 +42,8 @@ class CommentDBType {
         this.commentatorInfo = commentatorInfo;
         this.createdAt = createdAt;
         this.likesInfo = {
-            likesCount: '0',
-            dislikesCount: '0',
+            likesCount: 0,
+            dislikesCount: 0,
         };
     }
 }
@@ -89,14 +89,14 @@ const commentSchema = new mongoose_1.default.Schema({
     createdAt: { type: Date, required: true },
     likesInfo: {
         type: {
-            likesCount: { type: String, required: true, default: '0' },
-            dislikesCount: { type: String, required: true, default: '0' },
+            likesCount: { type: Number, required: true, default: '0' },
+            dislikesCount: { type: Number, required: true, default: '0' },
         },
         required: true,
     },
 });
 exports.commentModel = mongoose_1.default.model('comments', commentSchema);
-class CommentRepository {
+class CommentsRepository {
     findComment(commentId, userLikeStatus) {
         return __awaiter(this, void 0, void 0, function* () {
             const foundComment = yield exports.commentModel.findOne({ id: commentId });
@@ -228,8 +228,7 @@ class CommentRepository {
         });
     }
 }
-exports.CommentRepository = CommentRepository;
-exports.commentsRepository = new CommentRepository();
+exports.CommentsRepository = CommentsRepository;
 /*export const commentsRepository = {
     async findComment(id: string): Promise<CommentType | null> {
         const foundComment = await commentModel.findOne(
