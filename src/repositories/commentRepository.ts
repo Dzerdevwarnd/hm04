@@ -1,3 +1,4 @@
+import { injectable } from 'inversify/dts/annotation/injectable'
 import { ObjectId } from 'mongodb'
 import mongoose from 'mongoose'
 
@@ -103,6 +104,7 @@ const commentSchema = new mongoose.Schema({
 
 export const commentModel = mongoose.model('comments', commentSchema)
 
+@injectable()
 export class CommentsRepository {
 	async findComment(
 		commentId: string,

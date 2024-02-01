@@ -1,9 +1,12 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.commentsControllerInstance = void 0;
+exports.container = void 0;
+const inversify_1 = require("inversify");
+require("reflect-metadata");
+const commentsController_1 = require("./controllers/commentsController");
 const commentRepository_1 = require("./repositories/commentRepository");
-const commentsRouter_1 = require("./routers/commentsRouter");
 const commentsService_1 = require("./services/commentsService");
-const commentsRepository = new commentRepository_1.CommentsRepository();
-const commentsService = new commentsService_1.CommentsService(commentsRepository);
-exports.commentsControllerInstance = new commentsRouter_1.CommentsController(commentsService);
+exports.container = new inversify_1.Container();
+exports.container.bind(commentsController_1.CommentsController).to(commentsController_1.CommentsController);
+exports.container.bind(commentsService_1.CommentsService).to(commentsService_1.CommentsService);
+exports.container.bind(commentRepository_1.CommentsRepository).to(commentRepository_1.CommentsRepository);

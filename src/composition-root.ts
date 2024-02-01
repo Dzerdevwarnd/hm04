@@ -1,10 +1,11 @@
+import { Container } from 'inversify'
+import 'reflect-metadata'
+import { CommentsController } from './controllers/commentsController'
 import { CommentsRepository } from './repositories/commentRepository'
-import { CommentsController } from './routers/commentsRouter'
 import { CommentsService } from './services/commentsService'
 
-const commentsRepository = new CommentsRepository()
-const commentsService = new CommentsService(commentsRepository)
+export const container = new Container()
 
-export const commentsControllerInstance = new CommentsController(
-	commentsService
-)
+container.bind(CommentsController).to(CommentsController)
+container.bind(CommentsService).to(CommentsService)
+container.bind(CommentsRepository).to(CommentsRepository)
