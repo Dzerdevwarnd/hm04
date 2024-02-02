@@ -1,6 +1,5 @@
 import { Request, Response } from 'express'
-import { inject } from 'inversify/dts/annotation/inject'
-import { injectable } from 'inversify/dts/annotation/injectable'
+import { injectable } from 'inversify'
 import { jwtService } from '../application/jwt-service'
 import { CommentsService } from '../services/commentsService'
 
@@ -9,9 +8,7 @@ type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
 
 @injectable()
 export class CommentsController {
-	constructor(
-		@inject(CommentsService) protected commentsService: CommentsService
-	) {}
+	constructor(protected commentsService: CommentsService) {}
 	async getComment(req: RequestWithParams<{ id: string }>, res: Response) {
 		let userId = undefined
 		if (req.headers.authorization) {

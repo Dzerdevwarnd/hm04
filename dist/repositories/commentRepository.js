@@ -19,7 +19,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CommentsRepository = exports.commentModel = exports.CommentsPaginationType = exports.CommentDBType = exports.CommentViewType = void 0;
-const injectable_1 = require("inversify/dts/annotation/injectable");
+const inversify_1 = require("inversify");
 const mongoose_1 = __importDefault(require("mongoose"));
 class CommentViewType {
     constructor(id, content, commentatorInfo, createdAt, likesInfo) {
@@ -237,7 +237,7 @@ let CommentsRepository = class CommentsRepository {
 };
 exports.CommentsRepository = CommentsRepository;
 exports.CommentsRepository = CommentsRepository = __decorate([
-    (0, injectable_1.injectable)()
+    (0, inversify_1.injectable)()
 ], CommentsRepository);
 /*export const commentsRepository = {
     async findComment(id: string): Promise<CommentType | null> {

@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify'
+import { injectable } from 'inversify'
 import { ObjectId } from 'mongodb'
 import { jwtService } from '../application/jwt-service'
 import { usersRepository } from '../repositories/UsersRepository'
@@ -14,9 +14,7 @@ import { likesService } from './likesService'
 
 @injectable()
 export class CommentsService {
-	constructor(
-		@inject(CommentsRepository) protected commentsRepository: CommentsRepository
-	) {}
+	constructor(protected commentsRepository: CommentsRepository) {}
 	async findComment(
 		commentId: string,
 		userId: string

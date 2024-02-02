@@ -1,4 +1,4 @@
-import { injectable } from 'inversify/dts/annotation/injectable'
+import { injectable } from 'inversify'
 import { ObjectId } from 'mongodb'
 import mongoose from 'mongoose'
 
