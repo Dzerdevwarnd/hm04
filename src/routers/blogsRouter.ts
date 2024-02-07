@@ -1,10 +1,10 @@
-import { Request, Response, Router } from 'express'
+import { Request, Router } from 'express'
 import { body } from 'express-validator'
 import { basicAuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
-import { blogsPaginationType } from '../repositories/blogsRepository'
-import { blogsService } from '../services/blogsService'
-import { postsService } from '../services/postsService'
+
+import { appContainer } from '../compositionRoots/composition-root'
+import { BlogsController } from '../controllers/BlogsController'
 import { postsValidation } from './postsRouter'
 
 type RequestWithParams<P> = Request<P, {}, {}, {}>
@@ -30,6 +30,60 @@ const urlValidation = body('websiteUrl')
 
 export const blogsRouter = Router({})
 
+const blogsControllerInstance = appContainer.resolve(BlogsController)
+
+blogsRouter.get(
+	'/',
+	blogsControllerInstance.getBlogsWithPagination.bind(blogsControllerInstance)
+)
+
+blogsRouter.get(
+	'/:id',
+	blogsControllerInstance.getBlogById.bind(blogsControllerInstance)
+)
+
+blogsRouter.get(
+	'/:id/posts',
+	blogsControllerInstance.getPostsByBlogId.bind(blogsControllerInstance)
+)
+
+blogsRouter.post(
+	'/',
+	basicAuthMiddleware,
+	nameValidation,
+	descriptionValidation,
+	urlValidation,
+	inputValidationMiddleware,
+	blogsControllerInstance.postBlog.bind(blogsControllerInstance)
+)
+
+blogsRouter.get(
+	'/:id/posts',
+	basicAuthMiddleware,
+	//postsValidation.blogIdExistValidationFromUrl,
+	postsValidation.titleValidation,
+	postsValidation.shortDescriptionValidation,
+	postsValidation.contentValidation,
+	inputValidationMiddleware,
+	blogsControllerInstance.createPostByBlogId.bind(blogsControllerInstance)
+)
+
+blogsRouter.put(
+	'/:id',
+	basicAuthMiddleware,
+	nameValidation,
+	descriptionValidation,
+	urlValidation,
+	inputValidationMiddleware,
+	blogsControllerInstance.updateBlog.bind(blogsControllerInstance)
+)
+
+blogsRouter.delete(
+	'/:id',
+	blogsControllerInstance.deleteBlogByID.bind(blogsControllerInstance)
+)
+
+/*
 blogsRouter.get(
 	'/',
 	async (req: RequestWithQuery<{ query: any }>, res: Response) => {
@@ -173,3 +227,4 @@ blogsRouter.delete(
 		}
 	}
 )
+*/

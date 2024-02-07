@@ -1,12 +1,9 @@
-import { Request, Router } from 'express'
+import { Router } from 'express'
 import { body } from 'express-validator'
-import { container } from '../composition-root'
+import { appContainer } from '../compositionRoots/composition-root'
 import { CommentsController } from '../controllers/commentsController'
 import { AuthMiddleware } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
-
-type RequestWithParams<P> = Request<P, {}, {}, {}>
-type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
 
 const contentValidation = body('content')
 	.trim()
@@ -22,7 +19,7 @@ const likeStatusValidation = body('likeStatus')
 		}
 	})
 
-const commentsControllerInstance = container.resolve(CommentsController)
+const commentsControllerInstance = appContainer.resolve(CommentsController)
 
 export const commentsRouter = Router({})
 

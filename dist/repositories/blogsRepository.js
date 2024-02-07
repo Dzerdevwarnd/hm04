@@ -1,4 +1,10 @@
 "use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -23,7 +29,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.blogsRepository = exports.blogModel = void 0;
+exports.BlogsRepository = exports.blogModel = void 0;
+const inversify_1 = require("inversify");
 const mongoose_1 = __importDefault(require("mongoose"));
 const PostsRepository_1 = require("./PostsRepository");
 const blogSchema = new mongoose_1.default.Schema({
@@ -35,7 +42,7 @@ const blogSchema = new mongoose_1.default.Schema({
     isMembership: { type: Boolean, required: true },
 });
 exports.blogModel = mongoose_1.default.model('blogs', blogSchema);
-exports.blogsRepository = {
+let BlogsRepository = class BlogsRepository {
     returnAllBlogs(query) {
         return __awaiter(this, void 0, void 0, function* () {
             const pageSize = Number(query.pageSize) || 10;
@@ -68,7 +75,7 @@ exports.blogsRepository = {
             };
             return blogsPagination;
         });
-    },
+    }
     findBlog(params) {
         return __awaiter(this, void 0, void 0, function* () {
             let blog = yield exports.blogModel.findOne({ id: params.id });
@@ -85,7 +92,7 @@ exports.blogsRepository = {
             };
             return blogView;
         });
-    },
+    }
     findPostsByBlogId(params, query) {
         return __awaiter(this, void 0, void 0, function* () {
             const totalCount = yield exports.blogModel.countDocuments({
@@ -122,7 +129,7 @@ exports.blogsRepository = {
                 return;
             }
         });
-    },
+    }
     createBlog(newBlog) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield exports.blogModel.insertMany(newBlog);
@@ -130,7 +137,7 @@ exports.blogsRepository = {
             const { _id } = newBlog, blogWithout_Id = __rest(newBlog, ["_id"]);
             return blogWithout_Id;
         });
-    },
+    }
     updateBlog(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield exports.blogModel.updateOne({ id: id }, {
@@ -142,12 +149,16 @@ exports.blogsRepository = {
             });
             return result.matchedCount === 1;
         });
-    },
+    }
     deleteBlog(params) {
         return __awaiter(this, void 0, void 0, function* () {
             let result = yield exports.blogModel.deleteOne({ id: params.id });
             return result.deletedCount === 1;
         });
-    },
+    }
 };
+exports.BlogsRepository = BlogsRepository;
+exports.BlogsRepository = BlogsRepository = __decorate([
+    (0, inversify_1.injectable)()
+], BlogsRepository);
 //

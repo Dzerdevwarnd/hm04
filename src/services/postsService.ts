@@ -1,17 +1,20 @@
+import { injectable } from 'inversify'
 import {
+	PostsRepository,
 	postType,
 	postsByBlogIdPaginationType,
-	postsRepository,
 } from '../repositories/PostsRepository'
 
-export const postsService = {
+@injectable()
+export class PostsService {
+	constructor(protected postsRepository: PostsRepository) {}
 	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
-		return postsRepository.returnAllPosts(query)
-	},
+		return this.postsRepository.returnAllPosts(query)
+	}
 
 	async findPost(params: { id: string }): Promise<postType | undefined> {
-		return postsRepository.findPost(params)
-	},
+		return this.postsRepository.findPost(params)
+	}
 	async createPost(body: {
 		title: string
 		shortDescription: string
@@ -28,9 +31,9 @@ export const postsService = {
 			blogName: '',
 			createdAt: createdDate,
 		}
-		const postWithout_id = postsRepository.createPost(newPost)
+		const postWithout_id = this.postsRepository.createPost(newPost)
 		return postWithout_id
-	},
+	}
 	async createPostByBlogId(
 		body: {
 			title: string
@@ -49,9 +52,9 @@ export const postsService = {
 			blogName: '',
 			createdAt: createdDate,
 		}
-		const postWithout_id = postsRepository.createPost(newPost)
+		const postWithout_id = this.postsRepository.createPost(newPost)
 		return postWithout_id
-	},
+	}
 	async updatePost(
 		id: string,
 		body: {
@@ -61,11 +64,11 @@ export const postsService = {
 			blogId: string
 		}
 	): Promise<boolean> {
-		const resultBoolean = postsRepository.updatePost(id, body)
+		const resultBoolean = this.postsRepository.updatePost(id, body)
 		return resultBoolean
-	},
+	}
 	async deletePost(params: { id: string }): Promise<boolean> {
-		const resultBoolean = postsRepository.deletePost(params)
+		const resultBoolean = this.postsRepository.deletePost(params)
 		return resultBoolean
-	},
+	}
 }

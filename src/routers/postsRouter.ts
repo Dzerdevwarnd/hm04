@@ -1,34 +1,19 @@
-import { Request, Response, Router } from 'express'
+import { Request, Router } from 'express'
 import { body } from 'express-validator'
-import { jwtService } from '../application/jwt-service'
+import { appContainer } from '../compositionRoots/composition-root'
+import { PostsController } from '../controllers/postsController'
 import {
 	AuthMiddleware,
 	basicAuthMiddleware,
 } from '../middleware/authMiddleware'
 import { inputValidationMiddleware } from '../middleware/inputValidationMiddleware'
-import {
-	postsByBlogIdPaginationType,
-	postsRepository,
-} from '../repositories/PostsRepository'
-import { blogViewType } from '../repositories/blogsRepository'
-import { CommentsRepository } from '../repositories/commentRepository'
-import { blogsService } from '../services/blogsService'
-import { CommentsService } from '../services/commentsService'
-import { postsService } from '../services/postsService'
+import { blogModel, blogViewType } from '../repositories/blogsRepository'
+import {} from '../services/postsService'
 type RequestWithParams<P> = Request<P, {}, {}, {}>
 type RequestWithBody<B> = Request<{}, {}, B, {}>
 type RequestWithParamsAndBody<P, B> = Request<P, {}, B>
 type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 type RequestWithParamsAndQuery<P, Q> = Request<P, {}, {}, Q>
-
-type blogType = {
-	id: string
-	name: string
-	description: string
-	websiteUrl: string
-}
-
-export const postsRouter = Router({})
 
 export const postsValidation = {
 	titleValidation: body('title')
@@ -53,7 +38,7 @@ export const postsValidation = {
 		async (value: string, { req }) => {
 			const id = value
 			const params = { id }
-			const blog: blogViewType | undefined = await blogsService.findBlog(params)
+			const blog: blogViewType | null = await blogModel.findOne(params)
 			if (!blog) {
 				throw new Error('Blog id does not exist')
 			}
@@ -65,9 +50,63 @@ export const postsValidation = {
 		.withMessage('Content length should be from 20 to 300'),
 }
 
-const commentsServiceInstance = new CommentsService(new CommentsRepository())
+const postsControllerInstance = appContainer.resolve(PostsController)
+
+export const postsRouter = Router({})
 
 postsRouter.get(
+	'/',
+	postsControllerInstance.getPostsWithPagination.bind(postsControllerInstance)
+)
+
+postsRouter.get(
+	'/:id',
+	postsControllerInstance.getPostById.bind(postsControllerInstance)
+)
+
+postsRouter.post(
+	'/',
+	basicAuthMiddleware,
+	postsValidation.blogIdExistValidationFromBody,
+	postsValidation.titleValidation,
+	postsValidation.shortDescriptionValidation,
+	postsValidation.contentValidation,
+	postsValidation.blogIdValidation,
+	inputValidationMiddleware,
+	postsControllerInstance.postPost.bind(postsControllerInstance)
+)
+
+postsRouter.put(
+	'/:id',
+	basicAuthMiddleware,
+	postsValidation.blogIdExistValidationFromBody,
+	postsValidation.titleValidation,
+	postsValidation.shortDescriptionValidation,
+	postsValidation.contentValidation,
+	postsValidation.blogIdValidation,
+	inputValidationMiddleware,
+	postsControllerInstance.updatePost.bind(postsControllerInstance)
+)
+
+postsRouter.delete(
+	'/:id',
+	postsControllerInstance.deleteById.bind(postsControllerInstance)
+)
+
+postsRouter.get(
+	'/:id/comments',
+	postsControllerInstance.getCommentsByPostId.bind(postsControllerInstance)
+)
+
+postsRouter.post(
+	'/:id/comments',
+	AuthMiddleware,
+	postsValidation.commentsContentValidation,
+	inputValidationMiddleware,
+	postsControllerInstance.postCommentByPostId.bind(postsControllerInstance)
+)
+
+/*postsRouter.get(
 	'/',
 	async (req: RequestWithQuery<{ query: any }>, res: Response) => {
 		const allPosts: postsByBlogIdPaginationType =
@@ -223,3 +262,4 @@ postsRouter.post(
 		}
 	}
 )
+*/

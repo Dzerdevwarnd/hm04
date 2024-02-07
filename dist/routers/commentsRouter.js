@@ -12,7 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.commentsRouter = void 0;
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
-const composition_root_1 = require("../composition-root");
+const composition_root_1 = require("../compositionRoots/composition-root");
 const commentsController_1 = require("../controllers/commentsController");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
@@ -28,7 +28,7 @@ const likeStatusValidation = (0, express_validator_1.body)('likeStatus')
         throw new Error('Incorrect likeStatus Value');
     }
 }));
-const commentsControllerInstance = composition_root_1.container.resolve(commentsController_1.CommentsController);
+const commentsControllerInstance = composition_root_1.appContainer.resolve(commentsController_1.CommentsController);
 exports.commentsRouter = (0, express_1.Router)({});
 exports.commentsRouter.get('/:id', commentsControllerInstance.getComment.bind(commentsControllerInstance));
 exports.commentsRouter.delete('/:id', commentsControllerInstance.deleteComment.bind(commentsControllerInstance));

@@ -1,3 +1,4 @@
+import { injectable } from 'inversify'
 import mongoose from 'mongoose'
 
 export type postType = {
@@ -30,7 +31,8 @@ const postSchema = new mongoose.Schema({
 
 export const postModel = mongoose.model('posts', postSchema)
 
-export const postsRepository = {
+@injectable()
+export class PostsRepository {
 	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
 		const pageSize = Number(query?.pageSize) || 10
 		const page = Number(query?.pageNumber) || 1
@@ -57,7 +59,7 @@ export const postsRepository = {
 			items: posts,
 		}
 		return postsPagination
-	},
+	}
 	async findPost(params: { id: string }): Promise<postType | undefined> {
 		let post: postType | null = await postModel.findOne(
 			{ id: params.id },
@@ -68,13 +70,13 @@ export const postsRepository = {
 		} else {
 			return
 		}
-	},
+	}
 	async createPost(newPost: postType): Promise<postType> {
 		const result = await postModel.insertMany(newPost)
 		//@ts-ignore
 		const { _id, ...postWithout_Id } = newPost
 		return postWithout_Id
-	},
+	}
 	async updatePost(
 		id: string,
 		body: {
@@ -96,9 +98,9 @@ export const postsRepository = {
 			}
 		)
 		return result.matchedCount === 1
-	},
+	}
 	async deletePost(params: { id: string }): Promise<boolean> {
 		let result = await postModel.deleteOne({ id: params.id })
 		return result.deletedCount === 1
-	},
+	}
 }

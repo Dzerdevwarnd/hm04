@@ -1,3 +1,4 @@
+import { injectable } from 'inversify'
 import mongoose from 'mongoose'
 import {
 	postModel,
@@ -41,7 +42,8 @@ const blogSchema = new mongoose.Schema({
 
 export const blogModel = mongoose.model('blogs', blogSchema)
 
-export const blogsRepository = {
+@injectable()
+export class BlogsRepository {
 	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
 		const pageSize = Number(query.pageSize) || 10
 		const page = Number(query.pageNumber) || 1
@@ -74,7 +76,7 @@ export const blogsRepository = {
 			items: blogs,
 		}
 		return blogsPagination
-	},
+	}
 	async findBlog(params: { id: string }): Promise<blogViewType | undefined> {
 		let blog: blogDBType | null = await blogModel.findOne({ id: params.id })
 		if (!blog) {
@@ -89,7 +91,7 @@ export const blogsRepository = {
 			websiteUrl: blog.websiteUrl,
 		}
 		return blogView
-	},
+	}
 	async findPostsByBlogId(
 		params: {
 			id: string
@@ -127,14 +129,14 @@ export const blogsRepository = {
 		} else {
 			return
 		}
-	},
+	}
 
 	async createBlog(newBlog: blogDBType): Promise<blogDBType> {
 		const result = await blogModel.insertMany(newBlog)
 		//@ts-ignore
 		const { _id, ...blogWithout_Id } = newBlog
 		return blogWithout_Id
-	},
+	}
 	async updateBlog(
 		id: string,
 		body: { name: string; description: string; websiteUrl: string }
@@ -150,10 +152,10 @@ export const blogsRepository = {
 			}
 		)
 		return result.matchedCount === 1
-	},
+	}
 	async deleteBlog(params: { id: string }): Promise<boolean> {
 		let result = await blogModel.deleteOne({ id: params.id })
 		return result.deletedCount === 1
-	},
+	}
 }
 //

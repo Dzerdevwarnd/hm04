@@ -9,18 +9,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.postsValidation = exports.postsRouter = void 0;
+exports.postsRouter = exports.postsValidation = void 0;
 const express_1 = require("express");
 const express_validator_1 = require("express-validator");
-const jwt_service_1 = require("../application/jwt-service");
+const composition_root_1 = require("../compositionRoots/composition-root");
+const postsController_1 = require("../controllers/postsController");
 const authMiddleware_1 = require("../middleware/authMiddleware");
 const inputValidationMiddleware_1 = require("../middleware/inputValidationMiddleware");
-const PostsRepository_1 = require("../repositories/PostsRepository");
-const commentRepository_1 = require("../repositories/commentRepository");
-const blogsService_1 = require("../services/blogsService");
-const commentsService_1 = require("../services/commentsService");
-const postsService_1 = require("../services/postsService");
-exports.postsRouter = (0, express_1.Router)({});
+const blogsRepository_1 = require("../repositories/blogsRepository");
 exports.postsValidation = {
     titleValidation: (0, express_validator_1.body)('title')
         .trim()
@@ -42,7 +38,7 @@ exports.postsValidation = {
     blogIdExistValidationFromBody: (0, express_validator_1.body)('blogId').custom((value, { req }) => __awaiter(void 0, void 0, void 0, function* () {
         const id = value;
         const params = { id };
-        const blog = yield blogsService_1.blogsService.findBlog(params);
+        const blog = yield blogsRepository_1.blogModel.findOne(params);
         if (!blog) {
             throw new Error('Blog id does not exist');
         }
@@ -52,79 +48,169 @@ exports.postsValidation = {
         .isLength({ min: 20, max: 300 })
         .withMessage('Content length should be from 20 to 300'),
 };
-const commentsServiceInstance = new commentsService_1.CommentsService(new commentRepository_1.CommentsRepository());
-exports.postsRouter.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const allPosts = yield postsService_1.postsService.returnAllPosts(req.query);
-    res.status(200).send(allPosts);
-    return;
-}));
-exports.postsRouter.get('/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const foundPost = yield postsService_1.postsService.findPost(req.params);
-    if (!foundPost) {
-        res.sendStatus(404);
-        return;
+const postsControllerInstance = composition_root_1.appContainer.resolve(postsController_1.PostsController);
+exports.postsRouter = (0, express_1.Router)({});
+exports.postsRouter.get('/', postsControllerInstance.getPostsWithPagination.bind(postsControllerInstance));
+exports.postsRouter.get('/:id', postsControllerInstance.getPostById.bind(postsControllerInstance));
+exports.postsRouter.post('/', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.postPost.bind(postsControllerInstance));
+exports.postsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.updatePost.bind(postsControllerInstance));
+exports.postsRouter.delete('/:id', postsControllerInstance.deleteById.bind(postsControllerInstance));
+exports.postsRouter.get('/:id/comments', postsControllerInstance.getCommentsByPostId.bind(postsControllerInstance));
+exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.commentsContentValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.postCommentByPostId.bind(postsControllerInstance));
+/*postsRouter.get(
+    '/',
+    async (req: RequestWithQuery<{ query: any }>, res: Response) => {
+        const allPosts: postsByBlogIdPaginationType =
+            await postsService.returnAllPosts(req.query)
+        res.status(200).send(allPosts)
+        return
     }
-    else {
-        res.status(200).send(foundPost);
-        return;
+)
+
+postsRouter.get(
+    '/:id',
+    async (req: RequestWithParams<{ id: string }>, res: Response) => {
+        const foundPost = await postsService.findPost(req.params)
+        if (!foundPost) {
+            res.sendStatus(404)
+            return
+        } else {
+            res.status(200).send(foundPost)
+            return
+        }
     }
-}));
-exports.postsRouter.post('/', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const newPost = yield postsService_1.postsService.createPost(req.body);
-    res.status(201).send(newPost);
-    return;
-}));
-exports.postsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, exports.postsValidation.blogIdExistValidationFromBody, exports.postsValidation.titleValidation, exports.postsValidation.shortDescriptionValidation, exports.postsValidation.contentValidation, exports.postsValidation.blogIdValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const ResultOfUpdatePost = yield postsService_1.postsService.updatePost(req.params.id, req.body);
-    if (!ResultOfUpdatePost) {
-        res.sendStatus(404);
-        return;
+)
+
+postsRouter.post(
+    '/',
+    basicAuthMiddleware,
+    postsValidation.blogIdExistValidationFromBody,
+    postsValidation.titleValidation,
+    postsValidation.shortDescriptionValidation,
+    postsValidation.contentValidation,
+    postsValidation.blogIdValidation,
+    inputValidationMiddleware,
+    async (
+        req: RequestWithBody<{
+            title: string
+            shortDescription: string
+            content: string
+            blogId: string
+        }>,
+        res: Response
+    ) => {
+        const newPost = await postsService.createPost(req.body)
+        res.status(201).send(newPost)
+        return
     }
-    else {
-        res.sendStatus(204);
-        return;
+)
+
+postsRouter.put(
+    '/:id',
+    basicAuthMiddleware,
+    postsValidation.blogIdExistValidationFromBody,
+    postsValidation.titleValidation,
+    postsValidation.shortDescriptionValidation,
+    postsValidation.contentValidation,
+    postsValidation.blogIdValidation,
+    inputValidationMiddleware,
+    async (
+        req: RequestWithParamsAndBody<
+            { id: string },
+            {
+                title: string
+                shortDescription: string
+                content: string
+                blogId: string
+            }
+        >,
+        res: Response
+    ) => {
+        const ResultOfUpdatePost = await postsService.updatePost(
+            req.params.id,
+            req.body
+        )
+        if (!ResultOfUpdatePost) {
+            res.sendStatus(404)
+            return
+        } else {
+            res.sendStatus(204)
+            return
+        }
     }
-}));
-exports.postsRouter.delete('/:id', authMiddleware_1.basicAuthMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const resultOfDelete = yield postsService_1.postsService.deletePost(req.params);
-    if (!resultOfDelete) {
-        res.sendStatus(404);
-        return;
+)
+
+postsRouter.delete(
+    '/:id',
+    basicAuthMiddleware,
+    async (req: RequestWithParams<{ id: string }>, res: Response) => {
+        const resultOfDelete = await postsService.deletePost(req.params)
+        if (!resultOfDelete) {
+            res.sendStatus(404)
+            return
+        } else {
+            res.sendStatus(204)
+            return
+        }
     }
-    else {
-        res.sendStatus(204);
-        return;
+)
+
+postsRouter.get(
+    '/:id/comments',
+    async (
+        req: RequestWithParamsAndQuery<{ id: string }, { query: any }>,
+        res: Response
+    ) => {
+        let userId = undefined
+        if (req.headers.authorization) {
+            userId = await jwtService.verifyAndGetUserIdByToken(
+                req.headers.authorization.split(' ')[1]
+            )
+        }
+        const commentsPagination =
+            await commentsServiceInstance.findCommentsByPostId(
+                req.params.id,
+                req.query,
+                userId
+            )
+        if (commentsPagination?.items.length === 0) {
+            res.sendStatus(404)
+            return
+        } else {
+            res.status(200).send(commentsPagination)
+            return
+        }
     }
-}));
-exports.postsRouter.get('/:id/comments', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    let userId = undefined;
-    if (req.headers.authorization) {
-        userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization.split(' ')[1]);
+)
+
+postsRouter.post(
+    '/:id/comments',
+    AuthMiddleware,
+    postsValidation.commentsContentValidation,
+    inputValidationMiddleware,
+    async (
+        req: RequestWithParamsAndBody<{ id: string }, { content: string }>,
+        res: Response
+    ) => {
+        const post = await postsRepository.findPost(req.params)
+        if (!post) {
+            res.sendStatus(404)
+            return
+        }
+        const token = req.headers.authorization!.split(' ')[1]
+
+        const comment = await commentsServiceInstance.createCommentsByPostId(
+            req.params.id,
+            req.body,
+            token
+        )
+        if (!comment) {
+            res.sendStatus(404)
+            return
+        } else {
+            res.status(201).send(comment)
+            return
+        }
     }
-    const commentsPagination = yield commentsServiceInstance.findCommentsByPostId(req.params.id, req.query, userId);
-    if ((commentsPagination === null || commentsPagination === void 0 ? void 0 : commentsPagination.items.length) === 0) {
-        res.sendStatus(404);
-        return;
-    }
-    else {
-        res.status(200).send(commentsPagination);
-        return;
-    }
-}));
-exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.commentsContentValidation, inputValidationMiddleware_1.inputValidationMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const post = yield PostsRepository_1.postsRepository.findPost(req.params);
-    if (!post) {
-        res.sendStatus(404);
-        return;
-    }
-    const token = req.headers.authorization.split(' ')[1];
-    const comment = yield commentsServiceInstance.createCommentsByPostId(req.params.id, req.body, token);
-    if (!comment) {
-        res.sendStatus(404);
-        return;
-    }
-    else {
-        res.status(201).send(comment);
-        return;
-    }
-}));
+)
+*/
