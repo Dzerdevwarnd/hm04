@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-export class LikeDBType {
+export class commentLikeDBType {
 	constructor(
 		public userId: string,
 		public commentId: string,
@@ -8,17 +8,20 @@ export class LikeDBType {
 	) {}
 }
 
-const likeSchema = new mongoose.Schema({
+const commentLikeSchema = new mongoose.Schema({
 	userId: { type: String, required: true },
 	commentId: { type: String, required: true },
 	likeStatus: { type: String, required: true },
 })
 
-export const likeModel = mongoose.model('likes', likeSchema)
+export const commentLikeModel = mongoose.model(
+	'commentsLikes',
+	commentLikeSchema
+)
 
-export const likesRepository = {
+export const commentLikesRepository = {
 	async findCommentLikeFromUser(userId: string, commentId: string) {
-		const like = await likeModel.findOne({
+		const like = await commentLikeModel.findOne({
 			userId: userId,
 			commentId: commentId,
 		})
@@ -30,7 +33,7 @@ export const likesRepository = {
 		commentId: string
 		likeStatus: string
 	}) {
-		const result = await likeModel.insertMany(like)
+		const result = await commentLikeModel.insertMany(like)
 		return result.length == 1
 	},
 	async updateUserLikeStatus(
@@ -38,7 +41,7 @@ export const likesRepository = {
 		commentId: string,
 		likeStatus: string
 	) {
-		const result = await likeModel.updateOne(
+		const result = await commentLikeModel.updateOne(
 			{ userId: userId, commentId: commentId },
 			{ likeStatus: likeStatus }
 		)

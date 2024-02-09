@@ -1,8 +1,8 @@
 import { injectable } from 'inversify'
 import mongoose from 'mongoose'
 import {
+	postDBType,
 	postModel,
-	postType,
 	postsByBlogIdPaginationType,
 } from './PostsRepository'
 
@@ -110,7 +110,7 @@ export class BlogsRepository {
 		} else {
 			sortDirection = 1
 		}
-		let posts: postType[] = await postModel
+		let posts: postDBType[] = await postModel
 			.find({ blogId: params.id }, { projection: { _id: 0 } })
 			.skip((page - 1) * pageSize)
 			.sort({ [sortBy]: sortDirection })

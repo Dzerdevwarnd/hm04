@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify'
+import { injectable } from 'inversify'
 import {
 	BlogsRepository,
 	blogDBType,
@@ -9,9 +9,7 @@ import {
 import { postsByBlogIdPaginationType } from '../repositories/PostsRepository'
 @injectable()
 export class BlogsService {
-	constructor(
-		@inject(BlogsRepository) protected blogsRepository: BlogsRepository
-	) {}
+	constructor(protected blogsRepository: BlogsRepository) {}
 	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
 		return this.blogsRepository.returnAllBlogs(query)
 	}

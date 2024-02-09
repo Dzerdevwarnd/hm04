@@ -21,13 +21,25 @@ export class PostsController {
 		req: RequestWithQuery<{ query: any }>,
 		res: Response
 	) {
+		let userId = undefined
+		if (req.headers.authorization) {
+			userId = await jwtService.verifyAndGetUserIdByToken(
+				req.headers.authorization.split(' ')[1]
+			)
+		}
 		const allPosts: postsByBlogIdPaginationType =
-			await this.postsService.returnAllPosts(req.query)
+			await this.postsService.returnAllPosts(req.query, userId)
 		res.status(200).send(allPosts)
 		return
 	}
 	async getPostById(req: RequestWithParams<{ id: string }>, res: Response) {
-		const foundPost = await this.postsService.findPost(req.params)
+		let userId = undefined
+		if (req.headers.authorization) {
+			userId = await jwtService.verifyAndGetUserIdByToken(
+				req.headers.authorization.split(' ')[1]
+			)
+		}
+		const foundPost = await this.postsService.findPost(req.params, userId)
 		if (!foundPost) {
 			res.sendStatus(404)
 			return

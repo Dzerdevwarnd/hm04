@@ -1,4 +1,4 @@
-import { inject, injectable } from 'inversify'
+import { injectable } from 'inversify'
 import { ObjectId } from 'mongodb'
 import { jwtService } from '../application/jwt-service'
 import { usersRepository } from '../repositories/UsersRepository'
@@ -10,18 +10,19 @@ import {
 	commentModel,
 } from '../repositories/commentRepository'
 
-import { likesService } from './likesService'
+import { commentsLikesService } from './commentLikesService'
 
 @injectable()
 export class CommentsService {
-	constructor(
-		@inject(CommentsRepository) protected commentsRepository: CommentsRepository
-	) {}
+	constructor(protected commentsRepository: CommentsRepository) {}
 	async findComment(
 		commentId: string,
 		userId: string
 	): Promise<CommentViewType | null> {
-		const like = await likesService.findCommentLikeFromUser(userId, commentId)
+		const like = await commentsLikesService.findCommentLikeFromUser(
+			userId,
+			commentId
+		)
 		const userLikeStatus = like?.likeStatus || 'None'
 		let comment = await this.commentsRepository.findComment(
 			commentId,
@@ -44,7 +45,10 @@ export class CommentsService {
 		}
 		const commentsView: CommentViewType[] = []
 		for (const comment of commentsDB) {
-			let like = await likesService.findCommentLikeFromUser(userId, comment.id)
+			let like = await commentsLikesService.findCommentLikeFromUser(
+				userId,
+				comment.id
+			)
 			let commentView = {
 				id: comment.id,
 				content: comment.content,
@@ -134,15 +138,26 @@ export class CommentsService {
 				dislikesCount
 			)
 		}
-		let like = await likesService.findCommentLikeFromUser(userId, commentId)
+		let like = await commentsLikesService.findCommentLikeFromUser(
+			userId,
+			commentId
+		)
 		if (!like) {
-			await likesService.addLikeToBdFromUser(userId, commentId, body.likeStatus)
+			await commentsLikesService.addLikeToBdFromUser(
+				userId,
+				commentId,
+				body.likeStatus
+			)
 			return true
 		} else {
 			if (like.likeStatus === body.likeStatus) {
 				return false
 			}
-			likesService.updateUserLikeStatus(userId, commentId, body.likeStatus)
+			commentsLikesService.updateUserLikeStatus(
+				userId,
+				commentId,
+				body.likeStatus
+			)
 			return true
 		}
 	}
@@ -178,7 +193,7 @@ export const commentService = {
 		commentId: string,
 		userId: string
 	): Promise<CommentViewType | null> {
-		const like = await likesService.findCommentLikeFromUser(userId, commentId)
+		const like = await commentsLikesService.findCommentLikeFromUser(userId, commentId)
 		const userLikeStatus = like?.likeStatus || 'None'
 		let comment = await commentsRepository.findComment(
 			commentId,
@@ -201,7 +216,7 @@ export const commentService = {
 		}
 		const commentsView: CommentViewType[] = []
 		for (const comment of commentsDB) {
-			let like = await likesService.findCommentLikeFromUser(userId, comment.id)
+			let like = await commentsLikesService.findCommentLikeFromUser(userId, comment.id)
 			let commentView = {
 				id: comment.id,
 				content: comment.content,
@@ -291,15 +306,15 @@ export const commentService = {
 				dislikesCount
 			)
 		}
-		let like = await likesService.findCommentLikeFromUser(userId, commentId)
+		let like = await commentsLikesService.findCommentLikeFromUser(userId, commentId)
 		if (!like) {
-			await likesService.addLikeToBdFromUser(userId, commentId, body.likeStatus)
+			await commentsLikesService.addLikeToBdFromUser(userId, commentId, body.likeStatus)
 			return true
 		} else {
 			if (like.likeStatus === body.likeStatus) {
 				return false
 			}
-			likesService.updateUserLikeStatus(userId, commentId, body.likeStatus)
+			commentsLikesService.updateUserLikeStatus(userId, commentId, body.likeStatus)
 			return true
 		}
 	},

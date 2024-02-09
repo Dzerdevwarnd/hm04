@@ -1,5 +1,5 @@
 import { Request, Response } from 'express'
-import { inject, injectable } from 'inversify'
+import { injectable } from 'inversify'
 import { blogsPaginationType } from '../repositories/blogsRepository'
 import { BlogsService } from '../services/blogsService'
 import { PostsService } from '../services/postsService'
@@ -13,9 +13,8 @@ type RequestWithQuery<Q> = Request<{}, {}, {}, Q>
 @injectable()
 export class BlogsController {
 	constructor(
-		@inject(BlogsService)
 		protected blogsService: BlogsService,
-		@inject(PostsService)
+
 		protected postsService: PostsService
 	) {}
 	async getBlogsWithPagination(

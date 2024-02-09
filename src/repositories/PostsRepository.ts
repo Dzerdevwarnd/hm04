@@ -1,14 +1,50 @@
 import { injectable } from 'inversify'
 import mongoose from 'mongoose'
+import { postLikeViewType } from './postLikesRepository'
 
-export type postType = {
-	id: string
-	title: string
-	shortDescription: string
-	content: string
-	blogId: string
-	blogName: string
-	createdAt: Date
+export class postDBType {
+	public likesInfo: {
+		likesCount: number
+		dislikesCount: number
+	}
+	constructor(
+		public id: string,
+		public title: string,
+		public shortDescription: string,
+		public content: string,
+		public blogId: string,
+		public blogName: string,
+		public createdAt: Date
+	) {
+		this.likesInfo = {
+			likesCount: 0,
+			dislikesCount: 0,
+		}
+	}
+}
+
+export class postViewType {
+	extendedLikesInfo: {
+		likesCount: number
+		dislikesCount: number
+		myStatus: string
+		newestLikes: postLikeViewType[]
+	}
+	constructor(
+		public id: string,
+		public title: string,
+		public shortDescription: string,
+		public content: string,
+		public blogId: string,
+		public blogName: string,
+		public createdAt: Date
+	) {
+		this.extendedLikesInfo = {
+			likesCount: 0,
+			dislikesCount: 0,
+			myStatus: None,
+		}
+	}
 }
 
 export type postsByBlogIdPaginationType = {
@@ -16,7 +52,7 @@ export type postsByBlogIdPaginationType = {
 	page: number
 	pageSize: number
 	totalCount: number
-	items: postType[]
+	items: postViewType[]
 }
 
 const postSchema = new mongoose.Schema({
@@ -27,13 +63,20 @@ const postSchema = new mongoose.Schema({
 	blogId: { type: String, required: true },
 	blogName: { type: String, default: '' },
 	createdAt: { type: Date, required: true },
+	likesInfo: {
+		type: {
+			likesCount: { type: Number, required: true, default: 0 },
+			dislikesCount: { type: Number, required: true, default: 0 },
+		},
+		required: true,
+	},
 })
 
 export const postModel = mongoose.model('posts', postSchema)
 
 @injectable()
 export class PostsRepository {
-	async returnAllPosts(query: any): Promise<postsByBlogIdPaginationType> {
+	async findPostsWithQuery(query: any): Promise<postDBType[]> {
 		const pageSize = Number(query?.pageSize) || 10
 		const page = Number(query?.pageNumber) || 1
 		const sortBy: string = query?.sortBy ?? 'createdAt'
@@ -50,18 +93,10 @@ export class PostsRepository {
 			.limit(pageSize)
 			.lean()
 		const totalCount = await postModel.countDocuments()
-		const pagesCount = Math.ceil(totalCount / pageSize)
-		const postsPagination = {
-			pagesCount: pagesCount,
-			page: Number(page),
-			pageSize: pageSize,
-			totalCount: totalCount,
-			items: posts,
-		}
-		return postsPagination
+		return posts
 	}
-	async findPost(params: { id: string }): Promise<postType | undefined> {
-		let post: postType | null = await postModel.findOne(
+	async findPost(params: { postId: string }): Promise<postDBType | undefined> {
+		let post: postDBType | null = await postModel.findOne(
 			{ id: params.id },
 			'-_id -__v'
 		)
@@ -71,7 +106,7 @@ export class PostsRepository {
 			return
 		}
 	}
-	async createPost(newPost: postType): Promise<postType> {
+	async createPost(newPost: postDBType): Promise<postDBType> {
 		const result = await postModel.insertMany(newPost)
 		//@ts-ignore
 		const { _id, ...postWithout_Id } = newPost
