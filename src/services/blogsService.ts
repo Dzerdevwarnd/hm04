@@ -6,10 +6,16 @@ import {
 	blogsPaginationType,
 } from '../repositories/blogsRepository'
 
-import { postsByBlogIdPaginationType } from '../repositories/PostsRepository'
+import {
+	PostsRepository,
+	postsByBlogIdPaginationType,
+} from '../repositories/PostsRepository'
 @injectable()
 export class BlogsService {
-	constructor(protected blogsRepository: BlogsRepository) {}
+	constructor(
+		protected blogsRepository: BlogsRepository,
+		protected postsRepository: PostsRepository
+	) {}
 	async returnAllBlogs(query: any): Promise<blogsPaginationType> {
 		return this.blogsRepository.returnAllBlogs(query)
 	}
@@ -20,9 +26,10 @@ export class BlogsService {
 		params: {
 			id: string
 		},
-		query: any
+		query: any,
+		userId: string
 	): Promise<postsByBlogIdPaginationType | undefined> {
-		return this.blogsRepository.findPostsByBlogId(params, query)
+		return this.postsRepository.findPostsByBlogId(params, query, userId)
 	}
 	async createBlog(body: {
 		name: string

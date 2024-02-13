@@ -47,6 +47,14 @@ exports.postsValidation = {
         .trim()
         .isLength({ min: 20, max: 300 })
         .withMessage('Content length should be from 20 to 300'),
+    likeStatusValidation: (0, express_validator_1.body)('likeStatus')
+        .trim()
+        .custom((likeStatus) => __awaiter(void 0, void 0, void 0, function* () {
+        const allowedValues = ['None', 'Like', 'Dislike'];
+        if (!allowedValues.includes(likeStatus)) {
+            throw new Error('Incorrect likeStatus Value');
+        }
+    })),
 };
 const postsControllerInstance = composition_root_1.appContainer.resolve(postsController_1.PostsController);
 exports.postsRouter = (0, express_1.Router)({});
@@ -57,6 +65,7 @@ exports.postsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, exports.po
 exports.postsRouter.delete('/:id', postsControllerInstance.deleteById.bind(postsControllerInstance));
 exports.postsRouter.get('/:id/comments', postsControllerInstance.getCommentsByPostId.bind(postsControllerInstance));
 exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.commentsContentValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.postCommentByPostId.bind(postsControllerInstance));
+exports.postsRouter.put('/:id/like-status', authMiddleware_1.AuthMiddleware, exports.postsValidation.likeStatusValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.updateCommentLikeStatus.bind(postsControllerInstance));
 /*postsRouter.get(
     '/',
     async (req: RequestWithQuery<{ query: any }>, res: Response) => {

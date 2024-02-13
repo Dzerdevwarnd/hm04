@@ -20,19 +20,73 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PostsService = void 0;
 const inversify_1 = require("inversify");
+const jwt_service_1 = require("../application/jwt-service");
 const PostsRepository_1 = require("../repositories/PostsRepository");
+const postLikesService_1 = require("./postLikesService");
 let PostsService = class PostsService {
     constructor(postsRepository) {
         this.postsRepository = postsRepository;
     }
-    returnAllPosts(query) {
+    returnAllPosts(query, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.postsRepository.returnAllPosts(query);
+            const postsDB = yield this.postsRepository.findPostsWithQuery(query);
+            const postsView = [];
+            for (const post of postsDB) {
+                let like = yield postLikesService_1.postLikesService.findPostLikeFromUser(userId, post.id);
+                let last3DBLikes = yield postLikesService_1.postLikesService.findLast3Likes(post.id);
+                let postView = {
+                    title: post.title,
+                    id: post.id,
+                    content: post.content,
+                    shortDescription: post.shortDescription,
+                    blogId: post.blogId,
+                    blogName: post.blogName,
+                    createdAt: post.createdAt,
+                    extendedLikesInfo: {
+                        likesCount: post.likesInfo.likesCount,
+                        dislikesCount: post.likesInfo.dislikesCount,
+                        myStatus: (like === null || like === void 0 ? void 0 : like.likeStatus) || 'None',
+                        newestLikes: last3DBLikes || [],
+                    },
+                };
+                postsView.push(postView);
+            }
+            const totalCount = yield PostsRepository_1.postModel.countDocuments();
+            const pagesCount = Math.ceil(totalCount / query.pageSize);
+            const postsPagination = {
+                pagesCount: pagesCount,
+                page: Number(query.page),
+                pageSize: query.pageSize,
+                totalCount: totalCount,
+                items: postsView,
+            };
+            return postsPagination;
         });
     }
-    findPost(params) {
+    findPost(params, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.postsRepository.findPost(params);
+            const foundPost = yield this.postsRepository.findPost(params);
+            if (!foundPost) {
+                return null;
+            }
+            let like = yield postLikesService_1.postLikesService.findPostLikeFromUser(userId, params.id);
+            let last3DBLikes = yield postLikesService_1.postLikesService.findLast3Likes(foundPost.id);
+            const postView = {
+                title: foundPost.title,
+                id: foundPost.id,
+                content: foundPost.content,
+                shortDescription: foundPost.shortDescription,
+                blogId: foundPost.blogId,
+                blogName: foundPost.blogName,
+                createdAt: foundPost.createdAt,
+                extendedLikesInfo: {
+                    likesCount: foundPost.likesInfo.likesCount,
+                    dislikesCount: foundPost.likesInfo.dislikesCount,
+                    myStatus: (like === null || like === void 0 ? void 0 : like.likeStatus) || 'None',
+                    newestLikes: last3DBLikes || [],
+                },
+            };
+            return postView;
         });
     }
     createPost(body) {
@@ -46,9 +100,28 @@ let PostsService = class PostsService {
                 blogId: body.blogId,
                 blogName: '',
                 createdAt: createdDate,
+                likesInfo: {
+                    likesCount: 0,
+                    dislikesCount: 0,
+                },
             };
-            const postWithout_id = this.postsRepository.createPost(newPost);
-            return postWithout_id;
+            const postDB = yield this.postsRepository.createPost(newPost);
+            const postView = {
+                id: newPost.id,
+                title: newPost.title,
+                shortDescription: newPost.shortDescription,
+                content: newPost.content,
+                blogId: newPost.blogId,
+                blogName: newPost.blogName,
+                createdAt: newPost.createdAt,
+                extendedLikesInfo: {
+                    likesCount: 0,
+                    dislikesCount: 0,
+                    myStatus: 'None',
+                    newestLikes: [],
+                },
+            };
+            return postView;
         });
     }
     createPostByBlogId(body, id) {
@@ -62,15 +135,80 @@ let PostsService = class PostsService {
                 blogId: id,
                 blogName: '',
                 createdAt: createdDate,
+                likesInfo: {
+                    likesCount: 0,
+                    dislikesCount: 0,
+                },
             };
-            const postWithout_id = this.postsRepository.createPost(newPost);
-            return postWithout_id;
+            const postDB = yield this.postsRepository.createPost(newPost);
+            const postView = {
+                id: newPost.id,
+                title: newPost.title,
+                shortDescription: newPost.shortDescription,
+                content: newPost.content,
+                blogId: newPost.blogId,
+                blogName: newPost.blogName,
+                createdAt: newPost.createdAt,
+                extendedLikesInfo: {
+                    likesCount: 0,
+                    dislikesCount: 0,
+                    myStatus: 'None',
+                    newestLikes: [],
+                },
+            };
+            return postView;
         });
     }
     updatePost(id, body) {
         return __awaiter(this, void 0, void 0, function* () {
             const resultBoolean = this.postsRepository.updatePost(id, body);
             return resultBoolean;
+        });
+    }
+    updatePostLikeStatus(id, body, accessToken) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(accessToken);
+            const post = yield this.findPost({ id }, userId);
+            let likesCount = post.extendedLikesInfo.likesCount;
+            let dislikesCount = post.extendedLikesInfo.dislikesCount;
+            if (body.likeStatus === 'Like' &&
+                (post === null || post === void 0 ? void 0 : post.extendedLikesInfo.myStatus) !== 'Like') {
+                likesCount = +likesCount + 1;
+                if ((post === null || post === void 0 ? void 0 : post.extendedLikesInfo.myStatus) === 'Dislike') {
+                    dislikesCount = +dislikesCount - 1;
+                }
+                this.postsRepository.updatePostLikesAndDislikesCount(id, likesCount, dislikesCount);
+            }
+            else if (body.likeStatus === 'Dislike' &&
+                (post === null || post === void 0 ? void 0 : post.extendedLikesInfo.myStatus) !== 'Dislike') {
+                dislikesCount = +dislikesCount + 1;
+                if ((post === null || post === void 0 ? void 0 : post.extendedLikesInfo.myStatus) === 'Like') {
+                    likesCount = +likesCount - 1;
+                }
+                this.postsRepository.updatePostLikesAndDislikesCount(id, likesCount, dislikesCount);
+            }
+            else if (body.likeStatus === 'None' &&
+                (post === null || post === void 0 ? void 0 : post.extendedLikesInfo.myStatus) === 'Like') {
+                likesCount = likesCount - 1;
+                this.postsRepository.updatePostLikesAndDislikesCount(id, likesCount, dislikesCount);
+            }
+            else if (body.likeStatus === 'None' &&
+                (post === null || post === void 0 ? void 0 : post.extendedLikesInfo.myStatus) === 'Dislike') {
+                dislikesCount = dislikesCount - 1;
+                this.postsRepository.updatePostLikesAndDislikesCount(id, likesCount, dislikesCount);
+            }
+            let like = yield postLikesService_1.postLikesService.findPostLikeFromUser(userId, id);
+            if (!like) {
+                yield postLikesService_1.postLikesService.addLikeToBdFromUser(userId, id, body.likeStatus);
+                return true;
+            }
+            else {
+                if (like.likeStatus === body.likeStatus) {
+                    return false;
+                }
+                postLikesService_1.postLikesService.updateUserLikeStatus(userId, id, body.likeStatus);
+                return true;
+            }
         });
     }
     deletePost(params) {

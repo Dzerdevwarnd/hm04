@@ -1,4 +1,5 @@
 import { injectable } from 'inversify'
+import { jwtService } from '../application/jwt-service'
 import {
 	PostsRepository,
 	postDBType,
@@ -32,7 +33,7 @@ export class PostsService {
 					likesCount: post.likesInfo.likesCount,
 					dislikesCount: post.likesInfo.dislikesCount,
 					myStatus: like?.likeStatus || 'None',
-					newestLikes: last3DBLikes,
+					newestLikes: last3DBLikes || [],
 				},
 			}
 
@@ -59,18 +60,20 @@ export class PostsService {
 			return null
 		}
 		let like = await postLikesService.findPostLikeFromUser(userId, params.id)
+		let last3DBLikes = await postLikesService.findLast3Likes(foundPost.id)
 		const postView = {
+			title: foundPost.title,
 			id: foundPost.id,
 			content: foundPost.content,
-			commentatorInfo: {
-				userId: like?.userId || 'string',
-				userLogin: like?.login || 'string',
-			},
+			shortDescription: foundPost.shortDescription,
+			blogId: foundPost.blogId,
+			blogName: foundPost.blogName,
 			createdAt: foundPost.createdAt,
-			likesInfo: {
-				likesCount: Number(foundPost.likesInfo.likesCount),
-				dislikesCount: Number(foundPost.likesInfo.dislikesCount),
+			extendedLikesInfo: {
+				likesCount: foundPost.likesInfo.likesCount,
+				dislikesCount: foundPost.likesInfo.dislikesCount,
 				myStatus: like?.likeStatus || 'None',
+				newestLikes: last3DBLikes || [],
 			},
 		}
 		return postView
@@ -80,7 +83,7 @@ export class PostsService {
 		shortDescription: string
 		content: string
 		blogId: string
-	}): Promise<postDBType> {
+	}): Promise<postViewType> {
 		const createdDate = new Date()
 		const newPost: postDBType = {
 			id: String(Date.now()),
@@ -96,14 +99,14 @@ export class PostsService {
 			},
 		}
 		const postDB = await this.postsRepository.createPost(newPost)
-		const postView = {
-			id: postDB.id,
-			title: postDB.title,
-			shortDescription: postDB.shortDescription,
-			content: postDB.content,
-			blogId: postDB.blogId,
-			blogName: postDB.blogName,
-			createdAt: postDB.createdAt,
+		const postView: postViewType = {
+			id: newPost.id,
+			title: newPost.title,
+			shortDescription: newPost.shortDescription,
+			content: newPost.content,
+			blogId: newPost.blogId,
+			blogName: newPost.blogName,
+			createdAt: newPost.createdAt,
 			extendedLikesInfo: {
 				likesCount: 0,
 				dislikesCount: 0,
@@ -120,7 +123,7 @@ export class PostsService {
 			content: string
 		},
 		id: string
-	): Promise<postDBType> {
+	): Promise<postViewType> {
 		const createdDate = new Date()
 		const newPost: postDBType = {
 			id: String(Date.now()),
@@ -135,9 +138,23 @@ export class PostsService {
 				dislikesCount: 0,
 			},
 		}
-		const postDB = this.postsRepository.createPost(newPost)
-		const postView: postViewType = {}
-		return postWithout_id
+		const postDB = await this.postsRepository.createPost(newPost)
+		const postView: postViewType = {
+			id: newPost.id,
+			title: newPost.title,
+			shortDescription: newPost.shortDescription,
+			content: newPost.content,
+			blogId: newPost.blogId,
+			blogName: newPost.blogName,
+			createdAt: newPost.createdAt,
+			extendedLikesInfo: {
+				likesCount: 0,
+				dislikesCount: 0,
+				myStatus: 'None',
+				newestLikes: [],
+			},
+		}
+		return postView
 	}
 	async updatePost(
 		id: string,
@@ -151,6 +168,76 @@ export class PostsService {
 		const resultBoolean = this.postsRepository.updatePost(id, body)
 		return resultBoolean
 	}
+
+	async updatePostLikeStatus(
+		id: string,
+		body: { likeStatus: string },
+		accessToken: string
+	): Promise<boolean> {
+		const userId = await jwtService.verifyAndGetUserIdByToken(accessToken)
+		const post = await this.findPost({ id }, userId)
+		let likesCount = post!.extendedLikesInfo.likesCount
+		let dislikesCount = post!.extendedLikesInfo.dislikesCount
+		if (
+			body.likeStatus === 'Like' &&
+			post?.extendedLikesInfo.myStatus !== 'Like'
+		) {
+			likesCount = +likesCount + 1
+			if (post?.extendedLikesInfo.myStatus === 'Dislike') {
+				dislikesCount = +dislikesCount - 1
+			}
+			this.postsRepository.updatePostLikesAndDislikesCount(
+				id,
+				likesCount,
+				dislikesCount
+			)
+		} else if (
+			body.likeStatus === 'Dislike' &&
+			post?.extendedLikesInfo.myStatus !== 'Dislike'
+		) {
+			dislikesCount = +dislikesCount + 1
+			if (post?.extendedLikesInfo.myStatus === 'Like') {
+				likesCount = +likesCount - 1
+			}
+			this.postsRepository.updatePostLikesAndDislikesCount(
+				id,
+				likesCount,
+				dislikesCount
+			)
+		} else if (
+			body.likeStatus === 'None' &&
+			post?.extendedLikesInfo.myStatus === 'Like'
+		) {
+			likesCount = likesCount - 1
+			this.postsRepository.updatePostLikesAndDislikesCount(
+				id,
+				likesCount,
+				dislikesCount
+			)
+		} else if (
+			body.likeStatus === 'None' &&
+			post?.extendedLikesInfo.myStatus === 'Dislike'
+		) {
+			dislikesCount = dislikesCount - 1
+			this.postsRepository.updatePostLikesAndDislikesCount(
+				id,
+				likesCount,
+				dislikesCount
+			)
+		}
+		let like = await postLikesService.findPostLikeFromUser(userId, id)
+		if (!like) {
+			await postLikesService.addLikeToBdFromUser(userId, id, body.likeStatus)
+			return true
+		} else {
+			if (like.likeStatus === body.likeStatus) {
+				return false
+			}
+			postLikesService.updateUserLikeStatus(userId, id, body.likeStatus)
+			return true
+		}
+	}
+
 	async deletePost(params: { id: string }): Promise<boolean> {
 		const resultBoolean = this.postsRepository.deletePost(params)
 		return resultBoolean

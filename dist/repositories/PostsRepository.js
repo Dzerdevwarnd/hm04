@@ -14,24 +14,49 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PostsRepository = exports.postModel = void 0;
+exports.PostsRepository = exports.postModel = exports.postViewType = exports.postDBType = void 0;
 const inversify_1 = require("inversify");
 const mongoose_1 = __importDefault(require("mongoose"));
+const postLikesService_1 = require("../services/postLikesService");
+const blogsRepository_1 = require("./blogsRepository");
+class postDBType {
+    constructor(id, title, shortDescription, content, blogId, blogName, createdAt) {
+        this.id = id;
+        this.title = title;
+        this.shortDescription = shortDescription;
+        this.content = content;
+        this.blogId = blogId;
+        this.blogName = blogName;
+        this.createdAt = createdAt;
+        this.likesInfo = {
+            likesCount: 0,
+            dislikesCount: 0,
+        };
+    }
+}
+exports.postDBType = postDBType;
+class postViewType {
+    constructor(id, title, shortDescription, content, blogId, blogName, createdAt) {
+        this.id = id;
+        this.title = title;
+        this.shortDescription = shortDescription;
+        this.content = content;
+        this.blogId = blogId;
+        this.blogName = blogName;
+        this.createdAt = createdAt;
+        this.extendedLikesInfo = {
+            likesCount: 0,
+            dislikesCount: 0,
+            myStatus: 'None',
+            newestLikes: [],
+        };
+    }
+}
+exports.postViewType = postViewType;
 const postSchema = new mongoose_1.default.Schema({
     id: { type: String, required: true },
     title: { type: String, required: true },
@@ -40,10 +65,17 @@ const postSchema = new mongoose_1.default.Schema({
     blogId: { type: String, required: true },
     blogName: { type: String, default: '' },
     createdAt: { type: Date, required: true },
+    likesInfo: {
+        type: {
+            likesCount: { type: Number, required: true, default: 0 },
+            dislikesCount: { type: Number, required: true, default: 0 },
+        },
+        required: true,
+    },
 });
 exports.postModel = mongoose_1.default.model('posts', postSchema);
 let PostsRepository = class PostsRepository {
-    returnAllPosts(query) {
+    findPostsWithQuery(query) {
         var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const pageSize = Number(query === null || query === void 0 ? void 0 : query.pageSize) || 10;
@@ -63,22 +95,67 @@ let PostsRepository = class PostsRepository {
                 .limit(pageSize)
                 .lean();
             const totalCount = yield exports.postModel.countDocuments();
-            const pagesCount = Math.ceil(totalCount / pageSize);
-            const postsPagination = {
-                pagesCount: pagesCount,
-                page: Number(page),
-                pageSize: pageSize,
-                totalCount: totalCount,
-                items: posts,
-            };
-            return postsPagination;
+            return posts;
         });
     }
     findPost(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            let post = yield exports.postModel.findOne({ id: params.id }, '-_id -__v');
-            if (post) {
-                return post;
+            let post = yield exports.postModel.findOne({ id: params.id });
+            return post;
+        });
+    }
+    findPostsByBlogId(params, query, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const totalCount = yield blogsRepository_1.blogModel.countDocuments({
+                blogId: params.id,
+            });
+            const pageSize = Number(query.pageSize) || 10;
+            const page = Number(query.pageNumber) || 1;
+            const sortBy = query.sortBy || 'createdAt';
+            let sortDirection = query.sortDirection || 'desc';
+            if (sortDirection === 'desc') {
+                sortDirection = -1;
+            }
+            else {
+                sortDirection = 1;
+            }
+            let postsDB = yield exports.postModel
+                .find({ blogId: params.id }, { projection: { _id: 0 } })
+                .skip((page - 1) * pageSize)
+                .sort({ [sortBy]: sortDirection })
+                .limit(pageSize)
+                .lean();
+            let postsView = [];
+            for (const post of postsDB) {
+                let like = yield postLikesService_1.postLikesService.findPostLikeFromUser(userId, params.id);
+                let last3DBLikes = yield postLikesService_1.postLikesService.findLast3Likes(params.id);
+                let postView = {
+                    title: post.title,
+                    id: post.id,
+                    content: post.content,
+                    shortDescription: post.shortDescription,
+                    blogId: post.blogId,
+                    blogName: post.blogName,
+                    createdAt: post.createdAt,
+                    extendedLikesInfo: {
+                        likesCount: post.likesInfo.likesCount,
+                        dislikesCount: post.likesInfo.dislikesCount,
+                        myStatus: (like === null || like === void 0 ? void 0 : like.likeStatus) || 'None',
+                        newestLikes: last3DBLikes || [],
+                    },
+                };
+                postsView.push(postView);
+            }
+            const pageCount = Math.ceil(totalCount / pageSize);
+            const postsPagination = {
+                pagesCount: pageCount,
+                page: page,
+                pageSize: pageSize,
+                totalCount: totalCount,
+                items: postsView,
+            };
+            if (postsView) {
+                return postsPagination;
             }
             else {
                 return;
@@ -88,9 +165,7 @@ let PostsRepository = class PostsRepository {
     createPost(newPost) {
         return __awaiter(this, void 0, void 0, function* () {
             const result = yield exports.postModel.insertMany(newPost);
-            //@ts-ignore
-            const { _id } = newPost, postWithout_Id = __rest(newPost, ["_id"]);
-            return postWithout_Id;
+            return result.length == 1;
         });
     }
     updatePost(id, body) {
@@ -104,6 +179,17 @@ let PostsRepository = class PostsRepository {
                 },
             });
             return result.matchedCount === 1;
+        });
+    }
+    updatePostLikesAndDislikesCount(postId, likesCount, dislikesCount) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const resultOfUpdate = yield exports.postModel.updateOne({ id: postId }, {
+                $set: {
+                    'likesInfo.likesCount': likesCount,
+                    'likesInfo.dislikesCount': dislikesCount,
+                },
+            });
+            return resultOfUpdate.matchedCount === 1;
         });
     }
     deletePost(params) {

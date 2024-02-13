@@ -8,9 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -23,6 +20,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BlogsController = void 0;
 const inversify_1 = require("inversify");
+const jwt_service_1 = require("../application/jwt-service");
 const blogsService_1 = require("../services/blogsService");
 const postsService_1 = require("../services/postsService");
 let BlogsController = class BlogsController {
@@ -39,20 +37,24 @@ let BlogsController = class BlogsController {
     }
     getBlogById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const foundPosts = yield this.blogsService.findPostsByBlogId(req.params, req.query);
-            if ((foundPosts === null || foundPosts === void 0 ? void 0 : foundPosts.items.length) === 0) {
+            const foundBlog = yield this.blogsService.findBlog(req.params);
+            if (!foundBlog) {
                 res.sendStatus(404);
                 return;
             }
             else {
-                res.status(200).send(foundPosts);
+                res.status(200).send(foundBlog);
                 return;
             }
         });
     }
     getPostsByBlogId(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const foundPosts = yield this.blogsService.findPostsByBlogId(req.params, req.query);
+            let userId = undefined;
+            if (req.headers.authorization) {
+                userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization.split(' ')[1]);
+            }
+            const foundPosts = yield this.blogsService.findPostsByBlogId(req.params, req.query, userId);
             if ((foundPosts === null || foundPosts === void 0 ? void 0 : foundPosts.items.length) === 0) {
                 res.sendStatus(404);
                 return;
@@ -111,8 +113,6 @@ let BlogsController = class BlogsController {
 exports.BlogsController = BlogsController;
 exports.BlogsController = BlogsController = __decorate([
     (0, inversify_1.injectable)(),
-    __param(0, (0, inversify_1.inject)(blogsService_1.BlogsService)),
-    __param(1, (0, inversify_1.inject)(postsService_1.PostsService)),
     __metadata("design:paramtypes", [blogsService_1.BlogsService,
         postsService_1.PostsService])
 ], BlogsController);

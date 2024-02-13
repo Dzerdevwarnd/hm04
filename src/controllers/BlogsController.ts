@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { injectable } from 'inversify'
+import { jwtService } from '../application/jwt-service'
 import { blogsPaginationType } from '../repositories/blogsRepository'
 import { BlogsService } from '../services/blogsService'
 import { PostsService } from '../services/postsService'
@@ -30,15 +31,12 @@ export class BlogsController {
 		req: RequestParamsQuery<{ id: string }, { query: any }>,
 		res: Response
 	) {
-		const foundPosts = await this.blogsService.findPostsByBlogId(
-			req.params,
-			req.query
-		)
-		if (foundPosts?.items.length === 0) {
+		const foundBlog = await this.blogsService.findBlog(req.params)
+		if (!foundBlog) {
 			res.sendStatus(404)
 			return
 		} else {
-			res.status(200).send(foundPosts)
+			res.status(200).send(foundBlog)
 			return
 		}
 	}
@@ -46,9 +44,16 @@ export class BlogsController {
 		req: RequestParamsQuery<{ id: string }, { query: any }>,
 		res: Response
 	) {
+		let userId = undefined
+		if (req.headers.authorization) {
+			userId = await jwtService.verifyAndGetUserIdByToken(
+				req.headers.authorization.split(' ')[1]
+			)
+		}
 		const foundPosts = await this.blogsService.findPostsByBlogId(
 			req.params,
-			req.query
+			req.query,
+			userId
 		)
 		if (foundPosts?.items.length === 0) {
 			res.sendStatus(404)

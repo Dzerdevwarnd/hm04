@@ -85,6 +85,27 @@ export class PostsController {
 			return
 		}
 	}
+	async updateCommentLikeStatus(
+		req: RequestWithParamsAndBody<{ id: string }, { likeStatus: string }>,
+		res: Response
+	) {
+		const post = await this.postsService.findPost(
+			req.params,
+			req.headers.authorization!.split(' ')[1]
+		)
+		if (!post) {
+			res.sendStatus(404)
+			return
+		}
+
+		const resultOfUpdate = await this.postsService.updatePostLikeStatus(
+			req.params.id,
+			req.body,
+			req.headers.authorization!.split(' ')[1]
+		)
+		res.sendStatus(204)
+		return
+	}
 	async deleteById(req: RequestWithParams<{ id: string }>, res: Response) {
 		const resultOfDelete = await this.postsService.deletePost(req.params)
 		if (!resultOfDelete) {
@@ -123,7 +144,7 @@ export class PostsController {
 		res: Response
 	) {
 		{
-			const post = await this.postsService.findPost(req.params)
+			const post = await this.postsService.findPost(req.params, 'userId')
 			if (!post) {
 				res.sendStatus(404)
 				return

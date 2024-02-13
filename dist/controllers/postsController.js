@@ -30,14 +30,22 @@ let PostsController = class PostsController {
     }
     getPostsWithPagination(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const allPosts = yield this.postsService.returnAllPosts(req.query);
+            let userId = undefined;
+            if (req.headers.authorization) {
+                userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization.split(' ')[1]);
+            }
+            const allPosts = yield this.postsService.returnAllPosts(req.query, userId);
             res.status(200).send(allPosts);
             return;
         });
     }
     getPostById(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            const foundPost = yield this.postsService.findPost(req.params);
+            let userId = undefined;
+            if (req.headers.authorization) {
+                userId = yield jwt_service_1.jwtService.verifyAndGetUserIdByToken(req.headers.authorization.split(' ')[1]);
+            }
+            const foundPost = yield this.postsService.findPost(req.params, userId);
             if (!foundPost) {
                 res.sendStatus(404);
                 return;
@@ -66,6 +74,18 @@ let PostsController = class PostsController {
                 res.sendStatus(204);
                 return;
             }
+        });
+    }
+    updateCommentLikeStatus(req, res) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const post = yield this.postsService.findPost(req.params, req.headers.authorization.split(' ')[1]);
+            if (!post) {
+                res.sendStatus(404);
+                return;
+            }
+            const resultOfUpdate = yield this.postsService.updatePostLikeStatus(req.params.id, req.body, req.headers.authorization.split(' ')[1]);
+            res.sendStatus(204);
+            return;
         });
     }
     deleteById(req, res) {
@@ -101,7 +121,7 @@ let PostsController = class PostsController {
     postCommentByPostId(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             {
-                const post = yield this.postsService.findPost(req.params);
+                const post = yield this.postsService.findPost(req.params, 'userId');
                 if (!post) {
                     res.sendStatus(404);
                     return;

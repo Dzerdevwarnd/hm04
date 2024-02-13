@@ -1,10 +1,5 @@
 import { injectable } from 'inversify'
 import mongoose from 'mongoose'
-import {
-	postDBType,
-	postModel,
-	postsByBlogIdPaginationType,
-} from './PostsRepository'
 
 export type blogDBType = {
 	id: string
@@ -91,44 +86,6 @@ export class BlogsRepository {
 			websiteUrl: blog.websiteUrl,
 		}
 		return blogView
-	}
-	async findPostsByBlogId(
-		params: {
-			id: string
-		},
-		query: any
-	): Promise<postsByBlogIdPaginationType | undefined> {
-		const totalCount: number = await blogModel.countDocuments({
-			blogId: params.id,
-		})
-		const pageSize = Number(query.pageSize) || 10
-		const page = Number(query.pageNumber) || 1
-		const sortBy: string = query.sortBy || 'createdAt'
-		let sortDirection = query.sortDirection || 'desc'
-		if (sortDirection === 'desc') {
-			sortDirection = -1
-		} else {
-			sortDirection = 1
-		}
-		let posts: postDBType[] = await postModel
-			.find({ blogId: params.id }, { projection: { _id: 0 } })
-			.skip((page - 1) * pageSize)
-			.sort({ [sortBy]: sortDirection })
-			.limit(pageSize)
-			.lean()
-		const pageCount = Math.ceil(totalCount / pageSize)
-		const postsPagination = {
-			pagesCount: pageCount,
-			page: page,
-			pageSize: pageSize,
-			totalCount: totalCount,
-			items: posts,
-		}
-		if (posts) {
-			return postsPagination
-		} else {
-			return
-		}
 	}
 
 	async createBlog(newBlog: blogDBType): Promise<blogDBType> {

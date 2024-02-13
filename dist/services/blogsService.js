@@ -8,9 +8,6 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -24,9 +21,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BlogsService = void 0;
 const inversify_1 = require("inversify");
 const blogsRepository_1 = require("../repositories/blogsRepository");
+const PostsRepository_1 = require("../repositories/PostsRepository");
 let BlogsService = class BlogsService {
-    constructor(blogsRepository) {
+    constructor(blogsRepository, postsRepository) {
         this.blogsRepository = blogsRepository;
+        this.postsRepository = postsRepository;
     }
     returnAllBlogs(query) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -38,9 +37,9 @@ let BlogsService = class BlogsService {
             return this.blogsRepository.findBlog(params);
         });
     }
-    findPostsByBlogId(params, query) {
+    findPostsByBlogId(params, query, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.blogsRepository.findPostsByBlogId(params, query);
+            return this.postsRepository.findPostsByBlogId(params, query, userId);
         });
     }
     createBlog(body) {
@@ -74,6 +73,6 @@ let BlogsService = class BlogsService {
 exports.BlogsService = BlogsService;
 exports.BlogsService = BlogsService = __decorate([
     (0, inversify_1.injectable)(),
-    __param(0, (0, inversify_1.inject)(blogsRepository_1.BlogsRepository)),
-    __metadata("design:paramtypes", [blogsRepository_1.BlogsRepository])
+    __metadata("design:paramtypes", [blogsRepository_1.BlogsRepository,
+        PostsRepository_1.PostsRepository])
 ], BlogsService);

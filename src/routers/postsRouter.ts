@@ -48,6 +48,14 @@ export const postsValidation = {
 		.trim()
 		.isLength({ min: 20, max: 300 })
 		.withMessage('Content length should be from 20 to 300'),
+	likeStatusValidation: body('likeStatus')
+		.trim()
+		.custom(async (likeStatus: string) => {
+			const allowedValues = ['None', 'Like', 'Dislike']
+			if (!allowedValues.includes(likeStatus)) {
+				throw new Error('Incorrect likeStatus Value')
+			}
+		}),
 }
 
 const postsControllerInstance = appContainer.resolve(PostsController)
@@ -104,6 +112,14 @@ postsRouter.post(
 	postsValidation.commentsContentValidation,
 	inputValidationMiddleware,
 	postsControllerInstance.postCommentByPostId.bind(postsControllerInstance)
+)
+
+postsRouter.put(
+	'/:id/like-status',
+	AuthMiddleware,
+	postsValidation.likeStatusValidation,
+	inputValidationMiddleware,
+	postsControllerInstance.updateCommentLikeStatus.bind(postsControllerInstance)
 )
 
 /*postsRouter.get(

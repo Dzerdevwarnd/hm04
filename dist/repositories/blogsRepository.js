@@ -32,7 +32,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BlogsRepository = exports.blogModel = void 0;
 const inversify_1 = require("inversify");
 const mongoose_1 = __importDefault(require("mongoose"));
-const PostsRepository_1 = require("./PostsRepository");
 const blogSchema = new mongoose_1.default.Schema({
     id: { type: String, required: true },
     name: { type: String, required: true },
@@ -91,43 +90,6 @@ let BlogsRepository = class BlogsRepository {
                 websiteUrl: blog.websiteUrl,
             };
             return blogView;
-        });
-    }
-    findPostsByBlogId(params, query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const totalCount = yield exports.blogModel.countDocuments({
-                blogId: params.id,
-            });
-            const pageSize = Number(query.pageSize) || 10;
-            const page = Number(query.pageNumber) || 1;
-            const sortBy = query.sortBy || 'createdAt';
-            let sortDirection = query.sortDirection || 'desc';
-            if (sortDirection === 'desc') {
-                sortDirection = -1;
-            }
-            else {
-                sortDirection = 1;
-            }
-            let posts = yield PostsRepository_1.postModel
-                .find({ blogId: params.id }, { projection: { _id: 0 } })
-                .skip((page - 1) * pageSize)
-                .sort({ [sortBy]: sortDirection })
-                .limit(pageSize)
-                .lean();
-            const pageCount = Math.ceil(totalCount / pageSize);
-            const postsPagination = {
-                pagesCount: pageCount,
-                page: page,
-                pageSize: pageSize,
-                totalCount: totalCount,
-                items: posts,
-            };
-            if (posts) {
-                return postsPagination;
-            }
-            else {
-                return;
-            }
         });
     }
     createBlog(newBlog) {
