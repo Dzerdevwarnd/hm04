@@ -22,7 +22,6 @@ exports.PostsRepository = exports.postModel = exports.postViewType = exports.pos
 const inversify_1 = require("inversify");
 const mongoose_1 = __importDefault(require("mongoose"));
 const postLikesService_1 = require("../services/postLikesService");
-const blogsRepository_1 = require("./blogsRepository");
 class postDBType {
     constructor(id, title, shortDescription, content, blogId, blogName, createdAt) {
         this.id = id;
@@ -106,7 +105,7 @@ let PostsRepository = class PostsRepository {
     }
     findPostsByBlogId(params, query, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const totalCount = yield blogsRepository_1.blogModel.countDocuments({
+            const totalCount = yield exports.postModel.countDocuments({
                 blogId: params.id,
             });
             const pageSize = Number(query.pageSize) || 10;
@@ -127,8 +126,8 @@ let PostsRepository = class PostsRepository {
                 .lean();
             let postsView = [];
             for (const post of postsDB) {
-                let like = yield postLikesService_1.postLikesService.findPostLikeFromUser(userId, params.id);
-                let last3DBLikes = yield postLikesService_1.postLikesService.findLast3Likes(params.id);
+                let like = yield postLikesService_1.postLikesService.findPostLikeFromUser(userId, post.id);
+                let last3DBLikes = yield postLikesService_1.postLikesService.findLast3Likes(post.id);
                 let postView = {
                     title: post.title,
                     id: post.id,

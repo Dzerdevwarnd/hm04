@@ -1,7 +1,6 @@
 import { injectable } from 'inversify'
 import mongoose from 'mongoose'
 import { postLikesService } from '../services/postLikesService'
-import { blogModel } from './blogsRepository'
 import { postLikeViewType } from './postLikesRepository'
 
 export class postDBType {
@@ -110,7 +109,7 @@ export class PostsRepository {
 		query: any,
 		userId: string
 	): Promise<postsByBlogIdPaginationType | undefined> {
-		const totalCount: number = await blogModel.countDocuments({
+		const totalCount: number = await postModel.countDocuments({
 			blogId: params.id,
 		})
 		const pageSize = Number(query.pageSize) || 10
@@ -130,8 +129,8 @@ export class PostsRepository {
 			.lean()
 		let postsView: postViewType[] = []
 		for (const post of postsDB) {
-			let like = await postLikesService.findPostLikeFromUser(userId, params.id)
-			let last3DBLikes = await postLikesService.findLast3Likes(params.id)
+			let like = await postLikesService.findPostLikeFromUser(userId, post.id)
+			let last3DBLikes = await postLikesService.findLast3Likes(post.id)
 			let postView = {
 				title: post.title,
 				id: post.id,

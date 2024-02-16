@@ -57,6 +57,17 @@ blogsRouter.post(
 	blogsControllerInstance.postBlog.bind(blogsControllerInstance)
 )
 
+blogsRouter.post(
+	'/:id/posts',
+	basicAuthMiddleware,
+	//postsValidation.blogIdExistValidationFromUrl,
+	postsValidation.titleValidation,
+	postsValidation.shortDescriptionValidation,
+	postsValidation.contentValidation,
+	inputValidationMiddleware,
+	blogsControllerInstance.createPostByBlogId.bind(blogsControllerInstance)
+)
+
 blogsRouter.get(
 	'/:id/posts',
 	basicAuthMiddleware,

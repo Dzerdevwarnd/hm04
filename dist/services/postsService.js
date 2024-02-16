@@ -23,6 +23,7 @@ const inversify_1 = require("inversify");
 const jwt_service_1 = require("../application/jwt-service");
 const PostsRepository_1 = require("../repositories/PostsRepository");
 const postLikesService_1 = require("./postLikesService");
+const usersService_1 = require("./usersService");
 let PostsService = class PostsService {
     constructor(postsRepository) {
         this.postsRepository = postsRepository;
@@ -48,16 +49,16 @@ let PostsService = class PostsService {
                         myStatus: (like === null || like === void 0 ? void 0 : like.likeStatus) || 'None',
                         newestLikes: last3DBLikes || [],
                     },
-                };
+                }; //
                 postsView.push(postView);
             }
             const totalCount = yield PostsRepository_1.postModel.countDocuments();
             const pagesCount = Math.ceil(totalCount / query.pageSize);
             const postsPagination = {
-                pagesCount: pagesCount,
-                page: Number(query.page),
-                pageSize: query.pageSize,
-                totalCount: totalCount,
+                pagesCount: pagesCount || 0,
+                page: Number(query.page) || 1,
+                pageSize: query.pageSize || 10,
+                totalCount: totalCount || 0,
                 items: postsView,
             };
             return postsPagination;
@@ -198,8 +199,9 @@ let PostsService = class PostsService {
                 this.postsRepository.updatePostLikesAndDislikesCount(id, likesCount, dislikesCount);
             }
             let like = yield postLikesService_1.postLikesService.findPostLikeFromUser(userId, id);
+            const user = yield usersService_1.userService.findUser(userId);
             if (!like) {
-                yield postLikesService_1.postLikesService.addLikeToBdFromUser(userId, id, body.likeStatus);
+                yield postLikesService_1.postLikesService.addLikeToBdFromUser(userId, id, body.likeStatus, user === null || user === void 0 ? void 0 : user.accountData.login);
                 return true;
             }
             else {

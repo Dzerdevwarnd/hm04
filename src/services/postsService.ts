@@ -8,6 +8,7 @@ import {
 	postsByBlogIdPaginationType,
 } from '../repositories/PostsRepository'
 import { postLikesService } from './postLikesService'
+import { userService } from './usersService'
 
 @injectable()
 export class PostsService {
@@ -35,17 +36,17 @@ export class PostsService {
 					myStatus: like?.likeStatus || 'None',
 					newestLikes: last3DBLikes || [],
 				},
-			}
+			} //
 
 			postsView.push(postView)
 		}
 		const totalCount = await postModel.countDocuments()
 		const pagesCount = Math.ceil(totalCount / query.pageSize)
 		const postsPagination = {
-			pagesCount: pagesCount,
-			page: Number(query.page),
-			pageSize: query.pageSize,
-			totalCount: totalCount,
+			pagesCount: pagesCount || 0,
+			page: Number(query.page) || 1,
+			pageSize: query.pageSize || 10,
+			totalCount: totalCount || 0,
 			items: postsView,
 		}
 		return postsPagination
@@ -226,8 +227,14 @@ export class PostsService {
 			)
 		}
 		let like = await postLikesService.findPostLikeFromUser(userId, id)
+		const user = await userService.findUser(userId)
 		if (!like) {
-			await postLikesService.addLikeToBdFromUser(userId, id, body.likeStatus)
+			await postLikesService.addLikeToBdFromUser(
+				userId,
+				id,
+				body.likeStatus,
+				user?.accountData.login
+			)
 			return true
 		} else {
 			if (like.likeStatus === body.likeStatus) {

@@ -14,13 +14,9 @@ export class postLikeDBType {
 
 export class postLikeViewType {
 	public addedAt: Date
-	constructor(
-		public userId: string,
-		public login: string = 'string'
-	) {
+	constructor(public userId: string, public login: string = 'string') {
 		this.addedAt = new Date()
 	}
-
 }
 
 const postLikeSchema = new mongoose.Schema({
@@ -42,9 +38,17 @@ export const postLikesRepository = {
 		return like
 	},
 
-	async findLast3Likes(postId: string):Promise<postLikeViewType[]> {
+	async findLast3Likes(postId: string): Promise<postLikeViewType[]> {
 		const last3Likes = await postLikeModel
-			.find({ postId: postId,likeStatus:"Like" }, { addedAt: 1, userId: 1, login: 1 })
+			.find(
+				{ postId: postId, likeStatus: 'Like' },
+				{
+					addedAt: 1,
+					userId: 1,
+					login: 1,
+					_id: 0,
+				}
+			)
 			.sort({ addedAt: -1 })
 			.limit(3)
 			.lean()

@@ -53,7 +53,12 @@ exports.postLikesRepository = {
     findLast3Likes(postId) {
         return __awaiter(this, void 0, void 0, function* () {
             const last3Likes = yield exports.postLikeModel
-                .find({ postId: postId, likeStatus: "Like" }, { addedAt: 1, userId: 1, login: 1 })
+                .find({ postId: postId, likeStatus: 'Like' }, {
+                addedAt: 1,
+                userId: 1,
+                login: 1,
+                _id: 0,
+            })
                 .sort({ addedAt: -1 })
                 .limit(3)
                 .lean();

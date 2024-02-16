@@ -119,7 +119,7 @@ postsRouter.put(
 	AuthMiddleware,
 	postsValidation.likeStatusValidation,
 	inputValidationMiddleware,
-	postsControllerInstance.updateCommentLikeStatus.bind(postsControllerInstance)
+	postsControllerInstance.updatePostLikeStatus.bind(postsControllerInstance)
 )
 
 /*postsRouter.get(

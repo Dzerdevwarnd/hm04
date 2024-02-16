@@ -85,7 +85,7 @@ export class PostsController {
 			return
 		}
 	}
-	async updateCommentLikeStatus(
+	async updatePostLikeStatus(
 		req: RequestWithParamsAndBody<{ id: string }, { likeStatus: string }>,
 		res: Response
 	) {

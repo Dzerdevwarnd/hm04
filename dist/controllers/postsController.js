@@ -76,7 +76,7 @@ let PostsController = class PostsController {
             }
         });
     }
-    updateCommentLikeStatus(req, res) {
+    updatePostLikeStatus(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
             const post = yield this.postsService.findPost(req.params, req.headers.authorization.split(' ')[1]);
             if (!post) {

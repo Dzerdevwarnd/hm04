@@ -28,6 +28,9 @@ exports.blogsRouter.get('/', blogsControllerInstance.getBlogsWithPagination.bind
 exports.blogsRouter.get('/:id', blogsControllerInstance.getBlogById.bind(blogsControllerInstance));
 exports.blogsRouter.get('/:id/posts', blogsControllerInstance.getPostsByBlogId.bind(blogsControllerInstance));
 exports.blogsRouter.post('/', authMiddleware_1.basicAuthMiddleware, nameValidation, descriptionValidation, urlValidation, inputValidationMiddleware_1.inputValidationMiddleware, blogsControllerInstance.postBlog.bind(blogsControllerInstance));
+exports.blogsRouter.post('/:id/posts', authMiddleware_1.basicAuthMiddleware, 
+//postsValidation.blogIdExistValidationFromUrl,
+postsRouter_1.postsValidation.titleValidation, postsRouter_1.postsValidation.shortDescriptionValidation, postsRouter_1.postsValidation.contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, blogsControllerInstance.createPostByBlogId.bind(blogsControllerInstance));
 exports.blogsRouter.get('/:id/posts', authMiddleware_1.basicAuthMiddleware, 
 //postsValidation.blogIdExistValidationFromUrl,
 postsRouter_1.postsValidation.titleValidation, postsRouter_1.postsValidation.shortDescriptionValidation, postsRouter_1.postsValidation.contentValidation, inputValidationMiddleware_1.inputValidationMiddleware, blogsControllerInstance.createPostByBlogId.bind(blogsControllerInstance));

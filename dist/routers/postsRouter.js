@@ -65,7 +65,7 @@ exports.postsRouter.put('/:id', authMiddleware_1.basicAuthMiddleware, exports.po
 exports.postsRouter.delete('/:id', postsControllerInstance.deleteById.bind(postsControllerInstance));
 exports.postsRouter.get('/:id/comments', postsControllerInstance.getCommentsByPostId.bind(postsControllerInstance));
 exports.postsRouter.post('/:id/comments', authMiddleware_1.AuthMiddleware, exports.postsValidation.commentsContentValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.postCommentByPostId.bind(postsControllerInstance));
-exports.postsRouter.put('/:id/like-status', authMiddleware_1.AuthMiddleware, exports.postsValidation.likeStatusValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.updateCommentLikeStatus.bind(postsControllerInstance));
+exports.postsRouter.put('/:id/like-status', authMiddleware_1.AuthMiddleware, exports.postsValidation.likeStatusValidation, inputValidationMiddleware_1.inputValidationMiddleware, postsControllerInstance.updatePostLikeStatus.bind(postsControllerInstance));
 /*postsRouter.get(
     '/',
     async (req: RequestWithQuery<{ query: any }>, res: Response) => {
